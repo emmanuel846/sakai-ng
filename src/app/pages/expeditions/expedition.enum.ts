@@ -1,0 +1,11 @@
+export enum ExpeditionStatus {
+    CREATED = 'CREATED',
+    VALIDATED = 'VALIDATED',
+    DELETED = 'DELETED',
+    RESERVED = 'RESERVED',
+    STARTED = 'STARTED',
+    ONGOING = 'ONGOING',
+    COMPLETED = 'COMPLETED',
+    CANCELLED = 'CANCELLED',
+    REJECTED = 'REJECTED',
+    }

@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
+import { AuthService } from '../../services/auth.service';
+import { AuthResponse } from '../../models/authRegister.model';
 
 @Component({
     selector: 'app-login',
@@ -36,13 +38,13 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
                                     />
                                 </g>
                             </svg>
-                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to PrimeLand!</div>
+                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">WT Backoffice</div>
                             <span class="text-muted-color font-medium">Sign in to continue</span>
                         </div>
 
                         <div>
-                            <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-                            <input pInputText id="email1" type="text" placeholder="Email address" class="w-full md:w-[30rem] mb-8" [(ngModel)]="email" />
+                            <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Nom d'utilisateur</label>
+                            <input pInputText id="email1" type="text" placeholder="Email address" class="w-full md:w-[30rem] mb-8" [(ngModel)]="username" />
 
                             <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
                             <p-password id="password1" [(ngModel)]="password" placeholder="Password" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
@@ -54,7 +56,7 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
                                 </div>
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                             </div>
-                            <p-button label="Sign In" styleClass="w-full" routerLink="/"></p-button>
+                            <p-button label="Connexion" styleClass="w-full"(click)="onSubmit()"></p-button>
                         </div>
                     </div>
                 </div>
@@ -63,9 +65,45 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
     `
 })
 export class Login {
-    email: string = '';
+    username: string = '';
 
     password: string = '';
 
     checked: boolean = false;
+    showLoading: boolean = false;
+    constructor(private authService: AuthService, private router: Router) {}
+    onSubmit() {
+        this.showLoading = true;
+        if (true) {
+          const username = this.username;
+          const password = this.password;
+          this.authService.login({ username, password }).subscribe({
+            next: (response: AuthResponse) => {
+              this.authService.setAuthToken(response.accessToken, response.refreshToken);
+              // this.alerts.open('', { label: 'Connexion effectuée avec succès', appearance: 'positive', autoClose: 0 }).subscribe();
+             
+    
+           
+                this.authService.getProfile().subscribe({
+                  next: (response) => {        
+                  
+                    this.authService.setUser(response);
+                },
+                error: (err) => {
+                    console.error('Error fetching profile:', err);
+                },
+            });
+            this.router.navigate(['/dashboard/pages/clients']);
+                
+            },
+            error: (err) => {
+              this.showLoading = false;
+              // this.alerts.open('', { label: err.error.message, appearance: 'negative', autoClose: 0 }).subscribe();
+            },
+          });
+    
+        } else {
+          this.showLoading = false;
+        }
+      }
 }

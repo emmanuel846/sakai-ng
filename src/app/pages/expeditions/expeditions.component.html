@@ -1,0 +1,91 @@
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2"  />
+        <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined  />
+    </ng-template>
+
+    <ng-template #end>
+        <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
+    </ng-template>
+</p-toolbar>
+
+<p-table
+    #dt
+    [value]="expeditions"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Liste des expéditions</h5>
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
+            </p-iconfield>
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th pSortableColumn="createdAt" style="min-width:16rem">Date de création</th>
+            <th pSortableColumn="name" style="min-width:16rem">
+              Pays départ
+                <p-sortIcon field="name" />
+            </th>
+            <th>Pays arrivé</th>
+            <th pSortableColumn="price" style="min-width: 8rem">
+              Client
+                <p-sortIcon field="price" />
+            </th>
+            <th pSortableColumn="category" style="min-width:10rem">
+                Code de reservation de vol
+                <p-sortIcon field="category" />
+            </th>
+            <th pSortableColumn="rating" style="min-width: 12rem">
+                Date Départ
+                <p-sortIcon field="rating" />
+            </th>
+            <th pSortableColumn="rating" style="min-width: 12rem">
+                Date de dépôt
+                <p-sortIcon field="rating" />
+            </th>
+            <th pSortableColumn="inventoryStatus" style="min-width: 12rem">
+               Date de livraison
+                <p-sortIcon field="inventoryStatus" />
+            </th>
+            
+            <th style="min-width: 12rem"></th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-expedition>
+        <tr>
+            <td style="width: 3rem">
+                <p-tableCheckbox [value]="expedition" />
+            </td>
+            <td style="min-width: 12rem">{{ expedition.createdAt | date: 'dd/MM/YYYY HH:mm:ss' }}</td>
+            <td style="min-width: 12rem">{{ expedition.countryDep }}</td>
+            <td style="min-width: 16rem">{{ expedition.countryArr }}</td>
+            <td style="min-width: 12rem">{{ expedition.clients.lastname }} {{ expedition.clients.firstname }}</td>
+            <td>{{ expedition.numVol }}</td>
+            <td>{{ expedition.depDateStart | date : 'dd/MM/YYYY'}}</td>
+            <td>{{ expedition.receiptDate | date : 'dd/MM/YYYY'}}</td>
+            <td>
+                {{ expedition.deliveryDate  | date : 'dd/MM/YYYY' }}
+            </td>
+            <td>
+                <p-button label="Valider" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.VALIDATED)" />
+                <p-button label="Rejeter" icon="pi pi-trash" severity="warn" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.REJECTED)" />
+                <p-button label="Terminer" icon="pi pi-check" severity="secondary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.COMPLETED)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
