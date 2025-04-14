@@ -20,6 +20,7 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
+import { ProgressBar } from 'primeng/progressbar';
 
 @Component({
   selector: 'app-expeditions',
@@ -41,12 +42,14 @@ import { ToolbarModule } from 'primeng/toolbar';
         TagModule,
         InputIconModule,
         IconFieldModule,
-        ConfirmDialogModule
+        ConfirmDialogModule,
+        ProgressBar
   ],
   templateUrl: './expeditions.component.html',
   styleUrl: './expeditions.component.scss'
 })
 export class ExpeditionsComponent {
+  loading = false;
   expeditions: ExpeditionLists[] = [];
   expedtionStatus = ExpeditionStatus;
   selectedExpedition!: ExpeditionLists;
@@ -57,10 +60,14 @@ export class ExpeditionsComponent {
     this.getAllExpeditions();
   }
   getAllExpeditions() {
+    this.loading = true;
     this.expeditionService.getExpeditons().subscribe({
       next: (data) => {
         this.expeditions = data.reverse();
-        console.log(data)
+        this.loading = false;
+      },
+      error:()=>{
+        this.loading = false;
       }
     });
   }

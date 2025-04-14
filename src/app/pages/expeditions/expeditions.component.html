@@ -1,7 +1,7 @@
 <p-toolbar styleClass="mb-6">
     <ng-template #start>
         <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2"  />
-        <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined  />
+        <p-button severity="secondary" label="Rafraichir" icon="pi pi-refresh" outlined (onClick)="getAllExpeditions()" />
     </ng-template>
 
     <ng-template #end>
@@ -14,7 +14,7 @@
     [value]="expeditions"
     [rows]="10"
     [paginator]="true"
-    [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
+    [globalFilterFields]="['name', 'country.name', 'country.name', 'status']"
     [tableStyle]="{ 'min-width': '75rem' }"
     [rowHover]="true"
     dataKey="id"
@@ -23,6 +23,9 @@
     [rowsPerPageOptions]="[10, 20, 30]"
 >
     <ng-template #caption>
+        @if (loading) {
+            <p-progressbar mode="indeterminate" [style]="{ height: '6px' }"></p-progressbar>
+        }
         <div class="flex items-center justify-between">
             <h5 class="m-0">Liste des expéditions</h5>
             <p-iconfield>
@@ -37,12 +40,12 @@
                 <p-tableHeaderCheckbox />
             </th>
             <th pSortableColumn="createdAt" style="min-width:16rem">Date de création</th>
-            <th pSortableColumn="name" style="min-width:16rem">
+            <th pSortableColumn="countryDep" style="min-width:16rem">
               Pays départ
                 <p-sortIcon field="name" />
             </th>
             <th>Pays arrivé</th>
-            <th pSortableColumn="price" style="min-width: 8rem">
+            <th pSortableColumn="countryArr" style="min-width: 8rem">
               Client
                 <p-sortIcon field="price" />
             </th>
@@ -71,9 +74,9 @@
             <td style="width: 3rem">
                 <p-tableCheckbox [value]="expedition" />
             </td>
-            <td style="min-width: 12rem">{{ expedition.createdAt | date: 'dd/MM/YYYY HH:mm:ss' }}</td>
-            <td style="min-width: 12rem">{{ expedition.countryDep }}</td>
-            <td style="min-width: 16rem">{{ expedition.countryArr }}</td>
+            <td>{{ expedition.createdAt | date: 'dd/MM/YYYY HH:mm:ss' }}</td>
+            <td>{{ expedition.countryDep }}</td>
+            <td>{{ expedition.countryArr }}</td>
             <td style="min-width: 12rem">{{ expedition.clients.lastname }} {{ expedition.clients.firstname }}</td>
             <td>{{ expedition.numVol }}</td>
             <td>{{ expedition.depDateStart | date : 'dd/MM/YYYY'}}</td>
@@ -81,9 +84,9 @@
             <td>
                 {{ expedition.deliveryDate  | date : 'dd/MM/YYYY' }}
             </td>
-            <td>
+            <td style="min-width: 30rem">
                 <p-button label="Valider" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.VALIDATED)" />
-                <p-button label="Rejeter" icon="pi pi-trash" severity="warn" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.REJECTED)" />
+                <p-button label="Rejeter" icon="pi pi-times" severity="warn" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.REJECTED)" />
                 <p-button label="Terminer" icon="pi pi-check" severity="secondary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.COMPLETED)" />
             </td>
         </tr>

@@ -1,7 +1,7 @@
 <p-toolbar styleClass="mb-6">
     <ng-template #start>
-        <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2"  />
-        <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined  />
+        <!-- <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2"  /> -->
+        <p-button severity="secondary" label="Rafraichir" icon="pi pi-refresh" outlined (onClick)="getAllClients();" />
     </ng-template>
 
     <ng-template #end>
@@ -23,6 +23,9 @@
     [rowsPerPageOptions]="[10, 20, 30]"
 >
     <ng-template #caption>
+        @if (loading) {
+            <p-progressbar mode="indeterminate" [style]="{ height: '6px' }" ></p-progressbar>
+        }
         <div class="flex items-center justify-between">
             <h5 class="m-0">Liste des clients</h5>
             <p-iconfield>
@@ -34,7 +37,8 @@
     <ng-template #header>
         <tr>
             <th style="width: 3rem">
-                <p-tableHeaderCheckbox />
+                <!-- <p-tableHeaderCheckbox /> -->
+                 Date
             </th>
             <!-- <th style="min-width: 16rem">Code</th> -->
             <th pSortableColumn="name" style="min-width:16rem">
@@ -64,7 +68,8 @@
     <ng-template #body let-client>
         <tr>
             <td style="width: 3rem">
-                <p-tableCheckbox [value]="client" />
+                <!-- <p-tableCheckbox [value]="client" /> -->
+                 {{client.createdAt | date: 'dd/MM/YYYY HH:mm:ss'}}
             </td>
             <td style="min-width: 12rem">{{ client.lastname }} {{ client.firstname }}</td>
             <td style="min-width: 16rem">{{ client.country }}</td>
@@ -77,8 +82,16 @@
                 {{ client.verificationStatus }}
             </td>
             <td>
-                <p-button label="Valider" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;validateAccount()" />
-                <p-button label="Activer" icon="pi pi-trash" severity="warn" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;activateAccount()"/>
+                @if (client.verificationStatus == "ACCEPTED") {
+                    <p-badge value="KYC validé" badgeSize="xlarge" severity="success" />
+                }@else {
+                    <p-button label="Valider" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;validateAccount()" />
+                }
+                @if (client.status == 'ACTIVATED') {
+                   &nbsp; <p-badge value="Profil activé" badgeSize="xlarge" severity="success" />
+                }@else {
+                  &nbsp;  <p-button label="Activer" icon="pi pi-check" severity="primary" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;activateAccount()"/>
+                }
             </td>
         </tr>
     </ng-template>

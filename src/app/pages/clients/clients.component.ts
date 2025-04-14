@@ -20,6 +20,8 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { ClientService } from './client.service';
 import { Profil } from '../../models/profil.model';
 import { AccountStatus, VerificationStatus } from './accountstatus.enum';
+import { Badge } from 'primeng/badge';
+import { ProgressBar } from 'primeng/progressbar';
 
 @Component({
   selector: 'app-clients',
@@ -40,13 +42,16 @@ import { AccountStatus, VerificationStatus } from './accountstatus.enum';
     TagModule,
     InputIconModule,
     IconFieldModule,
-    ConfirmDialogModule],
+    ConfirmDialogModule,
+    Badge,
+  ProgressBar],
   templateUrl: './clients.component.html',
   styleUrl: './clients.component.scss'
 })
 export class ClientsComponent implements OnInit {
   clients: Profil[] = [];
-  selectedClient!: Profil;
+  selectedClient!: Profil
+  loading = false;
   constructor(private clientService: ClientService) { }
 
 
@@ -54,9 +59,14 @@ export class ClientsComponent implements OnInit {
     this.getAllClients();
   }
   getAllClients() {
+    this.loading = true;
     this.clientService.getClients().subscribe({
       next: (data) => {
         this.clients = data;
+        this.loading = false;
+      },
+      error:()=>{
+        this.loading = false;
       }
     });
   }
