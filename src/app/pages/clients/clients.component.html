@@ -17,6 +17,8 @@
     [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
     [tableStyle]="{ 'min-width': '75rem' }"
     [rowHover]="true"
+    selectionMode="single" [(selection)]="selectedClient"
+    (onRowSelect)="onRowSelect($event)"
     dataKey="id"
     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
     [showCurrentPageReport]="true"
@@ -66,7 +68,7 @@
         </tr>
     </ng-template>
     <ng-template #body let-client>
-        <tr>
+        <tr [pSelectableRow]="client">
             <td style="width: 3rem">
                 <!-- <p-tableCheckbox [value]="client" /> -->
                  {{client.createdAt | date: 'dd/MM/YYYY HH:mm:ss'}}

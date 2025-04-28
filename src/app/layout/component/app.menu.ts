@@ -86,11 +86,12 @@ export class AppMenu {
                         icon: 'pi pi-fw pi-exclamation-circle',
                         routerLink: ['/dashboard/pages/expeditions']
                     },
-                    // {
-                    //     label: 'Empty',
-                    //     icon: 'pi pi-fw pi-circle-off',
-                    //     routerLink: ['/pages/empty']
-                    // }
+                    {
+                        label: 'Liste des réservations',
+                        icon: 'pi pi-fw pi-calendar',
+                        routerLink: ['/dashboard/pages/reservations']
+                        
+                    }
                 ]
             },
             // {

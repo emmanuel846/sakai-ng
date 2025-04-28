@@ -4,6 +4,7 @@ import { Crud } from './crud/crud';
 import { Empty } from './empty/empty';
 import { ClientsComponent } from './clients/clients.component';
 import { ExpeditionsComponent } from './expeditions/expeditions.component';
+import { ReservationsComponent } from './reservations/reservations.component';
 
 export default [
     { path: 'documentation', component: Documentation },
@@ -11,5 +12,6 @@ export default [
     { path: 'empty', component: Empty },
     { path: 'clients', component: ClientsComponent },
     { path: 'expeditions', component: ExpeditionsComponent },
+    { path: 'reservations', component: ReservationsComponent },
     { path: '**', redirectTo: '/notfound' }
 ] as Routes;

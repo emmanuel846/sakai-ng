@@ -50,7 +50,8 @@ import { ProgressBar } from 'primeng/progressbar';
 })
 export class ClientsComponent implements OnInit {
   clients: Profil[] = [];
-  selectedClient!: Profil
+  selectedClient!: Profil;
+  metaKey: boolean = true;
   loading = false;
   constructor(private clientService: ClientService) { }
 
@@ -86,5 +87,8 @@ export class ClientsComponent implements OnInit {
         this.getAllClients();
       }
     });
+  }
+  onRowSelect(event: any) {
+    this.selectedClient = event.data;
   }
 }

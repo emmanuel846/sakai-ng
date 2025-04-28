@@ -1,0 +1,29 @@
+<div class="card">
+    <p-table [columns]="cols" [value]="reservations()"  [tableStyle]="{ 'min-width': '75rem' }" paginator="true"
+        [rowsPerPageOptions]="[5, 10, 20]" [rows]="10"
+        [globalFilterFields]="['name', 'country.name', 'country.name', 'status']" [rowHover]="true" dataKey="id"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" [showCurrentPageReport]="true">
+        <ng-template #header let-columns>
+            <tr>
+                <th *ngFor="let col of columns"  [pSortableColumn]="col.field">
+                    {{ col.header }}
+                </th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowData let-columns="columns">
+            <tr>
+                <td *ngFor="let col of columns">
+                    @if (col.type == 'date') {
+                        <ng-container>
+                            {{ resolveFieldData(rowData, col.field) | date: 'dd/MM/YYYY' }}
+                        </ng-container>
+                    }@else {
+                        {{ resolveFieldData(rowData, col.field) }}
+                    }
+                   
+                   
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
