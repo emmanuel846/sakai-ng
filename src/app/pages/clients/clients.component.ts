@@ -52,6 +52,7 @@ export class ClientsComponent implements OnInit {
   clients: Profil[] = [];
   selectedClient!: Profil;
   metaKey: boolean = true;
+  verifcationStatus = VerificationStatus;
   loading = false;
   constructor(private clientService: ClientService) { }
 
@@ -74,8 +75,8 @@ export class ClientsComponent implements OnInit {
   onGlobalFilter(table: Table, event: Event) {
     table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
   }
-  validateAccount() {
-    this.clientService.validate(this.selectedClient.id, VerificationStatus.ACCEPTED).subscribe({
+  validateAccount(verificationstatus: VerificationStatus) {
+    this.clientService.validate(this.selectedClient.id, verificationstatus).subscribe({
       next: (data) => {
         this.getAllClients();
       }

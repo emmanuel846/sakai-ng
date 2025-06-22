@@ -83,17 +83,18 @@
             <td>
                 {{ client.verificationStatus }}
             </td>
-            <td>
+            <td class="w-full flex ">
                 @if (client.verificationStatus == "ACCEPTED") {
                     <p-badge value="KYC validé" badgeSize="xlarge" severity="success" />
                 }@else {
-                    <p-button label="Valider" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;validateAccount()" />
+                    <p-button label="Valider" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;validateAccount(verifcationStatus.ACCEPTED)" />
                 }
                 @if (client.status == 'ACTIVATED') {
                    &nbsp; <p-badge value="Profil activé" badgeSize="xlarge" severity="success" />
                 }@else {
                   &nbsp;  <p-button label="Activer" icon="pi pi-check" severity="primary" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;activateAccount()"/>
                 }
+                <p-button [severity]="'warn'" label="Invalider" icon="pi pi-pencil" class="mr-2 ml-2" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;validateAccount(verifcationStatus.REJECTED)" />
             </td>
         </tr>
     </ng-template>
