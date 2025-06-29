@@ -47,23 +47,15 @@
                 Nom et prénoms
                 <p-sortIcon field="name" />
             </th>
-            <th>Pays</th>
             <th pSortableColumn="price" style="min-width: 8rem">
                 Date de naissance
                 <p-sortIcon field="price" />
-            </th>
-            <th pSortableColumn="category" style="min-width:10rem">
-                Téléphone
-                <p-sortIcon field="category" />
             </th>
             <th pSortableColumn="rating" style="min-width: 12rem">
                 Status
                 <p-sortIcon field="rating" />
             </th>
-            <th pSortableColumn="inventoryStatus" style="min-width: 12rem">
-                Pièces d'identité
-                <p-sortIcon field="inventoryStatus" />
-            </th>
+          
             <th style="min-width: 12rem"></th>
         </tr>
     </ng-template>
@@ -74,15 +66,11 @@
                  {{client.createdAt | date: 'dd/MM/YYYY HH:mm:ss'}}
             </td>
             <td style="min-width: 12rem">{{ client.lastname }} {{ client.firstname }}</td>
-            <td style="min-width: 16rem">{{ client.country }}</td>
             <td>
                 {{ client.birthdate | date : 'dd/MM/yyyy' }}
             </td>
-            <td>{{ client.phoneNumber }}</td>
             <td>{{ client.status }}</td>
-            <td>
-                {{ client.verificationStatus }}
-            </td>
+           
             <td class="w-full flex ">
                 @if (client.verificationStatus == "ACCEPTED") {
                     <p-badge value="KYC validé" badgeSize="xlarge" severity="success" />

@@ -21,6 +21,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
 import { ProgressBar } from 'primeng/progressbar';
+import { SidebarModule } from 'primeng/sidebar';
 
 @Component({
   selector: 'app-expeditions',
@@ -43,7 +44,8 @@ import { ProgressBar } from 'primeng/progressbar';
         InputIconModule,
         IconFieldModule,
         ConfirmDialogModule,
-        ProgressBar
+        ProgressBar,
+        SidebarModule
   ],
   templateUrl: './expeditions.component.html',
   styleUrl: './expeditions.component.scss'
@@ -53,8 +55,9 @@ export class ExpeditionsComponent {
   expeditions: ExpeditionLists[] = [];
   expedtionStatus = ExpeditionStatus;
   selectedExpedition!: ExpeditionLists;
-  constructor(private expeditionService: ExpeditionService) { }
+  drawerVisible = false;
 
+  constructor(private expeditionService: ExpeditionService) { }
 
   ngOnInit() {
     this.getAllExpeditions();
@@ -81,5 +84,8 @@ export class ExpeditionsComponent {
       }
     });
   }
- 
+  openDetails(expedition: ExpeditionLists) {
+    this.selectedExpedition = expedition;
+    this.drawerVisible = true;
+  }
 }

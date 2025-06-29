@@ -40,7 +40,7 @@
                 <p-tableHeaderCheckbox />
             </th>
             <th pSortableColumn="createdAt" style="min-width:16rem">Date de création</th>
-            <th pSortableColumn="countryDep" style="min-width:16rem">
+            <th pSortableColumn="countryDep" style="width:6rem">
               Pays départ
                 <p-sortIcon field="name" />
             </th>
@@ -70,7 +70,7 @@
         </tr>
     </ng-template>
     <ng-template #body let-expedition>
-        <tr>
+        <tr (click)="openDetails(expedition)" style="cursor:pointer;">
             <td style="width: 3rem">
                 <p-tableCheckbox [value]="expedition" />
             </td>
@@ -92,3 +92,96 @@
         </tr>
     </ng-template>
 </p-table>
+
+<p-sidebar [(visible)]="drawerVisible" position="right" [baseZIndex]="10000" [modal]="true" styleClass="expedition-drawer">
+    <ng-container *ngIf="selectedExpedition">
+        <div class="expedition-details-header flex align-items-center justify-content-between mb-3">
+            <div>
+                <h2 class="m-0"><i class="pi pi-send mr-2"></i>Détails de l'expédition</h2>
+                <span class="text-secondary">N° Vol : <b>{{ selectedExpedition.numVol }}</b></span>
+            </div>
+            <p-button icon="pi pi-times" class="p-button-rounded p-button-text" (onClick)="drawerVisible=false"></p-button>
+        </div>
+        <hr>
+        <div class="expedition-details-grid">
+            <div>
+                <i class="pi pi-flag mr-2 text-primary"></i>
+                <b>Pays départ :</b> {{ selectedExpedition.countryDep }}
+            </div>
+            <div>
+                <i class="pi pi-flag-fill mr-2 text-success"></i>
+                <b>Pays arrivé :</b> {{ selectedExpedition.countryArr }}
+            </div>
+            <div>
+                <i class="pi pi-map-marker mr-2 text-primary"></i>
+                <b>Ville départ :</b> {{ selectedExpedition.villeDep }}
+            </div>
+            <div>
+                <i class="pi pi-map-marker-fill mr-2 text-success"></i>
+                <b>Ville arrivée :</b> {{ selectedExpedition.villeArr }}
+            </div>
+            <div>
+                <i class="pi pi-calendar mr-2"></i>
+                <b>Date départ :</b> {{ selectedExpedition.depDateStart | date:'dd/MM/yyyy' }}
+            </div>
+            <div>
+                <i class="pi pi-calendar-plus mr-2"></i>
+                <b>Date arrivée :</b> {{ selectedExpedition.arrivalStartDate | date:'dd/MM/yyyy' }}
+            </div>
+            <div>
+                <i class="pi pi-clock mr-2"></i>
+                <b>Date de dépôt :</b> {{ selectedExpedition.receiptDate | date:'dd/MM/yyyy' }}
+            </div>
+            <div>
+                <i class="pi pi-calendar-minus mr-2"></i>
+                <b>Date de livraison :</b> {{ selectedExpedition.deliveryDate | date:'dd/MM/yyyy' }}
+            </div>
+            <div>
+                <i class="pi pi-weight mr-2"></i>
+                <b>Poids à charger :</b> {{ selectedExpedition.weightToLoad }} kg
+            </div>
+            <div>
+                <i class="pi pi-inbox mr-2"></i>
+                <b>Poids réservé :</b> {{ selectedExpedition.weightReserved }} kg
+            </div>
+            <div>
+                <i class="pi pi-info-circle mr-2"></i>
+                <b>Statut :</b> <span [ngClass]="{
+                    'text-success': selectedExpedition.expeditionStatus === 'DELIVERED' || selectedExpedition.expeditionStatus === 'COMPLETED',
+                    'text-warning': selectedExpedition.expeditionStatus === 'RESERVED' || selectedExpedition.expeditionStatus === 'ONGOING',
+                    'text-danger': selectedExpedition.expeditionStatus === 'DELETED'
+                }">{{ selectedExpedition.expeditionStatus }}</span>
+            </div>
+            <div>
+                <i class="pi pi-user mr-2"></i>
+                <b>Client :</b> {{ selectedExpedition.clients.lastname }} {{ selectedExpedition.clients.firstname }}
+            </div>
+            <div>
+                <i class="pi pi-star mr-2"></i>
+                <b>Préférences :</b> {{ selectedExpedition.preferences || 'Aucune' }}
+            </div>
+        </div>
+        <hr>
+        <div class="mt-4 flex justify-content-end">
+            <p-button label="Fermer" icon="pi pi-times" (onClick)="drawerVisible=false" severity="secondary"></p-button>
+        </div>
+    </ng-container>
+</p-sidebar>
+
+<style>
+/* Ajoute ce style dans le même fichier ou dans le style global/component */
+.expedition-details-header {
+    padding-bottom: 0.5rem;
+}
+.expedition-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
+    margin-bottom: 1.5rem;
+}
+@media (max-width: 600px) {
+    .expedition-details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>

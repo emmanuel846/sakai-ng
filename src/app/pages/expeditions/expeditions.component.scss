@@ -1,0 +1,14 @@
+.expedition-details-header {
+    padding-bottom: 0.5rem;
+}
+.expedition-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
+    margin-bottom: 1.5rem;
+}
+@media (max-width: 600px) {
+    .expedition-details-grid {
+        grid-template-columns: 1fr;
+    }
+}
