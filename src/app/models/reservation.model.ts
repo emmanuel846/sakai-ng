@@ -12,7 +12,7 @@ export interface Receiver {
   phoneNumber: string;
   email: string;
   address: string;
-  id?:string;
+  id?: string;
 }
 
 export enum ReservationStatus {
@@ -34,7 +34,10 @@ export enum ExpeditionStatus {
   STARTED = 'STARTED',
   ONGOING = 'ONGOING',
   DELIVERED = 'DELIVERED',
-  COMPLETED = 'COMPLETED'
+  COMPLETED = 'COMPLETED',
+  VALIDATED = 'VALIDATED',
+  CANCELLED = 'CANCELLED',
+  REJECTED = 'REJECTED',
 }
 
 export enum ColiStatus {
@@ -176,7 +179,7 @@ export interface SearchParamsByCountry {
   countryArr: string;
   depDateStart: string;
 }
-export interface SearchParmsByCountryOnly{
+export interface SearchParmsByCountryOnly {
   countryDep: string;
   countryArr: string;
 }
@@ -197,19 +200,19 @@ export interface ExpeditionLists {
   villeDep: string;
   villeArr: string;
   weightToLoad: number;
-  weightReserved:number;
+  weightReserved: number;
   depDateStart: string;
   depDateEnd: string;
   arrivalStartDate: string;
   arrivalEndDate: string;
-  expeditionStatus: string;
+  expeditionStatus: ExpeditionStatus;
   clients: Clients;
   collectionPoints: CollectionPoints;
   preferences?: string;
 }
-export interface ExpeditionListsByMonth{
-  month:number
-  expeditions:ExpeditionLists[]
+export interface ExpeditionListsByMonth {
+  month: number
+  expeditions: ExpeditionLists[]
 }
 export interface ListReservations {
   id: string;

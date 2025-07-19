@@ -3,8 +3,7 @@ import { Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { Profil } from "../../models/profil.model";
-import { Expedition, ExpeditionLists } from "../../models/reservation.model";
-import { ExpeditionStatus } from "./expedition.enum";
+import { Expedition, ExpeditionLists, ExpeditionStatus } from "../../models/reservation.model";
 @Injectable({
     providedIn: 'root'
 })

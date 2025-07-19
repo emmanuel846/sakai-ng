@@ -1,0 +1,18 @@
+<p-tabs value="0">
+    <p-tablist>
+        <p-tab value="0">En attente de validation</p-tab>
+        <p-tab value="1">En cours de traitement</p-tab>
+        <p-tab value="2">Terminé</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+        <p-tabpanel value="0">
+            <app-expeditions [filterBy]="expeditionStatus.CREATED"></app-expeditions>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+           <app-expeditions [filterBy]="expeditionStatus.VALIDATED"></app-expeditions>
+        </p-tabpanel>
+        <p-tabpanel value="2">
+           <app-expeditions [filterBy]="expeditionStatus.COMPLETED"></app-expeditions>
+        </p-tabpanel>
+    </p-tabpanels>
+</p-tabs>

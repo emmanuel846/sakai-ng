@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
-import { Expedition, ExpeditionLists } from '../../models/reservation.model';
+import { AfterContentInit, Component, input, OnInit } from '@angular/core';
+import { Expedition, ExpeditionLists, ExpeditionStatus } from '../../models/reservation.model';
 import { ExpeditionService } from './expedition.service';
 import { Table, TableModule } from 'primeng/table';
-import { ExpeditionStatus } from './expedition.enum';
+// import { ExpeditionStatus } from './expedition.enum'; // Remove this line
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -50,24 +50,28 @@ import { SidebarModule } from 'primeng/sidebar';
   templateUrl: './expeditions.component.html',
   styleUrl: './expeditions.component.scss'
 })
-export class ExpeditionsComponent {
+export class ExpeditionsComponent implements OnInit, AfterContentInit {
   loading = false;
   expeditions: ExpeditionLists[] = [];
   expedtionStatus = ExpeditionStatus;
   selectedExpedition!: ExpeditionLists;
   drawerVisible = false;
-
+  filterBy = input.required<ExpeditionStatus>();
   constructor(private expeditionService: ExpeditionService) { }
 
   ngOnInit() {
     this.getAllExpeditions();
   }
+  ngAfterContentInit() {
+    // Any additional initialization after content is loaded can go here
+  }
   getAllExpeditions() {
     this.loading = true;
     this.expeditionService.getExpeditons().subscribe({
       next: (data) => {
-        this.expeditions = data.reverse();
+        this.expeditions = data.reverse().filter(exp => exp.expeditionStatus === this.filterBy());
         this.loading = false;
+        console.log(this.expeditions);
       },
       error:()=>{
         this.loading = false;
