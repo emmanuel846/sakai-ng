@@ -1,0 +1,121 @@
+.badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+    color: white;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #28a745;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.p-toolbar-group-start {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field {
+    margin-bottom: 1rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.p-invalid {
+    color: #e74c3c !important;
+    font-size: 0.875rem;
+}
+
+.p-text-secondary {
+    color: #6c757d !important;
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .p-toolbar-group-start {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .p-toolbar-group-start .p-button {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Table enhancements */
+::ng-deep .p-datatable .p-datatable-thead > tr > th {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    font-weight: 600;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Dialog improvements */
+::ng-deep .p-dialog {
+    max-width: 90vw;
+}
+
+::ng-deep .p-dialog .p-dialog-content {
+    padding: 1.5rem;
+}
+
+/* Button improvements */
+.p-button-rounded {
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+/* Form styling */
+::ng-deep .p-inputtext:enabled:focus {
+    outline: 0 none;
+    outline-offset: 0;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+}
+
+::ng-deep .p-dropdown:not(.p-disabled).p-focus {
+    outline: 0 none;
+    outline-offset: 0;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+}
+
+::ng-deep .p-inputtextarea:enabled:focus {
+    outline: 0 none;
+    outline-offset: 0;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+}
+
+/* Table responsive enhancements */
+@media screen and (max-width: 768px) {
+    ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(3),
+    ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(3) {
+        display: none;
+    }
+    
+    ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(4),
+    ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(4) {
+        display: none;
+    }
+}

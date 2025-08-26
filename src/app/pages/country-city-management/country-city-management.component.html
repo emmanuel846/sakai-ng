@@ -1,0 +1,369 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <h3>Gestion des Pays et Villes</h3>
+            
+            <p-toast></p-toast>
+            <p-confirmDialog></p-confirmDialog>
+            
+            <p-tabView>
+                <!-- ONGLET PAYS -->
+                <p-tabPanel header="Pays">
+                    <div class="p-toolbar-group-start mb-3">
+                        <p-button 
+                            label="Nouveau Pays" 
+                            icon="pi pi-plus" 
+                            class="p-button-success mr-2"
+                            (click)="openNewCountry()">
+                        </p-button>
+                        <p-button 
+                            label="Import JSON" 
+                            icon="pi pi-upload" 
+                            class="p-button-info"
+                            (click)="openBulkCountryCreate()">
+                        </p-button>
+                    </div>
+
+                    <p-table 
+                        [value]="countries" 
+                        [loading]="loading"
+                        [paginator]="true" 
+                        [rows]="10"
+                        [globalFilterFields]="['name', 'iso2', 'iso3']"
+                        responsiveLayout="scroll"
+                        #dt>
+                        
+                        <ng-template pTemplate="caption">
+                            <div class="flex justify-content-between align-items-center">
+                                <h5 class="m-0">Liste des Pays</h5>
+                                <span class="p-input-icon-left">
+                                    <i class="pi pi-search"></i>
+                                    <input 
+                                        pInputText 
+                                        type="text" 
+                                        (input)="dt.filterGlobal($any($event.target).value, 'contains')" 
+                                        placeholder="Rechercher..." />
+                                </span>
+                            </div>
+                        </ng-template>
+
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th pSortableColumn="name">
+                                    Nom <p-sortIcon field="name"></p-sortIcon>
+                                </th>
+                                <th pSortableColumn="iso2">
+                                    ISO2 <p-sortIcon field="iso2"></p-sortIcon>
+                                </th>
+                                <th pSortableColumn="iso3">
+                                    ISO3 <p-sortIcon field="iso3"></p-sortIcon>
+                                </th>
+                                <th pSortableColumn="status">
+                                    Statut <p-sortIcon field="status"></p-sortIcon>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template pTemplate="body" let-country>
+                            <tr>
+                                <td>{{ country.name }}</td>
+                                <td>{{ country.iso2 }}</td>
+                                <td>{{ country.iso3 }}</td>
+                                <td>
+                                    <span [class]="'badge ' + (country.status === 'ACTIVATED' ? 'badge-success' : 'badge-warning')">
+                                        {{ country.status || 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <p-button 
+                                        icon="pi pi-pencil" 
+                                        class="p-button-rounded p-button-success mr-2"
+                                        (click)="editCountry(country)"
+                                        pTooltip="Modifier"
+                                        tooltipPosition="top">
+                                    </p-button>
+                                    <p-button 
+                                        icon="pi pi-trash" 
+                                        class="p-button-rounded p-button-warning"
+                                        (click)="deleteCountry(country)"
+                                        pTooltip="Supprimer"
+                                        tooltipPosition="top">
+                                    </p-button>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </p-tabPanel>
+
+                <!-- ONGLET VILLES -->
+                <p-tabPanel header="Villes">
+                    <div class="p-toolbar-group-start mb-3">
+                        <p-button 
+                            label="Nouvelle Ville" 
+                            icon="pi pi-plus" 
+                            class="p-button-success mr-2"
+                            (click)="openNewCity()">
+                        </p-button>
+                        <p-dropdown 
+                            [options]="countryOptions" 
+                            placeholder="Filtrer par pays"
+                            optionLabel="label"
+                            optionValue="value"
+                            [showClear]="true"
+                            (onChange)="onCountryFilterChange($event)"
+                            class="ml-2">
+                        </p-dropdown>
+                    </div>
+
+                    <p-table 
+                        [value]="filteredCities" 
+                        [loading]="loading"
+                        [paginator]="true" 
+                        [rows]="10"
+                        [globalFilterFields]="['name', 'country']"
+                        responsiveLayout="scroll"
+                        #dt2>
+                        
+                        <ng-template pTemplate="caption">
+                            <div class="flex justify-content-between align-items-center">
+                                <h5 class="m-0">
+                                    Liste des Villes 
+                                    <span *ngIf="selectedCountryForCities"> - {{ selectedCountryForCities.name }}</span>
+                                </h5>
+                                <span class="p-input-icon-left">
+                                    <i class="pi pi-search"></i>
+                                    <input 
+                                        pInputText 
+                                        type="text" 
+                                        (input)="dt2.filterGlobal($any($event.target).value, 'contains')" 
+                                        placeholder="Rechercher..." />
+                                </span>
+                            </div>
+                        </ng-template>
+
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th pSortableColumn="name">
+                                    Nom <p-sortIcon field="name"></p-sortIcon>
+                                </th>
+                                <th pSortableColumn="country">
+                                    Pays <p-sortIcon field="country"></p-sortIcon>
+                                </th>
+                                <th pSortableColumn="createdAt">
+                                    Date création <p-sortIcon field="createdAt"></p-sortIcon>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template pTemplate="body" let-city>
+                            <tr>
+                                <td>{{ city.name }}</td>
+                                <td>{{ getCityCountryName(city) }}</td>
+                                <td>{{ city.createdAt | date: 'dd/MM/yyyy' }}</td>
+                                <td>
+                                    <p-button 
+                                        icon="pi pi-pencil" 
+                                        class="p-button-rounded p-button-success mr-2"
+                                        (click)="editCity(city)"
+                                        pTooltip="Modifier"
+                                        tooltipPosition="top">
+                                    </p-button>
+                                    <p-button 
+                                        icon="pi pi-trash" 
+                                        class="p-button-rounded p-button-warning"
+                                        (click)="deleteCity(city)"
+                                        pTooltip="Supprimer"
+                                        tooltipPosition="top">
+                                    </p-button>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </p-tabPanel>
+            </p-tabView>
+        </div>
+    </div>
+</div>
+
+<!-- DIALOG PAYS -->
+<p-dialog 
+    [(visible)]="countryDialog" 
+    [modal]="true" 
+    [header]="(editingCountry ? 'Modifier' : 'Nouveau') + ' Pays'" 
+    [closable]="false"
+    class="p-fluid">
+    
+    <ng-template pTemplate="content">
+        <form [formGroup]="countryForm">
+            <div class="field">
+                <label for="name">Nom du Pays *</label>
+                <input 
+                    type="text" 
+                    pInputText 
+                    id="name" 
+                    formControlName="name"
+                    [class.ng-invalid]="countryForm.get('name')?.invalid && countryForm.get('name')?.touched" />
+                <small class="p-invalid" *ngIf="countryForm.get('name')?.invalid && countryForm.get('name')?.touched">
+                    Le nom est requis.
+                </small>
+            </div>
+
+            <div class="field">
+                <label for="iso2">Code ISO2 *</label>
+                <input 
+                    type="text" 
+                    pInputText 
+                    id="iso2" 
+                    formControlName="iso2"
+                    maxlength="2"
+                    placeholder="Ex: FR"
+                    [class.ng-invalid]="countryForm.get('iso2')?.invalid && countryForm.get('iso2')?.touched" />
+                <small class="p-invalid" *ngIf="countryForm.get('iso2')?.invalid && countryForm.get('iso2')?.touched">
+                    Code ISO2 requis (2 caractères).
+                </small>
+            </div>
+
+            <div class="field">
+                <label for="iso3">Code ISO3 *</label>
+                <input 
+                    type="text" 
+                    pInputText 
+                    id="iso3" 
+                    formControlName="iso3"
+                    maxlength="3"
+                    placeholder="Ex: FRA"
+                    [class.ng-invalid]="countryForm.get('iso3')?.invalid && countryForm.get('iso3')?.touched" />
+                <small class="p-invalid" *ngIf="countryForm.get('iso3')?.invalid && countryForm.get('iso3')?.touched">
+                    Code ISO3 requis (2-3 caractères).
+                </small>
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <p-button 
+            label="Annuler" 
+            icon="pi pi-times" 
+            class="p-button-text"
+            (click)="hideDialog()">
+        </p-button>
+        <p-button 
+            label="Sauvegarder" 
+            icon="pi pi-check" 
+            class="p-button-text"
+            [disabled]="countryForm.invalid"
+            (click)="saveCountry()">
+        </p-button>
+    </ng-template>
+</p-dialog>
+
+<!-- DIALOG CREATION EN MASSE PAYS -->
+<p-dialog 
+    [(visible)]="bulkCountryDialog" 
+    [modal]="true" 
+    header="Import JSON des Pays" 
+    [closable]="false"
+    class="p-fluid">
+    
+    <ng-template pTemplate="content">
+        <form [formGroup]="bulkCountryForm">
+            <div class="field">
+                <label for="countries">JSON des Pays *</label>
+                <textarea 
+                    pInputTextarea 
+                    id="countries" 
+                    formControlName="countries"
+                    rows="10"
+                    placeholder="Format: [&quot;iso2&quot;:&quot;FR&quot;,&quot;iso3&quot;:&quot;FRA&quot;,&quot;name&quot;:&quot;France&quot;]"
+                    [class.ng-invalid]="bulkCountryForm.get('countries')?.invalid && bulkCountryForm.get('countries')?.touched">
+                </textarea>
+                <small class="p-invalid" *ngIf="bulkCountryForm.get('countries')?.invalid && bulkCountryForm.get('countries')?.touched">
+                    JSON des pays requis.
+                </small>
+                <small class="p-text-secondary">
+                    Format attendu: tableau JSON avec iso2, iso3 et name
+                </small>
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <p-button 
+            label="Annuler" 
+            icon="pi pi-times" 
+            class="p-button-text"
+            (click)="hideDialog()">
+        </p-button>
+        <p-button 
+            label="Importer" 
+            icon="pi pi-upload" 
+            class="p-button-text"
+            [disabled]="bulkCountryForm.invalid"
+            (click)="saveBulkCountries()">
+        </p-button>
+    </ng-template>
+</p-dialog>
+
+<!-- DIALOG VILLES -->
+<p-dialog 
+    [(visible)]="cityDialog" 
+    [modal]="true" 
+    [header]="(editingCity ? 'Modifier' : 'Nouvelles') + ' Villes'" 
+    [closable]="false"
+    class="p-fluid">
+    
+    <ng-template pTemplate="content">
+        <form [formGroup]="cityForm">
+            <div class="field">
+                <label for="country">Pays *</label>
+                <p-dropdown 
+                    [options]="countryOptions" 
+                    formControlName="country"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Sélectionner un pays"
+                    [class.ng-invalid]="cityForm.get('country')?.invalid && cityForm.get('country')?.touched">
+                </p-dropdown>
+                <small class="p-invalid" *ngIf="cityForm.get('country')?.invalid && cityForm.get('country')?.touched">
+                    Le pays est requis.
+                </small>
+            </div>
+
+            <div class="field">
+                <label for="cities">Villes *</label>
+                <textarea 
+                    pInputTextarea 
+                    id="cities" 
+                    formControlName="cities"
+                    rows="5"
+                    placeholder="Entrez les noms des villes, une par ligne"
+                    [class.ng-invalid]="cityForm.get('cities')?.invalid && cityForm.get('cities')?.touched">
+                </textarea>
+                <small class="p-invalid" *ngIf="cityForm.get('cities')?.invalid && cityForm.get('cities')?.touched">
+                    Au moins une ville est requise.
+                </small>
+                <small class="p-text-secondary">
+                    Entrez chaque ville sur une nouvelle ligne
+                </small>
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <p-button 
+            label="Annuler" 
+            icon="pi pi-times" 
+            class="p-button-text"
+            (click)="hideDialog()">
+        </p-button>
+        <p-button 
+            label="Sauvegarder" 
+            icon="pi pi-check" 
+            class="p-button-text"
+            [disabled]="cityForm.invalid"
+            (click)="saveCity()">
+        </p-button>
+    </ng-template>
+</p-dialog>

@@ -91,6 +91,16 @@ export class AppMenu {
                         icon: 'pi pi-fw pi-calendar',
                         routerLink: ['/dashboard/pages/reservations']
                         
+                    },
+                    {
+                        label: 'Gestion des Pays et Villes',
+                        icon: 'pi pi-fw pi-globe',
+                        routerLink: ['/dashboard/pages/country-city-management']
+                    },
+                    {
+                        label: 'Gestion des Points de Collecte',
+                        icon: 'pi pi-fw pi-map-marker',
+                        routerLink: ['/dashboard/pages/collection-point-management']
                     }
                 ]
             },
