@@ -17,5 +17,8 @@ export class ExpeditionService{
     validate(clientId: string,status: ExpeditionStatus): Observable<any> {
         return this.http.put(this.url+'/validate?expId='+clientId+'&expeditionStatus='+status, {});
     }
+     updateExpedition(data: Expedition): Observable<Expedition> {
+        return this.http.put<Expedition>(this.url + '/update', data);
+    }
    
 }

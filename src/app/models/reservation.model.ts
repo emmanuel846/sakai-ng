@@ -150,12 +150,14 @@ interface ExpeditorColisPicture {
 }
 
 export interface Expedition {
+  id?: string;
   deliveryDate: string
   numVol: string
   countryDep: string
   countryArr: string
   fees: number
-  preferences?: string
+  totalFees: number
+  preferences: ArticlePreferences[];
   receiptDate: string
   villeDep: string
   villeArr: string
@@ -166,6 +168,7 @@ export interface Expedition {
   arrivalEndDate: string
   clientId: string
   collectionPointsId: string
+  packageRetrivalDate:string;
 }
 
 export interface SearchParams {
@@ -208,7 +211,11 @@ export interface ExpeditionLists {
   expeditionStatus: ExpeditionStatus;
   clients: Clients;
   collectionPoints: CollectionPoints;
-  preferences?: string;
+  preferences?: ArticlePreferences[];
+}
+export interface ArticlePreferences {
+  categoryName: string;
+  maxQuantity:number;
 }
 export interface ExpeditionListsByMonth {
   month: number

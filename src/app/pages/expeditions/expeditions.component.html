@@ -85,12 +85,14 @@
                 {{ expedition.deliveryDate  | date : 'dd/MM/YYYY' }}
             </td>
             <td style="min-width: 30rem">
+                <p-button label="Modifier" icon="pi pi-pencil" severity="info" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="openEditDialog(expedition); $event.stopPropagation()" />
                 @if (expedition.expeditionStatus === expedtionStatus.CREATED) {
-                    <p-button label="Valider" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.VALIDATED)" />
-                    <p-button label="Rejeter" icon="pi pi-times" severity="warn" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.REJECTED)" />
+                    <p-button label="Valider" icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.VALIDATED); $event.stopPropagation()" />
+                    <p-button label="Rejeter" icon="pi pi-times" severity="warn" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.REJECTED); $event.stopPropagation()" />
                 }
                 @if(expedition.expeditionStatus === expedtionStatus.VALIDATED) {
-                    <p-button label="Terminer" icon="pi pi-check" severity="secondary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.COMPLETED)" />
+                    <p-button label="Mettre en attente" icon="pi pi-check" severity="primary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.CREATED); $event.stopPropagation()" />
+                    <p-button label="Terminer" icon="pi pi-check" severity="secondary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.COMPLETED); $event.stopPropagation()" />
                 }
             </td>
         </tr>
@@ -162,7 +164,10 @@
             </div>
             <div>
                 <i class="pi pi-star mr-2"></i>
-                <b>Préférences :</b> {{ selectedExpedition.preferences || 'Aucune' }}
+                <b>Préférences :</b> 
+                <div *ngFor="let pref of selectedExpedition.preferences; let last = last">
+                    <span>{{ pref.categoryName }}: {{ pref.maxQuantity }}</span><span *ngIf="!last">, </span>
+                </div>
             </div>
         </div>
         <hr>
@@ -172,17 +177,227 @@
     </ng-container>
 </p-sidebar>
 
+<p-dialog [(visible)]="editDialogVisible" [modal]="true" [style]="{width: '75vw', maxHeight: '90vh'}" [dismissableMask]="true" [draggable]="false" [resizable]="false" styleClass="expedition-edit-dialog">
+    <ng-template #header>
+        <div class="flex align-items-center gap-2">
+            <i class="pi pi-pencil text-primary" style="font-size: 1.5rem"></i>
+            <span class="text-xl font-semibold">Modifier l'expédition</span>
+        </div>
+    </ng-template>
+    
+    <ng-container *ngIf="editForm">
+        <form [formGroup]="editForm" class="p-fluid">
+            <!-- Informations du vol -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-3 text-primary border-bottom-2 border-primary pb-2">
+                    <i class="pi pi-plane mr-2"></i>Informations du vol
+                </h3>
+                <div class="grid formgrid">
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="numVol" class="font-semibold">
+                            <i class="pi pi-ticket mr-1"></i>Numéro de vol *
+                        </label>
+                        <input pInputText id="numVol" formControlName="numVol" placeholder="Ex: AF1234" />
+                        <small class="text-muted">Le numéro de vol de l'expédition</small>
+                    </div>
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="weightToLoad" class="font-semibold">
+                            <i class="pi pi-inbox mr-1"></i>Poids à charger (kg) *
+                        </label>
+                        <p-inputnumber id="weightToLoad" formControlName="weightToLoad" [min]="0" [showButtons]="true" placeholder="0" />
+                        <small class="text-muted">Capacité maximale en kilogrammes</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Itinéraire -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-3 text-primary border-bottom-2 border-primary pb-2">
+                    <i class="pi pi-map mr-2"></i>Itinéraire
+                </h3>
+                <div class="grid formgrid">
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="countryDep" class="font-semibold">
+                            <i class="pi pi-flag mr-1"></i>Pays de départ *
+                        </label>
+                        <input pInputText id="countryDep" formControlName="countryDep" placeholder="Ex: France" />
+                    </div>
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="villeDep" class="font-semibold">
+                            <i class="pi pi-map-marker mr-1"></i>Ville de départ *
+                        </label>
+                        <input pInputText id="villeDep" formControlName="villeDep" placeholder="Ex: Paris" />
+                    </div>
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="countryArr" class="font-semibold">
+                            <i class="pi pi-flag-fill mr-1"></i>Pays d'arrivée *
+                        </label>
+                        <input pInputText id="countryArr" formControlName="countryArr" placeholder="Ex: Cameroun" />
+                    </div>
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="villeArr" class="font-semibold">
+                            <i class="pi pi-map-marker-fill mr-1"></i>Ville d'arrivée *
+                        </label>
+                        <input pInputText id="villeArr" formControlName="villeArr" placeholder="Ex: Douala" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dates -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-3 text-primary border-bottom-2 border-primary pb-2">
+                    <i class="pi pi-calendar mr-2"></i>Calendrier
+                </h3>
+                <div class="grid formgrid">
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="depDateStart" class="font-semibold">
+                            <i class="pi pi-calendar-plus mr-1"></i>Date de départ *
+                        </label>
+                        <p-datepicker id="depDateStart" formControlName="depDateStart" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="Sélectionner une date" />
+                    </div>
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="arrivalStartDate" class="font-semibold">
+                            <i class="pi pi-calendar-minus mr-1"></i>Date d'arrivée *
+                        </label>
+                        <p-datepicker id="arrivalStartDate" formControlName="arrivalStartDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="Sélectionner une date" />
+                    </div>
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="receiptDate" class="font-semibold">
+                            <i class="pi pi-clock mr-1"></i>Date de dépôt *
+                        </label>
+                        <p-datepicker id="receiptDate" formControlName="receiptDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="Sélectionner une date" />
+                        <small class="text-muted">Date limite pour déposer les colis</small>
+                    </div>
+                    <div class="col-12 md:col-6 field">
+                        <label htmlFor="deliveryDate" class="font-semibold">
+                            <i class="pi pi-send mr-1"></i>Date de livraison *
+                        </label>
+                        <p-datepicker id="deliveryDate" formControlName="deliveryDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="Sélectionner une date" />
+                        <small class="text-muted">Date prévue de livraison</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Préférences -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-3 text-primary border-bottom-2 border-primary pb-2">
+                    <i class="pi pi-star mr-2"></i>Articles acceptés et quantités maximales
+                </h3>
+                <small class="text-muted block mb-3">Sélectionnez les catégories d'articles que vous acceptez de transporter et spécifiez la quantité maximale pour chacune.</small>
+                
+                <div class="grid formgrid preferences-grid">
+                    <div *ngFor="let category of categories; let i = index" class="col-12 md:col-6 lg:col-4 field">
+                        <div class="p-3 border-round border-1 surface-border hover:surface-hover transition-duration-150" [class.bg-primary-50]="selectedPreferences[i]?.selected">
+                            <div class="flex align-items-center justify-content-between mb-2">
+                                <label [for]="'pref-'+i" class="font-medium flex align-items-center cursor-pointer flex-1">
+                                    <p-checkbox 
+                                        [inputId]="'pref-'+i" 
+                                        [binary]="true" 
+                                        [(ngModel)]="selectedPreferences[i].selected"
+                                        [ngModelOptions]="{standalone: true}"
+                                        class="mr-2"
+                                    />
+                                    <span>{{ category.name }}</span>
+                                </label>
+                            </div>
+                            <div *ngIf="selectedPreferences[i]?.selected" class="mt-2">
+                                <label [for]="'qty-'+i" class="text-sm text-muted block mb-1">Quantité max</label>
+                                <p-inputnumber 
+                                    [inputId]="'qty-'+i"
+                                    [(ngModel)]="selectedPreferences[i].maxQuantity" 
+                                    [ngModelOptions]="{standalone: true}"
+                                    [min]="1" 
+                                    [showButtons]="true"
+                                    buttonLayout="horizontal"
+                                    [step]="1"
+                                    decrementButtonClass="p-button-secondary"
+                                    incrementButtonClass="p-button-secondary"
+                                    incrementButtonIcon="pi pi-plus"
+                                    decrementButtonIcon="pi pi-minus"
+                                    placeholder="Ex: 5"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </ng-container>
+    
+    <ng-template #footer>
+        <div class="flex justify-content-end gap-2">
+            <p-button 
+                label="Annuler" 
+                icon="pi pi-times" 
+                (onClick)="editDialogVisible=false" 
+                severity="secondary" 
+                [outlined]="true"
+            />
+            <p-button 
+                label="Enregistrer" 
+                icon="pi pi-check" 
+                (onClick)="saveExpedition()" 
+                [disabled]="!editForm.valid" 
+                [loading]="saving"
+            />
+        </div>
+    </ng-template>
+</p-dialog>
+
 <style>
-/* Ajoute ce style dans le même fichier ou dans le style global/component */
+/* Styles pour l'expédition */
 .expedition-details-header {
     padding-bottom: 0.5rem;
 }
+
 .expedition-details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem 2rem;
     margin-bottom: 1.5rem;
 }
+
+.expedition-edit-dialog :deep(.p-dialog-content) {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.expedition-edit-dialog :deep(.p-dialog-header) {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+    color: white;
+}
+
+.expedition-edit-dialog :deep(.p-dialog-header .p-dialog-title) {
+    color: white;
+}
+
+.preferences-grid .p-checkbox {
+    display: inline-flex;
+}
+
+.preferences-grid .hover\:surface-hover:hover {
+    background-color: var(--surface-hover);
+}
+
+.bg-primary-50 {
+    background-color: var(--primary-50) !important;
+    border-color: var(--primary-200) !important;
+}
+
+.text-muted {
+    color: var(--text-color-secondary);
+}
+
+.border-bottom-2 {
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+}
+
+.border-primary {
+    border-color: var(--primary-color);
+}
+
 @media (max-width: 600px) {
     .expedition-details-grid {
         grid-template-columns: 1fr;
