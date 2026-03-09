@@ -173,5 +173,7 @@ export class AuthService {
     return this.http.post(this.apiUrl + `/public/passwordInitialization`, data);
   }
 
- 
+  verify2fa(data: { sessionToken: string; verificationCode: string }): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(this.apiUrl + `/auth/verify-2fa`, data);
+  }
 }

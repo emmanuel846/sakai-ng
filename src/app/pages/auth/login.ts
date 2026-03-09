@@ -9,11 +9,13 @@ import { RippleModule } from 'primeng/ripple';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '../../services/auth.service';
 import { AuthResponse } from '../../models/authRegister.model';
+import { InputOtpModule } from 'primeng/inputotp';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RouterModule, RippleModule, AppFloatingConfigurator],
+    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RouterModule, RippleModule, AppFloatingConfigurator, InputOtpModule, CommonModule],
     template: `
         <app-floating-configurator />
         <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
@@ -39,10 +41,11 @@ import { AuthResponse } from '../../models/authRegister.model';
                                 </g>
                             </svg>
                             <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">WT Backoffice</div>
-                            <span class="text-muted-color font-medium">Sign in to continue</span>
+                            <span class="text-muted-color font-medium">{{ show2FA ? 'Vérification en deux étapes' : 'Sign in to continue' }}</span>
                         </div>
 
-                        <div>
+                        <!-- Formulaire de connexion -->
+                        <div *ngIf="!show2FA">
                             <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Nom d'utilisateur</label>
                             <input pInputText id="email1" type="text" placeholder="Email address" class="w-full md:w-[30rem] mb-8" [(ngModel)]="username" />
 
@@ -56,7 +59,23 @@ import { AuthResponse } from '../../models/authRegister.model';
                                 </div>
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                             </div>
-                            <p-button label="Connexion" styleClass="w-full"(click)="onSubmit()"></p-button>
+                            <p-button label="Connexion" styleClass="w-full" [loading]="showLoading" (click)="onSubmit()"></p-button>
+                        </div>
+
+                        <!-- Écran OTP pour la 2FA -->
+                        <div *ngIf="show2FA" class="text-center">
+                            <p class="text-muted-color mb-6">Veuillez entrer le code à 6 chiffres envoyé à votre appareil d'authentification.</p>
+                            
+                            <div class="flex justify-center mb-6">
+                                <p-inputOtp [(ngModel)]="otpCode" [length]="6" [integerOnly]="true"></p-inputOtp>
+                            </div>
+
+                            <div *ngIf="otpError" class="text-red-500 mb-4">{{ otpError }}</div>
+
+                            <div class="flex flex-col gap-4">
+                                <p-button label="Vérifier" styleClass="w-full" [loading]="showLoading" [disabled]="otpCode.length !== 6" (click)="verify2FA()"></p-button>
+                                <p-button label="Retour" styleClass="w-full" [outlined]="true" (click)="backToLogin()"></p-button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -66,44 +85,90 @@ import { AuthResponse } from '../../models/authRegister.model';
 })
 export class Login {
     username: string = '';
-
     password: string = '';
-
     checked: boolean = false;
     showLoading: boolean = false;
+    
+    // Propriétés pour la 2FA
+    show2FA: boolean = false;
+    otpCode: string = '';
+    otpError: string = '';
+    sessionToken: string = '';
+
     constructor(private authService: AuthService, private router: Router) {}
+
     onSubmit() {
         this.showLoading = true;
         if (true) {
-          const username = this.username;
-          const password = this.password;
-          this.authService.login({ username, password }).subscribe({
-            next: (response: AuthResponse) => {
-              this.authService.setAuthToken(response.accessToken, response.refreshToken);
-              // this.alerts.open('', { label: 'Connexion effectuée avec succès', appearance: 'positive', autoClose: 0 }).subscribe();
-             
-    
-           
-                this.authService.getProfile().subscribe({
-                  next: (response) => {        
-                  
-                    this.authService.setUser(response);
+            const username = this.username;
+            const password = this.password;
+            this.authService.login({ username, password }).subscribe({
+                next: (response: AuthResponse) => {
+                    this.showLoading = false;
+                    
+                    // Vérifier si la 2FA est requise
+                    if (response.requires2FA) {
+                        this.sessionToken = response.sessionToken;
+                        this.show2FA = true;
+                        this.otpCode = '';
+                        this.otpError = '';
+                    } else {
+                        // Pas de 2FA, connexion directe
+                        this.completeLogin(response);
+                    }
                 },
                 error: (err) => {
-                    console.error('Error fetching profile:', err);
+                    this.showLoading = false;
+                    // this.alerts.open('', { label: err.error.message, appearance: 'negative', autoClose: 0 }).subscribe();
                 },
             });
-            this.router.navigate(['/dashboard/pages/clients']);
-                
+        } else {
+            this.showLoading = false;
+        }
+    }
+
+    verify2FA() {
+        if (this.otpCode.length !== 6) {
+            this.otpError = 'Veuillez entrer un code à 6 chiffres';
+            return;
+        }
+
+        this.showLoading = true;
+        this.otpError = '';
+
+        this.authService.verify2fa({ sessionToken: this.sessionToken, verificationCode: this.otpCode }).subscribe({
+            next: (response: AuthResponse) => {
+                this.showLoading = false;
+                this.completeLogin(response);
             },
             error: (err) => {
-              this.showLoading = false;
-              // this.alerts.open('', { label: err.error.message, appearance: 'negative', autoClose: 0 }).subscribe();
+                this.showLoading = false;
+                this.otpError = err.error?.message || 'Code OTP invalide. Veuillez réessayer.';
+                this.otpCode = '';
             },
-          });
-    
-        } else {
-          this.showLoading = false;
-        }
-      }
+        });
+    }
+
+    private completeLogin(response: AuthResponse) {
+        this.authService.setAuthToken(response.accessToken, response.refreshToken);
+        
+        this.authService.getProfile().subscribe({
+            next: (profileResponse) => {
+                this.authService.setUser(profileResponse);
+            },
+            error: (err) => {
+                console.error('Error fetching profile:', err);
+            },
+        });
+        
+        this.router.navigate(['/dashboard/pages/clients']);
+    }
+
+    backToLogin() {
+        this.show2FA = false;
+        this.otpCode = '';
+        this.otpError = '';
+        this.sessionToken = '';
+        this.password = '';
+    }
 }

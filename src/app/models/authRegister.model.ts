@@ -11,6 +11,11 @@ export interface AuthResponse {
   accessToken: string
   refreshToken: string
   userId: number
+  status:string
+  requires2FA:boolean;
+  sessionToken:string;
+  riskLevel:string;
+  message:string;
 }
 export interface ClientRegister {
   firstname: string;
