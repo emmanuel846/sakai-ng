@@ -1,6 +1,6 @@
 export const environment = {
     production: false,
-    apiUrl: 'https://whotraveling.com',
+    apiUrl: 'https://test.whotraveling.com',
     // apiUrl: 'http://localhost:9001',
     data: {
       access_token: 'accesstoken9939939',

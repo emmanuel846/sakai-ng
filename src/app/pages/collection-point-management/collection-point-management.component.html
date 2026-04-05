@@ -1,235 +1,561 @@
-<div class="grid">
-    <div class="col-12">
-        <div class="card">
-            <h3>Gestion des Points de Collecte</h3>
-            
-            <p-toast></p-toast>
-            <p-confirmDialog></p-confirmDialog>
-            
-            <div class="p-toolbar-group-start mb-3">
-                <p-button 
-                    label="Nouveau Point de Collecte" 
-                    icon="pi pi-plus" 
-                    class="p-button-success mr-2"
-                    (click)="openNewCollectionPoint()">
-                </p-button>
-                <p-dropdown 
-                    [options]="countryOptions" 
-                    placeholder="Filtrer par pays"
-                    optionLabel="label"
-                    optionValue="value"
-                    [showClear]="true"
-                    (onChange)="onCountryFilterChange($event)"
-                    class="ml-2">
-                </p-dropdown>
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- ===== KPI CARDS ===== -->
+<div class="flex flex-wrap gap-3 mb-3">
+
+    <div class="kpi-wrap-item">
+        <div class="card kpi-card kpi-total mb-0">
+            <div class="flex justify-content-between align-items-start">
+                <div>
+                    <span class="block text-500 font-medium mb-1">Total</span>
+                    <span class="text-900 font-bold text-4xl">{{ stats.total }}</span>
+                </div>
+                <div class="kpi-icon bg-blue-100">
+                    <i class="pi pi-map-marker text-blue-500 text-2xl"></i>
+                </div>
             </div>
-
-            <p-table 
-                [value]="filteredCollectionPoints" 
-                [loading]="loading"
-                [paginator]="true" 
-                [rows]="10"
-                [globalFilterFields]="['name', 'adresse', 'country', 'contacts']"
-                responsiveLayout="scroll"
-                #dt>
-                
-                <ng-template pTemplate="caption">
-                    <div class="flex justify-content-between align-items-center">
-                        <h5 class="m-0">
-                            Liste des Points de Collecte
-                            <span *ngIf="selectedCountryForFilter"> - {{ selectedCountryForFilter.name }}</span>
-                        </h5>
-                        <span class="p-input-icon-left">
-                            <i class="pi pi-search"></i>
-                            <input 
-                                pInputText 
-                                type="text" 
-                                (input)="dt.filterGlobal($any($event.target).value, 'contains')" 
-                                placeholder="Rechercher..." />
-                        </span>
-                    </div>
-                </ng-template>
-
-                <ng-template pTemplate="header">
-                    <tr>
-                        <th pSortableColumn="name">
-                            Nom <p-sortIcon field="name"></p-sortIcon>
-                        </th>
-                        <th pSortableColumn="country">
-                            Pays <p-sortIcon field="country"></p-sortIcon>
-                        </th>
-                        <th pSortableColumn="adresse">
-                            Adresse <p-sortIcon field="adresse"></p-sortIcon>
-                        </th>
-                        <th pSortableColumn="contacts">
-                            Contacts <p-sortIcon field="contacts"></p-sortIcon>
-                        </th>
-                        <th pSortableColumn="openHours">
-                            Horaires <p-sortIcon field="openHours"></p-sortIcon>
-                        </th>
-                        <th pSortableColumn="status">
-                            Statut <p-sortIcon field="status"></p-sortIcon>
-                        </th>
-                        <th>Actions</th>
-                    </tr>
-                </ng-template>
-
-                <ng-template pTemplate="body" let-collectionPoint>
-                    <tr>
-                        <td>{{ collectionPoint.name }}</td>
-                        <td>{{ collectionPoint.country }}</td>
-                        <td>{{ collectionPoint.adresse }}</td>
-                        <td>{{ collectionPoint.contacts }}</td>
-                        <td>{{ collectionPoint.openHours }}</td>
-                        <td>
-                            <span [class]="'badge ' + (collectionPoint.status === 'ACTIVATED' ? 'badge-success' : 'badge-warning')">
-                                {{ collectionPoint.status || 'N/A' }}
-                            </span>
-                        </td>
-                        <td>
-                            <p-button 
-                                *ngIf="getLocationUrl(collectionPoint)"
-                                icon="pi pi-map-marker" 
-                                class="p-button-rounded p-button-info mr-2"
-                                (click)="openLocationInNewTab(collectionPoint)"
-                                pTooltip="Voir sur la carte"
-                                tooltipPosition="top">
-                            </p-button>
-                            <p-button 
-                                icon="pi pi-pencil" 
-                                class="p-button-rounded p-button-success mr-2"
-                                (click)="editCollectionPoint(collectionPoint)"
-                                pTooltip="Modifier"
-                                tooltipPosition="top">
-                            </p-button>
-                            <p-button 
-                                icon="pi pi-trash" 
-                                class="p-button-rounded p-button-warning"
-                                (click)="deleteCollectionPoint(collectionPoint)"
-                                pTooltip="Supprimer"
-                                tooltipPosition="top">
-                            </p-button>
-                        </td>
-                    </tr>
-                </ng-template>
-            </p-table>
+            <span class="text-500 text-sm mt-2 block">Points de collecte enregistrés</span>
         </div>
     </div>
+
+    <div class="kpi-wrap-item">
+        <div class="card kpi-card kpi-active mb-0">
+            <div class="flex justify-content-between align-items-start">
+                <div>
+                    <span class="block text-500 font-medium mb-1">Actifs</span>
+                    <span class="text-900 font-bold text-4xl">{{ stats.active }}</span>
+                </div>
+                <div class="kpi-icon bg-green-100">
+                    <i class="pi pi-check-circle text-green-500 text-2xl"></i>
+                </div>
+            </div>
+            <span class="text-500 text-sm mt-2 block">Points opérationnels</span>
+        </div>
+    </div>
+
+    <div class="kpi-wrap-item">
+        <div class="card kpi-card kpi-pending mb-0">
+            <div class="flex justify-content-between align-items-start">
+                <div>
+                    <span class="block text-500 font-medium mb-1">En attente</span>
+                    <span class="text-900 font-bold text-4xl">{{ stats.pending }}</span>
+                </div>
+                <div class="kpi-icon bg-orange-100">
+                    <i class="pi pi-clock text-orange-500 text-2xl"></i>
+                </div>
+            </div>
+            <span class="text-500 text-sm mt-2 block">En attente de validation</span>
+        </div>
+    </div>
+
+    <div class="kpi-wrap-item">
+        <div class="card kpi-card kpi-individual mb-0">
+            <div class="flex justify-content-between align-items-start">
+                <div>
+                    <span class="block text-500 font-medium mb-1">Particuliers</span>
+                    <span class="text-900 font-bold text-4xl">{{ stats.individuals }}</span>
+                </div>
+                <div class="kpi-icon bg-purple-100">
+                    <i class="pi pi-user text-purple-500 text-2xl"></i>
+                </div>
+            </div>
+            <span class="text-500 text-sm mt-2 block">Points gérés par un particulier</span>
+        </div>
+    </div>
+
 </div>
 
-<!-- DIALOG POINT DE COLLECTE -->
-<p-dialog 
-    [(visible)]="collectionPointDialog" 
-    [modal]="true" 
-    [header]="(editingCollectionPoint ? 'Modifier' : 'Nouveau') + ' Point de Collecte'" 
+<!-- ===== MAIN TABLE CARD ===== -->
+<div class="card">
+
+    <!-- Toolbar -->
+    <div class="flex justify-content-between flex-wrap gap-3 align-items-center mb-4">
+
+        <div class="flex flex-wrap gap-2 align-items-center">
+            <p-button
+                label="Nouveau point"
+                icon="pi pi-plus"
+                (click)="openNew()">
+            </p-button>
+
+            <!-- Filtre type (select button) -->
+            <p-selectButton
+                [options]="typeOptions"
+                [(ngModel)]="filterType"
+                optionLabel="label"
+                optionValue="value"
+                (onChange)="applyFilters()"
+                [allowEmpty]="true">
+            </p-selectButton>
+        </div>
+
+        <div class="flex flex-wrap gap-2 align-items-center">
+            <!-- Filtre pays -->
+            <p-dropdown
+                [options]="countryFilterOptions"
+                [(ngModel)]="filterCountryName"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Pays"
+                [showClear]="true"
+                (onChange)="applyFilters()"
+                [style]="{ 'min-width': '160px' }">
+            </p-dropdown>
+
+            <!-- Filtre ville -->
+            <p-dropdown
+                [options]="cityFilterOptions"
+                [(ngModel)]="filterCityName"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Ville"
+                [showClear]="true"
+                (onChange)="applyFilters()"
+                [style]="{ 'min-width': '140px' }">
+            </p-dropdown>
+
+            <!-- Filtre statut -->
+            <p-dropdown
+                [options]="statusFilterOptions"
+                [(ngModel)]="filterStatus"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Statut"
+                [showClear]="true"
+                (onChange)="applyFilters()"
+                [style]="{ 'min-width': '150px' }">
+            </p-dropdown>
+
+            <!-- Recherche -->
+            <span class="p-input-icon-left">
+                <i class="pi pi-search"></i>
+                <input
+                    pInputText
+                    type="text"
+                    [(ngModel)]="searchTerm"
+                    (input)="applyFilters()"
+                    placeholder="Rechercher..."
+                    style="width: 200px" />
+            </span>
+
+            <!-- Réinitialiser -->
+            <p-button
+                icon="pi pi-filter-slash"
+                class="p-button-outlined p-button-secondary"
+                (click)="resetFilters()"
+                pTooltip="Réinitialiser les filtres"
+                tooltipPosition="top">
+            </p-button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <p-table
+        [value]="filteredCollectionPoints"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} à {last} sur {totalRecords} points"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-gridlines">
+
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="type" style="width: 120px">
+                    Type <p-sortIcon field="type"></p-sortIcon>
+                </th>
+                <th pSortableColumn="name">Nom / Identité <p-sortIcon field="name"></p-sortIcon></th>
+                <th>Localisation</th>
+                <th>Contacts</th>
+                <th>Horaires</th>
+                <th pSortableColumn="status" style="width: 140px">
+                    Statut <p-sortIcon field="status"></p-sortIcon>
+                </th>
+                <th style="width: 160px; text-align: center">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-cp>
+            <tr class="cp-row">
+
+                <!-- Type -->
+                <td>
+                    <p-tag
+                        [value]="getTypeLabel(cp.type)"
+                        [severity]="getTypeSeverity(cp.type)">
+                    </p-tag>
+                </td>
+
+                <!-- Nom / Identité -->
+                <td>
+                    <div class="font-semibold text-900">{{ cp.name }}</div>
+                    <div class="text-sm text-500 mt-1" *ngIf="cp.type === 'INDIVIDUAL' && (cp.firstName || cp.lastName)">
+                        <i class="pi pi-user mr-1"></i>{{ cp.firstName }} {{ cp.lastName }}
+                    </div>
+                    <div class="text-sm text-500 mt-1" *ngIf="cp.type !== 'INDIVIDUAL' && cp.companyName">
+                        <i class="pi pi-building mr-1"></i>{{ cp.companyName }}
+                    </div>
+                    <div class="text-sm text-500 mt-1" *ngIf="cp.type === 'INDIVIDUAL' && cp.email">
+                        <i class="pi pi-envelope mr-1"></i>{{ cp.email }}
+                    </div>
+                </td>
+
+                <!-- Localisation -->
+                <td>
+                    <div class="flex align-items-center gap-1" *ngIf="cp.countryName">
+                        <i class="pi pi-globe text-400"></i>
+                        <span>{{ cp.countryName }}</span>
+                    </div>
+                    <div class="text-sm text-500 mt-1" *ngIf="cp.cityName">
+                        <i class="pi pi-map mr-1"></i>{{ cp.cityName }}
+                    </div>
+                    <div class="text-sm text-500" *ngIf="cp.provinceName">
+                        {{ cp.provinceName }}
+                    </div>
+                    <div class="text-sm text-400 mt-1" *ngIf="cp.address">{{ cp.address }}</div>
+                </td>
+
+                <!-- Contacts -->
+                <td>
+                    <span class="text-sm">{{ cp.contacts || '—' }}</span>
+                </td>
+
+                <!-- Horaires -->
+                <td>
+                    <span class="text-sm">{{ formatOpeningHours(cp) }}</span>
+                </td>
+
+                <!-- Statut -->
+                <td>
+                    <p-tag
+                        [value]="getStatusLabel(cp.status)"
+                        [severity]="getStatusSeverity(cp.status)">
+                    </p-tag>
+                </td>
+
+                <!-- Actions -->
+                <td class="text-center">
+                    <p-button
+                        *ngIf="cp.locationUrl"
+                        icon="pi pi-map-marker"
+                        class="p-button-rounded p-button-info p-button-text"
+                        (click)="openMap(cp)"
+                        pTooltip="Voir sur la carte"
+                        tooltipPosition="top">
+                    </p-button>
+                    <p-button
+                        icon="pi pi-pencil"
+                        class="p-button-rounded p-button-success p-button-text"
+                        (click)="edit(cp)"
+                        pTooltip="Modifier"
+                        tooltipPosition="top">
+                    </p-button>
+                    <p-button
+                        icon="pi pi-sliders-h"
+                        class="p-button-rounded p-button-secondary p-button-text"
+                        (click)="openStatusChange(cp)"
+                        pTooltip="Changer le statut"
+                        tooltipPosition="top">
+                    </p-button>
+                    <p-button
+                        icon="pi pi-trash"
+                        class="p-button-rounded p-button-danger p-button-text"
+                        (click)="delete(cp)"
+                        pTooltip="Supprimer"
+                        tooltipPosition="top">
+                    </p-button>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="7" class="text-center p-5 text-500">
+                    <i class="pi pi-inbox text-4xl mb-3 block"></i>
+                    Aucun point de collecte trouvé
+                </td>
+            </tr>
+        </ng-template>
+
+    </p-table>
+</div>
+
+
+<!-- ===== DIALOG CRÉATION / MODIFICATION ===== -->
+<p-dialog
+    [(visible)]="showDialog"
+    [modal]="true"
+    [header]="dialogTitle"
     [closable]="false"
-    class="p-fluid"
-    [style]="{ width: '600px' }">
-    
+    [style]="{ width: '700px' }"
+    styleClass="p-fluid">
+
     <ng-template pTemplate="content">
-        <form [formGroup]="collectionPointForm">
-            <div class="field">
-                <label for="name">Nom du Point de Collecte *</label>
-                <input 
-                    type="text" 
-                    pInputText 
-                    id="name" 
-                    formControlName="name"
-                    [class.ng-invalid]="collectionPointForm.get('name')?.invalid && collectionPointForm.get('name')?.touched" />
-                <small class="p-invalid" *ngIf="collectionPointForm.get('name')?.invalid && collectionPointForm.get('name')?.touched">
-                    Le nom est requis.
+        <form [formGroup]="form">
+
+            <!-- ÉTAPE 1 : Sélection du type -->
+            <div class="mb-4">
+                <label class="font-semibold text-900 block mb-3">Type de point de collecte *</label>
+                <div class="grid">
+                    <div class="col-12 md:col-4" *ngFor="let t of typeOptions">
+                        <div
+                            class="type-card border-round-lg p-3 text-center cursor-pointer"
+                            [class.selected]="form.get('type')?.value === t.value"
+                            [class.type-individual]="t.value === 'INDIVIDUAL'"
+                            [class.type-company]="t.value === 'COMPANY'"
+                            [class.type-official]="t.value === 'OFFICIAL_POINT'"
+                            (click)="selectType(t.value)">
+                            <div class="type-icon border-round-lg mx-auto mb-2">
+                                <i [class]="'pi ' + t.icon + ' text-2xl'"></i>
+                            </div>
+                            <div class="font-semibold text-900">{{ t.label }}</div>
+                            <div class="text-xs text-500 mt-1">{{ t.description }}</div>
+                        </div>
+                    </div>
+                </div>
+                <small class="p-error block mt-1"
+                    *ngIf="form.get('type')?.invalid && form.get('type')?.touched">
+                    Sélectionnez un type.
                 </small>
             </div>
 
-            <div class="field">
-                <label for="country">Pays *</label>
-                <p-dropdown 
-                    [options]="countryOptions" 
-                    formControlName="country"
-                    optionLabel="label"
-                    optionValue="value"
-                    placeholder="Sélectionner un pays"
-                    [class.ng-invalid]="collectionPointForm.get('country')?.invalid && collectionPointForm.get('country')?.touched">
-                </p-dropdown>
-                <small class="p-invalid" *ngIf="collectionPointForm.get('country')?.invalid && collectionPointForm.get('country')?.touched">
-                    Le pays est requis.
-                </small>
-            </div>
+            <ng-container *ngIf="form.get('type')?.value">
 
-            <div class="field">
-                <label for="adresse">Adresse *</label>
-                <textarea 
-                    pInputTextarea 
-                    id="adresse" 
-                    formControlName="adresse"
-                    rows="3"
-                    placeholder="Adresse complète du point de collecte"
-                    [class.ng-invalid]="collectionPointForm.get('adresse')?.invalid && collectionPointForm.get('adresse')?.touched">
-                </textarea>
-                <small class="p-invalid" *ngIf="collectionPointForm.get('adresse')?.invalid && collectionPointForm.get('adresse')?.touched">
-                    L'adresse est requise.
-                </small>
-            </div>
+                <p-divider></p-divider>
 
-            <div class="field">
-                <label for="google_location_url">URL Google Maps *</label>
-                <input 
-                    type="url" 
-                    pInputText 
-                    id="google_location_url" 
-                    formControlName="google_location_url"
-                    placeholder="https://maps.google.com/..."
-                    [class.ng-invalid]="collectionPointForm.get('google_location_url')?.invalid && collectionPointForm.get('google_location_url')?.touched" />
-                <small class="p-invalid" *ngIf="collectionPointForm.get('google_location_url')?.invalid && collectionPointForm.get('google_location_url')?.touched">
-                    L'URL Google Maps est requise.
-                </small>
-            </div>
+                <!-- ÉTAPE 2 : Identité (conditionnelle selon le type) -->
+                <div class="mb-3">
+                    <h6 class="text-600 font-semibold mb-3 mt-0">
+                        <i class="pi pi-id-card mr-2"></i>Informations d'identité
+                    </h6>
 
-            <div class="field">
-                <label for="contacts">Contacts *</label>
-                <textarea 
-                    pInputTextarea 
-                    id="contacts" 
-                    formControlName="contacts"
-                    rows="2"
-                    placeholder="Numéros de téléphone, emails..."
-                    [class.ng-invalid]="collectionPointForm.get('contacts')?.invalid && collectionPointForm.get('contacts')?.touched">
-                </textarea>
-                <small class="p-invalid" *ngIf="collectionPointForm.get('contacts')?.invalid && collectionPointForm.get('contacts')?.touched">
-                    Les contacts sont requis.
-                </small>
-            </div>
+                    <!-- Particulier -->
+                    <div class="grid" *ngIf="form.get('type')?.value === 'INDIVIDUAL'">
+                        <div class="field col-12 md:col-6">
+                            <label>Prénom *</label>
+                            <input pInputText formControlName="firstName" class="w-full"
+                                [class.ng-invalid]="form.get('firstName')?.invalid && form.get('firstName')?.touched" />
+                            <small class="p-error" *ngIf="form.get('firstName')?.invalid && form.get('firstName')?.touched">Requis</small>
+                        </div>
+                        <div class="field col-12 md:col-6">
+                            <label>Nom *</label>
+                            <input pInputText formControlName="lastName" class="w-full"
+                                [class.ng-invalid]="form.get('lastName')?.invalid && form.get('lastName')?.touched" />
+                            <small class="p-error" *ngIf="form.get('lastName')?.invalid && form.get('lastName')?.touched">Requis</small>
+                        </div>
+                        <div class="field col-12">
+                            <label>Email *</label>
+                            <input pInputText type="email" formControlName="email" class="w-full"
+                                placeholder="prenom.nom@email.com"
+                                [class.ng-invalid]="form.get('email')?.invalid && form.get('email')?.touched" />
+                            <small class="p-error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+                                Email valide requis
+                            </small>
+                        </div>
+                    </div>
 
-            <div class="field">
-                <label for="openHours">Heures d'ouverture *</label>
-                <textarea 
-                    pInputTextarea 
-                    id="openHours" 
-                    formControlName="openHours"
-                    rows="2"
-                    placeholder="Ex: Lun-Ven: 9h-17h, Sam: 9h-12h"
-                    [class.ng-invalid]="collectionPointForm.get('openHours')?.invalid && collectionPointForm.get('openHours')?.touched">
-                </textarea>
-                <small class="p-invalid" *ngIf="collectionPointForm.get('openHours')?.invalid && collectionPointForm.get('openHours')?.touched">
-                    Les heures d'ouverture sont requises.
-                </small>
-            </div>
+                    <!-- Entreprise / Point officiel -->
+                    <div class="grid" *ngIf="form.get('type')?.value !== 'INDIVIDUAL'">
+                        <div class="field col-12">
+                            <label>Nom de l'entreprise / organisation *</label>
+                            <input pInputText formControlName="companyName" class="w-full"
+                                [class.ng-invalid]="form.get('companyName')?.invalid && form.get('companyName')?.touched" />
+                            <small class="p-error" *ngIf="form.get('companyName')?.invalid && form.get('companyName')?.touched">Requis</small>
+                        </div>
+                        <div class="field col-12 md:col-6">
+                            <label>N° d'enregistrement</label>
+                            <input pInputText formControlName="registrationNumber" class="w-full" />
+                        </div>
+                        <div class="field col-12 md:col-6">
+                            <label>Site web</label>
+                            <input pInputText type="url" formControlName="website" class="w-full"
+                                placeholder="https://..." />
+                        </div>
+                    </div>
+                </div>
+
+                <p-divider></p-divider>
+
+                <!-- ÉTAPE 3 : Infos du point de collecte -->
+                <div class="mb-3">
+                    <h6 class="text-600 font-semibold mb-3 mt-0">
+                        <i class="pi pi-map-marker mr-2"></i>Point de collecte
+                    </h6>
+                    <div class="grid">
+                        <div class="field col-12">
+                            <label>Nom du point de collecte *</label>
+                            <input pInputText formControlName="name" class="w-full"
+                                placeholder="Ex: Dépôt central Dakar"
+                                [class.ng-invalid]="form.get('name')?.invalid && form.get('name')?.touched" />
+                            <small class="p-error" *ngIf="form.get('name')?.invalid && form.get('name')?.touched">Requis</small>
+                        </div>
+                        <div class="field col-12">
+                            <label>Adresse *</label>
+                            <textarea pInputTextarea formControlName="address" rows="2" class="w-full"
+                                placeholder="Adresse complète"
+                                [class.ng-invalid]="form.get('address')?.invalid && form.get('address')?.touched">
+                            </textarea>
+                            <small class="p-error" *ngIf="form.get('address')?.invalid && form.get('address')?.touched">Requis</small>
+                        </div>
+                        <div class="field col-12">
+                            <label>URL Google Maps</label>
+                            <input pInputText type="url" formControlName="locationUrl" class="w-full"
+                                placeholder="https://maps.google.com/..." />
+                        </div>
+                        <div class="field col-12 md:col-6">
+                            <label>Contacts</label>
+                            <input pInputText formControlName="contacts" class="w-full"
+                                placeholder="+33 6 00 00 00 00" />
+                        </div>
+                    </div>
+                </div>
+
+                <p-divider></p-divider>
+
+                <!-- ÉTAPE 4 : Localisation -->
+                <div>
+                    <h6 class="text-600 font-semibold mb-3 mt-0">
+                        <i class="pi pi-globe mr-2"></i>Localisation
+                    </h6>
+                    <div class="grid">
+                        <div class="field col-12 md:col-4">
+                            <label>Pays</label>
+                            <p-dropdown
+                                [options]="countryOptions"
+                                formControlName="countryId"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="-- Pays --"
+                                [showClear]="true"
+                                (onChange)="onCountryChangeInForm($event)"
+                                class="w-full">
+                            </p-dropdown>
+                        </div>
+                        <div class="field col-12 md:col-4">
+                            <label>Ville</label>
+                            <p-dropdown
+                                [options]="cityOptions"
+                                formControlName="cityId"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="-- Ville --"
+                                [showClear]="true"
+                                [disabled]="!form.get('countryId')?.value"
+                                class="w-full">
+                            </p-dropdown>
+                        </div>
+                        <div class="field col-12 md:col-4">
+                            <label>Province / Région</label>
+                            <p-dropdown
+                                [options]="provinceOptions"
+                                formControlName="provinceId"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="-- Province --"
+                                [showClear]="true"
+                                class="w-full">
+                            </p-dropdown>
+                        </div>
+                    </div>
+                </div>
+
+                <p-divider></p-divider>
+
+                <!-- ÉTAPE 5 : Horaires d'ouverture -->
+                <div>
+                    <h6 class="text-600 font-semibold mb-3 mt-0">
+                        <i class="pi pi-clock mr-2"></i>Horaires d'ouverture
+                    </h6>
+                    <div class="opening-hours-table" formArrayName="openingHours">
+                        <div class="oh-header">
+                            <div class="oh-col-day">Jour</div>
+                            <div class="oh-col-closed">Fermé</div>
+                            <div class="oh-col-times">Ouverture → Fermeture</div>
+                        </div>
+                        <ng-container *ngFor="let ctrl of openingHoursArray.controls; let i = index" [formGroupName]="i">
+                            <div class="oh-row" [class.oh-row-closed]="ctrl.get('closed')?.value">
+                                <div class="oh-col-day">
+                                    <span class="day-label" [class.text-400]="ctrl.get('closed')?.value">{{ DAYS[i].label }}</span>
+                                </div>
+                                <div class="oh-col-closed">
+                                    <input type="checkbox" formControlName="closed" />
+                                </div>
+                                <div class="oh-col-times">
+                                    <ng-container *ngIf="!ctrl.get('closed')?.value">
+                                        <input type="time" formControlName="openTime" class="time-input" />
+                                        <span class="mx-2 text-400">→</span>
+                                        <input type="time" formControlName="closeTime" class="time-input" />
+                                    </ng-container>
+                                    <span *ngIf="ctrl.get('closed')?.value" class="text-400 text-sm">Fermé ce jour</span>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </div>
+                </div>
+
+            </ng-container>
         </form>
     </ng-template>
 
     <ng-template pTemplate="footer">
-        <p-button 
-            label="Annuler" 
-            icon="pi pi-times" 
+        <p-button
+            label="Annuler"
+            icon="pi pi-times"
             class="p-button-text"
+            [disabled]="saving"
             (click)="hideDialog()">
         </p-button>
-        <p-button 
-            label="Sauvegarder" 
-            icon="pi pi-check" 
+        <p-button
+            [label]="editingId ? 'Mettre à jour' : 'Créer'"
+            icon="pi pi-check"
+            [loading]="saving"
+            [disabled]="form.invalid || !form.get('type')?.value"
+            (click)="save()">
+        </p-button>
+    </ng-template>
+</p-dialog>
+
+
+<!-- ===== DIALOG CHANGEMENT DE STATUT ===== -->
+<p-dialog
+    [(visible)]="statusDialog"
+    [modal]="true"
+    header="Changer le statut"
+    [closable]="false"
+    [style]="{ width: '380px' }">
+
+    <ng-template pTemplate="content">
+        <p class="text-600 mb-3">
+            Point de collecte : <strong>{{ statusChangeTarget?.name }}</strong>
+        </p>
+        <div class="flex flex-column gap-3">
+            <div *ngFor="let s of allStatusOptions" class="flex align-items-center gap-3">
+                <p-radioButton
+                    [inputId]="s.value"
+                    [value]="s.value"
+                    [(ngModel)]="selectedNewStatus">
+                </p-radioButton>
+                <label [for]="s.value" class="cursor-pointer">
+                    <p-tag [value]="s.label" [severity]="s.severity"></p-tag>
+                </label>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Annuler"
             class="p-button-text"
-            [disabled]="collectionPointForm.invalid"
-            (click)="saveCollectionPoint()">
+            (click)="statusDialog = false">
+        </p-button>
+        <p-button
+            label="Confirmer"
+            icon="pi pi-check"
+            [disabled]="!selectedNewStatus"
+            (click)="confirmStatusChange()">
         </p-button>
     </ng-template>
 </p-dialog>

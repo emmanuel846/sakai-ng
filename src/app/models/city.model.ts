@@ -38,3 +38,9 @@ export interface CountryCreateRequest {
 }
 
 export interface CountryListCreateRequest extends Array<CountryCreateRequest> {}
+
+export interface Province {
+  id?: string;
+  name: string;
+  isActive?: boolean;
+}

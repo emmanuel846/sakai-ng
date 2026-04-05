@@ -1,0 +1,180 @@
+// === KPI Cards ===
+.kpi-wrap-item {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.kpi-card {
+    border-left: 4px solid transparent;
+    transition: box-shadow 0.2s;
+    height: 100%;
+
+    &:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+
+    &.kpi-total    { border-left-color: #3b82f6; }
+    &.kpi-public   { border-left-color: #22c55e; }
+    &.kpi-json     { border-left-color: #f97316; }
+    &.kpi-category { border-left-color: #a855f7; }
+}
+
+.kpi-icon {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    flex-shrink: 0;
+}
+
+// === Value cell ===
+.value-cell {
+    font-family: monospace;
+    font-size: 0.85rem;
+    display: inline-block;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.value-json {
+    color: #d97706;
+    background: #fef3c7;
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: help;
+}
+
+.value-boolean-true  { color: #16a34a; font-weight: 600; }
+.value-boolean-false { color: #dc2626; font-weight: 600; }
+
+// === Category badge ===
+.category-badge {
+    background: var(--surface-100, #f3f4f6);
+    border: 1px solid var(--surface-200, #e5e7eb);
+    color: var(--text-color-secondary);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+// ============================================================
+// === Dialog form
+// ============================================================
+
+.setting-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-top: 0.5rem;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.form-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.form-hint {
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--text-color-secondary);
+    margin-left: 0.25rem;
+}
+
+.form-error {
+    color: #ef4444;
+    font-size: 0.75rem;
+}
+
+.form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+// === Type option cards ===
+.type-options-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.625rem;
+}
+
+.type-option-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    border: 2px solid var(--surface-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: center;
+    user-select: none;
+
+    i {
+        font-size: 1.25rem;
+        color: var(--text-color-secondary);
+    }
+
+    .type-label {
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--text-color);
+    }
+
+    .type-desc {
+        font-size: 0.68rem;
+        color: var(--text-color-secondary);
+    }
+
+    &:hover {
+        border-color: var(--primary-color);
+        background: var(--surface-hover);
+    }
+
+    &.selected {
+        border-color: var(--primary-color);
+        background: var(--primary-50, #eff6ff);
+
+        i, .type-label { color: var(--primary-color); }
+    }
+}
+
+// === Boolean row ===
+.boolean-row {
+    display: flex;
+    align-items: center;
+}
+
+// === Public toggle row ===
+.public-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 10px;
+    background: var(--surface-50, #f9fafb);
+}
+
+// === Font mono ===
+.font-mono {
+    font-family: 'Courier New', Courier, monospace;
+}
+

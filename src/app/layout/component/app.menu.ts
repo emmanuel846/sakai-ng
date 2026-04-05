@@ -101,6 +101,11 @@ export class AppMenu {
                         label: 'Gestion des Points de Collecte',
                         icon: 'pi pi-fw pi-map-marker',
                         routerLink: ['/dashboard/pages/collection-point-management']
+                    },
+                    {
+                        label: 'Paramètres',
+                        icon: 'pi pi-fw pi-sliders-h',
+                        routerLink: ['/dashboard/pages/settings']
                     }
                 ]
             },

@@ -8,6 +8,7 @@ import { ReservationsComponent } from './reservations/reservations.component';
 import { ExpeditionMainComponent } from './expeditions/expedition-main/expedition-main.component';
 import { CountryCityManagementComponent } from './country-city-management/country-city-management.component';
 import { CollectionPointManagementComponent } from './collection-point-management/collection-point-management.component';
+import { SettingsComponent } from './settings/settings.component';
 
 export default [
     { path: 'documentation', component: Documentation },
@@ -18,5 +19,6 @@ export default [
     { path: 'reservations', component: ReservationsComponent },
     { path: 'country-city-management', component: CountryCityManagementComponent },
     { path: 'collection-point-management', component: CollectionPointManagementComponent },
+    { path: 'settings', component: SettingsComponent },
     { path: '**', redirectTo: '/notfound' }
 ] as Routes;

@@ -1,3 +1,74 @@
+// === KPI Cards ===
+.kpi-wrap-item {
+    flex: 1 1 220px;   // croît et rétrécit librement, min 220px
+    min-width: 0;      // évite le débordement flex
+}
+
+.kpi-card {
+    border-left: 4px solid transparent;
+    transition: box-shadow 0.2s;
+    height: 100%;
+
+    &:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    &.kpi-total    { border-left-color: #3b82f6; }
+    &.kpi-active   { border-left-color: #22c55e; }
+    &.kpi-pending  { border-left-color: #f97316; }
+    &.kpi-individual { border-left-color: #a855f7; }
+}
+
+.kpi-icon {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    flex-shrink: 0;
+}
+
+// === Type selection cards ===
+.type-card {
+    border: 2px solid var(--surface-border);
+    transition: all 0.2s ease;
+    user-select: none;
+
+    &:hover {
+        border-color: var(--primary-color);
+        background: var(--surface-hover);
+        transform: translateY(-2px);
+    }
+
+    &.selected {
+        border-color: var(--primary-color);
+        background: var(--primary-50, #eff6ff);
+    }
+
+    .type-icon {
+        width: 3rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &.type-individual .type-icon   { background: #eff6ff; color: #3b82f6; i { color: #3b82f6; } }
+    &.type-company .type-icon      { background: #fdf4ff; color: #a855f7; i { color: #a855f7; } }
+    &.type-official .type-icon     { background: #f0fdf4; color: #22c55e; i { color: #22c55e; } }
+}
+
+// === Table rows ===
+.cp-row {
+    transition: background 0.15s;
+
+    &:hover td {
+        background: var(--surface-hover);
+    }
+}
+
+// Backward compat (not needed after migration)
 .badge {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
@@ -91,6 +162,90 @@
     outline-offset: 0;
     box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2);
     border-color: #3b82f6;
+}
+
+// === Opening hours table ===
+.opening-hours-table {
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    overflow: hidden;
+
+    .oh-header {
+        display: grid;
+        grid-template-columns: 110px 60px 1fr;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: var(--surface-50, #f8f9fa);
+        border-bottom: 1px solid var(--surface-border);
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-color-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .oh-row {
+        display: grid;
+        grid-template-columns: 110px 60px 1fr;
+        align-items: center;
+        padding: 0.4rem 1rem;
+        border-bottom: 1px solid var(--surface-border);
+        transition: background 0.15s;
+        min-height: 42px;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            background: var(--surface-hover, rgba(0, 0, 0, 0.03));
+        }
+
+        &.oh-row-closed {
+            background: var(--surface-50, #f8f9fa);
+        }
+    }
+
+    .oh-col-day .day-label {
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .oh-col-closed {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--primary-color, #3b82f6);
+        }
+    }
+
+    .oh-col-times {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+}
+
+.time-input {
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    padding: 0.3rem 0.4rem;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    background: var(--surface-card);
+    cursor: pointer;
+    width: 108px;
+
+    &:focus {
+        outline: none;
+        border-color: var(--primary-color, #3b82f6);
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+    }
 }
 
 ::ng-deep .p-dropdown:not(.p-disabled).p-focus {

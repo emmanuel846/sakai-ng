@@ -1,0 +1,347 @@
+<p-toast></p-toast>
+<p-confirmDialog>
+    <ng-template #message let-message>
+        <span [innerHTML]="message.message"></span>
+    </ng-template>
+</p-confirmDialog>
+
+<!-- ===== KPI CARDS ===== -->
+<div class="flex flex-wrap gap-3 mb-3">
+
+    <div class="kpi-wrap-item">
+        <div class="card kpi-card kpi-total mb-0">
+            <div class="flex justify-content-between align-items-start">
+                <div>
+                    <span class="block text-500 font-medium mb-1">Total</span>
+                    <span class="text-900 font-bold text-4xl">{{ totalCount }}</span>
+                </div>
+                <div class="kpi-icon bg-blue-100">
+                    <i class="pi pi-sliders-h text-blue-500 text-2xl"></i>
+                </div>
+            </div>
+            <span class="text-500 text-sm mt-2 block">Paramètres enregistrés</span>
+        </div>
+    </div>
+
+    <div class="kpi-wrap-item">
+        <div class="card kpi-card kpi-public mb-0">
+            <div class="flex justify-content-between align-items-start">
+                <div>
+                    <span class="block text-500 font-medium mb-1">Publics</span>
+                    <span class="text-900 font-bold text-4xl">{{ publicCount }}</span>
+                </div>
+                <div class="kpi-icon bg-green-100">
+                    <i class="pi pi-globe text-green-500 text-2xl"></i>
+                </div>
+            </div>
+            <span class="text-500 text-sm mt-2 block">Accessibles sans authentification</span>
+        </div>
+    </div>
+
+    <div class="kpi-wrap-item">
+        <div class="card kpi-card kpi-json mb-0">
+            <div class="flex justify-content-between align-items-start">
+                <div>
+                    <span class="block text-500 font-medium mb-1">JSON</span>
+                    <span class="text-900 font-bold text-4xl">{{ jsonCount }}</span>
+                </div>
+                <div class="kpi-icon bg-orange-100">
+                    <i class="pi pi-code text-orange-500 text-2xl"></i>
+                </div>
+            </div>
+            <span class="text-500 text-sm mt-2 block">Paramètres de type objet/tableau</span>
+        </div>
+    </div>
+
+    <div class="kpi-wrap-item">
+        <div class="card kpi-card kpi-category mb-0">
+            <div class="flex justify-content-between align-items-start">
+                <div>
+                    <span class="block text-500 font-medium mb-1">Catégories</span>
+                    <span class="text-900 font-bold text-4xl">{{ categoryCount }}</span>
+                </div>
+                <div class="kpi-icon bg-purple-100">
+                    <i class="pi pi-tag text-purple-500 text-2xl"></i>
+                </div>
+            </div>
+            <span class="text-500 text-sm mt-2 block">Groupes de paramètres</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== MAIN TABLE CARD ===== -->
+<div class="card">
+
+    <!-- Toolbar -->
+    <div class="flex justify-content-between flex-wrap gap-3 align-items-center mb-4">
+        <div class="flex flex-wrap gap-2 align-items-center">
+            <p-button
+                label="Nouveau paramètre"
+                icon="pi pi-plus"
+                (click)="openNew()">
+            </p-button>
+            <p-dropdown
+                [options]="categoryOptions"
+                [(ngModel)]="filterCategory"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Toutes les catégories"
+                showClear
+                (onChange)="applyFilter()">
+            </p-dropdown>
+        </div>
+        <div class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input
+                pInputText
+                type="text"
+                placeholder="Rechercher..."
+                [(ngModel)]="searchTerm"
+                (input)="applyFilter()"
+                class="w-full" />
+        </div>
+    </div>
+
+    <!-- Table -->
+    <p-table
+        [value]="filteredSettings"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="15"
+        [rowsPerPageOptions]="[10, 15, 25, 50]"
+        dataKey="id"
+        styleClass="p-datatable-sm p-datatable-gridlines"
+        responsiveLayout="scroll">
+
+        <ng-template #header>
+            <tr>
+                <th pSortableColumn="key" style="min-width:200px">
+                    Clé <p-sortIcon field="key"></p-sortIcon>
+                </th>
+                <th style="min-width:250px">Valeur</th>
+                <th pSortableColumn="valueType" style="width:120px">
+                    Type <p-sortIcon field="valueType"></p-sortIcon>
+                </th>
+                <th pSortableColumn="category" style="width:140px">
+                    Catégorie <p-sortIcon field="category"></p-sortIcon>
+                </th>
+                <th style="width:90px" class="text-center">Public</th>
+                <th style="width:110px" class="text-center">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-setting>
+            <tr>
+                <!-- Key -->
+                <td>
+                    <span class="font-semibold text-900">{{ setting.key }}</span>
+                    <div *ngIf="setting.description" class="text-500 text-xs mt-1">{{ setting.description }}</div>
+                </td>
+
+                <!-- Value -->
+                <td>
+                    <span
+                        class="value-cell"
+                        [class.value-json]="setting.valueType === 'JSON'"
+                        [class.value-boolean-true]="setting.valueType === 'BOOLEAN' && setting.value === true"
+                        [class.value-boolean-false]="setting.valueType === 'BOOLEAN' && setting.value === false"
+                        [pTooltip]="setting.valueType === 'JSON' ? formatDisplayValue(setting) : ''"
+                        tooltipPosition="top">
+                        {{ formatDisplayValue(setting) }}
+                    </span>
+                </td>
+
+                <!-- Type badge -->
+                <td>
+                    <p-tag
+                        [value]="setting.valueType"
+                        [severity]="typeTagSeverity(setting.valueType)"
+                        [icon]="typeTagIcon(setting.valueType)">
+                    </p-tag>
+                </td>
+
+                <!-- Category -->
+                <td>
+                    <span *ngIf="setting.category" class="category-badge">{{ setting.category }}</span>
+                    <span *ngIf="!setting.category" class="text-400 text-sm">—</span>
+                </td>
+
+                <!-- Public -->
+                <td class="text-center">
+                    <i
+                        [class]="setting.isPublic ? 'pi pi-globe text-green-500' : 'pi pi-lock text-400'"
+                        [pTooltip]="setting.isPublic ? 'Accessible publiquement' : 'Privé'"
+                        tooltipPosition="top">
+                    </i>
+                </td>
+
+                <!-- Actions -->
+                <td class="text-center">
+                    <div class="flex gap-2 justify-content-center">
+                        <p-button
+                            icon="pi pi-pencil"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="secondary"
+                            pTooltip="Modifier"
+                            tooltipPosition="top"
+                            (click)="openEdit(setting)">
+                        </p-button>
+                        <p-button
+                            icon="pi pi-trash"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="danger"
+                            pTooltip="Supprimer"
+                            tooltipPosition="top"
+                            (click)="confirmDelete(setting)">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="6" class="text-center text-500 py-5">
+                    <i class="pi pi-inbox text-4xl block mb-2"></i>
+                    Aucun paramètre trouvé
+                </td>
+            </tr>
+        </ng-template>
+
+    </p-table>
+</div>
+
+<!-- ===== DIALOG UPSERT ===== -->
+<p-dialog
+    [(visible)]="showDialog"
+    [modal]="true"
+    [closable]="true"
+    [draggable]="false"
+    [style]="{ width: '600px' }"
+    [header]="isEditing ? 'Modifier le paramètre' : 'Nouveau paramètre'"
+    (onHide)="closeDialog()">
+
+    <form [formGroup]="form" class="setting-form">
+
+        <!-- Row 1 : Key -->
+        <div class="form-field">
+            <label class="form-label">
+                Clé <span class="text-red-400">*</span>
+                <span class="form-hint">lettres minuscules, chiffres et _ uniquement</span>
+            </label>
+            <input
+                pInputText
+                formControlName="key"
+                placeholder="ex: commission_rate"
+                class="w-full"
+                [class.ng-invalid]="form.get('key')!.invalid && form.get('key')!.touched" />
+            <small *ngIf="form.get('key')!.errors?.['required'] && form.get('key')!.touched" class="form-error">
+                La clé est obligatoire.
+            </small>
+            <small *ngIf="form.get('key')!.errors?.['pattern'] && form.get('key')!.touched" class="form-error">
+                Uniquement des lettres minuscules, chiffres et underscores.
+            </small>
+        </div>
+
+        <!-- Row 2 : Category + Description -->
+        <div class="form-row-2">
+            <div class="form-field">
+                <label class="form-label">Catégorie</label>
+                <input pInputText formControlName="category" placeholder="ex: pricing, system, ui" class="w-full" />
+            </div>
+            <div class="form-field">
+                <label class="form-label">Description</label>
+                <input pInputText formControlName="description" placeholder="Usage du paramètre" class="w-full" />
+            </div>
+        </div>
+
+        <!-- Row 3 : Value type -->
+        <div class="form-field">
+            <label class="form-label">Type de valeur <span class="text-red-400">*</span></label>
+            <div class="type-options-grid">
+                <div
+                    *ngFor="let opt of valueTypeOptions"
+                    class="type-option-card"
+                    [class.selected]="selectedType === opt.value"
+                    (click)="form.get('valueType')!.setValue(opt.value)">
+                    <i [class]="'pi ' + opt.icon"></i>
+                    <span class="type-label">{{ opt.label }}</span>
+                    <span class="type-desc">{{ opt.description }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 4 : Value (dynamic) -->
+        <div class="form-field">
+            <label class="form-label">Valeur</label>
+
+            <input
+                *ngIf="selectedType === 'STRING'"
+                pInputText
+                formControlName="valueString"
+                placeholder="ex: Bienvenue sur WhoTraveling"
+                class="w-full" />
+
+            <p-inputNumber
+                *ngIf="selectedType === 'NUMBER'"
+                formControlName="valueNumber"
+                [useGrouping]="false"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="10"
+                placeholder="ex: 1.1"
+                styleClass="w-full">
+            </p-inputNumber>
+
+            <div *ngIf="selectedType === 'BOOLEAN'" class="boolean-row">
+                <p-selectButton
+                    formControlName="valueBoolean"
+                    [options]="booleanOptions"
+                    optionLabel="label"
+                    optionValue="value">
+                </p-selectButton>
+            </div>
+
+            <ng-container *ngIf="selectedType === 'JSON'">
+                <textarea
+                    pTextarea
+                    formControlName="valueJson"
+                    [rows]="5"
+                    placeholder='ex: {"stripe": true, "paypal": false}'
+                    class="w-full font-mono text-sm">
+                </textarea>
+                <small class="text-400 mt-1 block">Doit être un JSON valide (objet ou tableau).</small>
+            </ng-container>
+        </div>
+
+        <!-- Row 5 : isPublic -->
+        <div class="public-toggle-row">
+            <p-toggleSwitch formControlName="isPublic" inputId="isPublic"></p-toggleSwitch>
+            <div class="flex flex-column gap-1">
+                <label for="isPublic" class="font-semibold text-sm cursor-pointer">Accessible publiquement</label>
+                <span class="text-400 text-xs">Ce paramètre sera lisible sans authentification</span>
+            </div>
+        </div>
+
+    </form>
+
+    <ng-template #footer>
+        <div class="flex gap-2 justify-content-end">
+            <p-button
+                label="Annuler"
+                icon="pi pi-times"
+                severity="secondary"
+                [text]="true"
+                (click)="closeDialog()">
+            </p-button>
+            <p-button
+                [label]="isEditing ? 'Mettre à jour' : 'Créer'"
+                icon="pi pi-check"
+                [loading]="saving"
+                (click)="save()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>
