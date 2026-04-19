@@ -346,7 +346,7 @@
                                 [class.ng-invalid]="form.get('lastName')?.invalid && form.get('lastName')?.touched" />
                             <small class="p-error" *ngIf="form.get('lastName')?.invalid && form.get('lastName')?.touched">Requis</small>
                         </div>
-                        <div class="field col-12">
+                        <div class="field col-12 md:col-6">
                             <label>Email *</label>
                             <input pInputText type="email" formControlName="email" class="w-full"
                                 placeholder="prenom.nom@email.com"
@@ -354,6 +354,13 @@
                             <small class="p-error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
                                 Email valide requis
                             </small>
+                        </div>
+                        <div class="field col-12 md:col-6">
+                            <label>Pays d'origine *</label>
+                            <input pInputText formControlName="birthCountry" class="w-full"
+                                placeholder="Ex: Togo"
+                                [class.ng-invalid]="form.get('birthCountry')?.invalid && form.get('birthCountry')?.touched" />
+                            <small class="text-500">Utilisé pour éviter les croisements communautaires</small>
                         </div>
                     </div>
 

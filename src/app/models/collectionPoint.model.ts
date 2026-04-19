@@ -35,6 +35,7 @@ export interface CollectionPoint {
     email?: string;
     firstName?: string;
     lastName?: string;
+    birthCountry?: string;
 
     // Entreprise / Point officiel (COMPANY, OFFICIAL_POINT)
     companyName?: string;
@@ -60,6 +61,7 @@ export interface CollectionPointCreateRequest {
     email?: string;
     firstName?: string;
     lastName?: string;
+    birthCountry?: string;
 
     // Entreprise / Point officiel
     companyName?: string;

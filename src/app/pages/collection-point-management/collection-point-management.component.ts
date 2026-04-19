@@ -165,6 +165,7 @@ export class CollectionPointManagementComponent implements OnInit {
       email:              [''],
       firstName:          [''],
       lastName:           [''],
+      birthCountry:       [''],
       // COMPANY / OFFICIAL_POINT
       companyName:        [''],
       registrationNumber: [''],
@@ -380,6 +381,7 @@ export class CollectionPointManagementComponent implements OnInit {
         email:              cp.email ?? '',
         firstName:          cp.firstName ?? '',
         lastName:           cp.lastName ?? '',
+        birthCountry:       cp.birthCountry ?? '',
         companyName:        cp.companyName ?? '',
         registrationNumber: cp.registrationNumber ?? '',
         website:            cp.website ?? ''
@@ -412,6 +414,7 @@ export class CollectionPointManagementComponent implements OnInit {
       email:              v.type === 'INDIVIDUAL' ? v.email : undefined,
       firstName:          v.type === 'INDIVIDUAL' ? v.firstName : undefined,
       lastName:           v.type === 'INDIVIDUAL' ? v.lastName : undefined,
+      birthCountry:       v.type === 'INDIVIDUAL' ? v.birthCountry : undefined,
       companyName:        v.type !== 'INDIVIDUAL' ? v.companyName : undefined,
       registrationNumber: v.type !== 'INDIVIDUAL' ? v.registrationNumber : undefined,
       website:            v.type !== 'INDIVIDUAL' ? v.website : undefined
