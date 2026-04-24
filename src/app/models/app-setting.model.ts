@@ -18,3 +18,12 @@ export interface AppSettingRequest {
   description: string | null;
   isPublic: boolean;
 }
+
+export type PreferenceLimitType = 'QUANTITY' | 'WEIGHT';
+
+export interface ArticlePreferenceCatalogEntry {
+  categoryName: string;
+  limitType: PreferenceLimitType;
+  defaultMaxQuantity: number | null;
+  defaultMaxWeight: number | null;
+}

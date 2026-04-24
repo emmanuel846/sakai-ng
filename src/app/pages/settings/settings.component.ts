@@ -14,9 +14,10 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TabsModule } from 'primeng/tabs';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
-import { AppSetting, AppSettingRequest, SettingValueType } from '../../models/app-setting.model';
+import { AppSetting, AppSettingRequest, SettingValueType, ArticlePreferenceCatalogEntry } from '../../models/app-setting.model';
 import { AppSettingApiService } from '../../services/app-setting-api.service';
 
 @Component({
@@ -39,6 +40,7 @@ import { AppSettingApiService } from '../../services/app-setting-api.service';
     ConfirmDialogModule,
     TooltipModule,
     ToggleSwitchModule,
+    TabsModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings.component.html',
@@ -60,6 +62,20 @@ export class SettingsComponent implements OnInit {
   categoryOptions: { label: string; value: string | null }[] = [];
 
   form!: FormGroup;
+
+  // ─── Catalog ─────────────────────────────────────────────────────────────
+  activeTab = 0;
+  catalogEntries: ArticlePreferenceCatalogEntry[] = [];
+  catalogLoading = false;
+  catalogSaving = false;
+  showCatalogDialog = false;
+  editingCatalogIndex: number | null = null;
+  catalogForm!: FormGroup;
+
+  readonly limitTypeOptions = [
+    { label: 'Quantité (pièces)', value: 'QUANTITY' },
+    { label: 'Poids (kg)',        value: 'WEIGHT'   },
+  ];
 
   readonly valueTypeOptions: { label: string; value: SettingValueType; icon: string; description: string }[] = [
     { label: 'Texte',   value: 'STRING',  icon: 'pi-align-left',   description: 'Chaîne de caractères' },
@@ -91,7 +107,9 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.buildForm();
+    this.buildCatalogForm();
     this.loadAll();
+    this.loadCatalog();
   }
 
   // ─── Form ─────────────────────────────────────────────────────────────────
@@ -117,6 +135,22 @@ export class SettingsComponent implements OnInit {
 
   get selectedType(): SettingValueType {
     return this.form.get('valueType')!.value;
+  }
+
+  private buildCatalogForm(): void {
+    this.catalogForm = this.fb.group({
+      categoryName:       ['', Validators.required],
+      limitType:          ['QUANTITY', Validators.required],
+      defaultMaxQuantity: [null as number | null],
+      defaultMaxWeight:   [null as number | null],
+    });
+    this.catalogForm.get('limitType')!.valueChanges.subscribe(() => {
+      this.catalogForm.patchValue({ defaultMaxQuantity: null, defaultMaxWeight: null });
+    });
+  }
+
+  get selectedCatalogLimitType(): string {
+    return this.catalogForm.get('limitType')!.value;
   }
 
   // ─── Data loading ─────────────────────────────────────────────────────────
@@ -307,5 +341,100 @@ export class SettingsComponent implements OnInit {
       case 'JSON':    return 'pi pi-code';
       default:        return 'pi pi-align-left';
     }
+  }
+
+  // ─── Catalog ─────────────────────────────────────────────────────────────
+
+  loadCatalog(): void {
+    this.catalogLoading = true;
+    this.service.getByKey('expedition_article_preference_catalog').subscribe({
+      next: (setting) => {
+        this.catalogEntries = Array.isArray(setting.value) ? setting.value : [];
+        this.catalogLoading = false;
+      },
+      error: () => {
+        this.catalogEntries = [];
+        this.catalogLoading = false;
+      }
+    });
+  }
+
+  saveCatalog(): void {
+    this.catalogSaving = true;
+    const dto: AppSettingRequest = {
+      key: 'expedition_article_preference_catalog',
+      value: this.catalogEntries,
+      valueType: 'JSON',
+      category: 'catalog',
+      description: 'Catalogue des catégories d\'articles acceptées par les voyageurs',
+      isPublic: false,
+    };
+    this.service.upsert(dto).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Catalogue sauvegardé', detail: `${this.catalogEntries.length} catégorie(s) enregistrée(s).` });
+        this.catalogSaving = false;
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de sauvegarder le catalogue.' });
+        this.catalogSaving = false;
+      }
+    });
+  }
+
+  openNewCatalogEntry(): void {
+    this.editingCatalogIndex = null;
+    this.catalogForm.reset({ limitType: 'QUANTITY' });
+    this.showCatalogDialog = true;
+  }
+
+  openEditCatalogEntry(index: number, entry: ArticlePreferenceCatalogEntry): void {
+    this.editingCatalogIndex = index;
+    this.catalogForm.patchValue(entry);
+    this.showCatalogDialog = true;
+  }
+
+  deleteCatalogEntry(index: number): void {
+    const entry = this.catalogEntries[index];
+    this.confirmationService.confirm({
+      message: `Supprimer la catégorie "<b>${entry.categoryName}</b>" du catalogue ?`,
+      header: 'Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Supprimer',
+      rejectLabel: 'Annuler',
+      acceptButtonProps: { severity: 'danger' },
+      accept: () => {
+        this.catalogEntries = this.catalogEntries.filter((_, i) => i !== index);
+      }
+    });
+  }
+
+  saveCatalogEntry(): void {
+    if (this.catalogForm.invalid) {
+      this.catalogForm.markAllAsTouched();
+      return;
+    }
+    const f = { ...this.catalogForm.getRawValue() } as ArticlePreferenceCatalogEntry;
+
+    const duplicate = this.catalogEntries.some((e, i) =>
+      e.categoryName.toLowerCase() === f.categoryName.toLowerCase() && i !== this.editingCatalogIndex
+    );
+    if (duplicate) {
+      this.messageService.add({ severity: 'warn', summary: 'Doublon', detail: `La catégorie "${f.categoryName}" existe déjà.` });
+      return;
+    }
+
+    if (f.limitType === 'QUANTITY') f.defaultMaxWeight = null;
+    else f.defaultMaxQuantity = null;
+
+    if (this.editingCatalogIndex !== null) {
+      this.catalogEntries = this.catalogEntries.map((e, i) => i === this.editingCatalogIndex ? f : e);
+    } else {
+      this.catalogEntries = [...this.catalogEntries, f];
+    }
+    this.showCatalogDialog = false;
+  }
+
+  closeCatalogDialog(): void {
+    this.showCatalogDialog = false;
   }
 }

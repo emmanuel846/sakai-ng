@@ -5,6 +5,14 @@
     </ng-template>
 </p-confirmDialog>
 
+<p-tabs [(value)]="activeTab">
+  <p-tablist>
+    <p-tab [value]="0"><i class="pi pi-sliders-h mr-2"></i>Paramètres généraux</p-tab>
+    <p-tab [value]="1"><i class="pi pi-list mr-2"></i>Catalogue d'articles</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel [value]="0">
+
 <!-- ===== KPI CARDS ===== -->
 <div class="flex flex-wrap gap-3 mb-3">
 
@@ -214,6 +222,105 @@
     </p-table>
 </div>
 
+    </p-tabpanel>
+
+    <!-- ===== CATALOG TAB ===== -->
+    <p-tabpanel [value]="1">
+
+<div class="card">
+
+  <div class="flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="text-900 font-semibold m-0">Catégories d'articles acceptées</h3>
+      <p class="text-500 text-sm mt-1 mb-0">Définissez les catégories et leurs limites par défaut. Les voyageurs ne pourront proposer que ces catégories.</p>
+    </div>
+    <div class="flex gap-2">
+      <p-button
+        label="Ajouter une catégorie"
+        icon="pi pi-plus"
+        (click)="openNewCatalogEntry()">
+      </p-button>
+      <p-button
+        label="Sauvegarder le catalogue"
+        icon="pi pi-save"
+        severity="success"
+        [loading]="catalogSaving"
+        (click)="saveCatalog()">
+      </p-button>
+    </div>
+  </div>
+
+  <p-table
+    [value]="catalogEntries"
+    [loading]="catalogLoading"
+    dataKey="categoryName"
+    styleClass="p-datatable-sm p-datatable-gridlines"
+    responsiveLayout="scroll">
+
+    <ng-template #header>
+      <tr>
+        <th style="min-width:200px">Catégorie</th>
+        <th style="width:160px">Type de limite</th>
+        <th style="width:220px">Valeur par défaut</th>
+        <th style="width:100px" class="text-center">Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-entry let-i="rowIndex">
+      <tr>
+        <td>
+          <span class="font-semibold text-900">{{ entry.categoryName }}</span>
+        </td>
+        <td>
+          <p-tag
+            [value]="entry.limitType === 'WEIGHT' ? 'Poids' : 'Quantité'"
+            [severity]="entry.limitType === 'WEIGHT' ? 'warn' : 'info'"
+            [icon]="entry.limitType === 'WEIGHT' ? 'pi pi-box' : 'pi pi-hashtag'">
+          </p-tag>
+        </td>
+        <td>
+          <span *ngIf="entry.limitType === 'QUANTITY'">
+            Max <strong>{{ entry.defaultMaxQuantity }}</strong> article(s)
+          </span>
+          <span *ngIf="entry.limitType === 'WEIGHT'">
+            Max <strong>{{ entry.defaultMaxWeight }}</strong> kg
+          </span>
+        </td>
+        <td class="text-center">
+          <div class="flex gap-2 justify-content-center">
+            <p-button
+              icon="pi pi-pencil"
+              [rounded]="true" [text]="true" severity="secondary"
+              pTooltip="Modifier" tooltipPosition="top"
+              (click)="openEditCatalogEntry(i, entry)">
+            </p-button>
+            <p-button
+              icon="pi pi-trash"
+              [rounded]="true" [text]="true" severity="danger"
+              pTooltip="Supprimer" tooltipPosition="top"
+              (click)="deleteCatalogEntry(i)">
+            </p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4" class="text-center text-500 py-5">
+          <i class="pi pi-tag text-4xl block mb-2"></i>
+          Aucune catégorie définie. Cliquez sur "Ajouter une catégorie" pour commencer.
+        </td>
+      </tr>
+    </ng-template>
+
+  </p-table>
+</div>
+
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
+
 <!-- ===== DIALOG UPSERT ===== -->
 <p-dialog
     [(visible)]="showDialog"
@@ -341,6 +448,96 @@
                 icon="pi pi-check"
                 [loading]="saving"
                 (click)="save()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- ===== DIALOG CATALOG ENTRY ===== -->
+<p-dialog
+    [(visible)]="showCatalogDialog"
+    [modal]="true"
+    [closable]="true"
+    [draggable]="false"
+    [style]="{ width: '480px' }"
+    [header]="editingCatalogIndex !== null ? 'Modifier la catégorie' : 'Nouvelle catégorie'"
+    (onHide)="closeCatalogDialog()">
+
+    <form [formGroup]="catalogForm" class="setting-form">
+
+        <!-- Nom de la catégorie -->
+        <div class="form-field">
+            <label class="form-label">
+                Nom de la catégorie <span class="text-red-400">*</span>
+            </label>
+            <input
+                pInputText
+                formControlName="categoryName"
+                placeholder="ex: Électronique"
+                class="w-full"
+                [class.ng-invalid]="catalogForm.get('categoryName')!.invalid && catalogForm.get('categoryName')!.touched" />
+            <small *ngIf="catalogForm.get('categoryName')!.errors?.['required'] && catalogForm.get('categoryName')!.touched" class="form-error">
+                Le nom est obligatoire.
+            </small>
+        </div>
+
+        <!-- Type de limite -->
+        <div class="form-field">
+            <label class="form-label">Type de limite <span class="text-red-400">*</span></label>
+            <p-dropdown
+                formControlName="limitType"
+                [options]="limitTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full">
+            </p-dropdown>
+        </div>
+
+        <!-- Quantité maximale par défaut -->
+        <div class="form-field" *ngIf="selectedCatalogLimitType === 'QUANTITY'">
+            <label class="form-label">
+                Quantité maximale par défaut <span class="text-red-400">*</span>
+            </label>
+            <p-inputNumber
+                formControlName="defaultMaxQuantity"
+                [min]="1"
+                [useGrouping]="false"
+                placeholder="ex: 5"
+                styleClass="w-full">
+            </p-inputNumber>
+        </div>
+
+        <!-- Poids maximal par défaut -->
+        <div class="form-field" *ngIf="selectedCatalogLimitType === 'WEIGHT'">
+            <label class="form-label">
+                Poids maximal par défaut (kg) <span class="text-red-400">*</span>
+            </label>
+            <p-inputNumber
+                formControlName="defaultMaxWeight"
+                [min]="0.1"
+                [minFractionDigits]="1"
+                [maxFractionDigits]="2"
+                [useGrouping]="false"
+                placeholder="ex: 2.5"
+                styleClass="w-full">
+            </p-inputNumber>
+        </div>
+
+    </form>
+
+    <ng-template #footer>
+        <div class="flex gap-2 justify-content-end">
+            <p-button
+                label="Annuler"
+                icon="pi pi-times"
+                severity="secondary"
+                [text]="true"
+                (click)="closeCatalogDialog()">
+            </p-button>
+            <p-button
+                [label]="editingCatalogIndex !== null ? 'Mettre à jour' : 'Ajouter'"
+                icon="pi pi-check"
+                (click)="saveCatalogEntry()">
             </p-button>
         </div>
     </ng-template>

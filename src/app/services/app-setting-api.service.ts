@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AppSetting, AppSettingRequest } from '../models/app-setting.model';
+import { AppSetting, AppSettingRequest, ArticlePreferenceCatalogEntry } from '../models/app-setting.model';
 
 @Injectable({
   providedIn: 'root'
@@ -30,5 +30,9 @@ export class AppSettingApiService {
 
   delete(key: string): Observable<void> {
     return this.http.delete<void>(`${this.BASE}/${key}`);
+  }
+
+  getArticlePreferenceCatalog(): Observable<ArticlePreferenceCatalogEntry[]> {
+    return this.http.get<ArticlePreferenceCatalogEntry[]>(`${this.BASE}/article-preference-catalog`);
   }
 }
