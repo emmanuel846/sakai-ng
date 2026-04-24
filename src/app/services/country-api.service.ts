@@ -46,4 +46,11 @@ export class CountryApiService {
   deleteCountry(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/api/v1/countries/${id}`);
   }
+
+  /**
+   * Active/désactive le filtre communautaire d'un pays
+   */
+  toggleCommunityFilter(id: string): Observable<Country> {
+    return this.http.patch<Country>(`${this.baseUrl}/api/v1/countries/${id}/community-filter`, {});
+  }
 }

@@ -9,6 +9,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TabViewModule } from 'primeng/tabview';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { Country, City, CountryCreateRequest, CityCreateRequest } from '../../models/city.model';
@@ -29,7 +30,8 @@ import { CityApiService } from '../../services/city-api.service';
     DropdownModule,
     ToastModule,
     ConfirmDialogModule,
-    TabViewModule
+    TabViewModule,
+    ToggleSwitchModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './country-city-management.component.html',
@@ -205,6 +207,28 @@ export class CountryCityManagementComponent implements OnInit {
               detail: 'Erreur lors de la suppression du pays'
             });
           }
+        });
+      }
+    });
+  }
+
+  toggleCommunityFilter(country: Country) {
+    this.countryService.toggleCommunityFilter(country.id!).subscribe({
+      next: (updated) => {
+        country.communityFilterActive = updated.communityFilterActive;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Succès',
+          detail: `Filtre communauté ${updated.communityFilterActive ? 'activé' : 'désactivé'} pour ${updated.name}`
+        });
+      },
+      error: () => {
+        // Restaurer l'état précédent en cas d'erreur
+        country.communityFilterActive = !country.communityFilterActive;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Erreur lors de la mise à jour du filtre'
         });
       }
     });

@@ -20,6 +20,7 @@ export interface Country {
   iso3: string;
   name: string;
   status?: string;
+  communityFilterActive?: boolean;
 }
 
 export interface CityCreateRequest {
@@ -35,6 +36,7 @@ export interface CountryCreateRequest {
   iso2: string;
   iso3: string;
   name: string;
+  communityFilterActive?: boolean;
 }
 
 export interface CountryListCreateRequest extends Array<CountryCreateRequest> {}

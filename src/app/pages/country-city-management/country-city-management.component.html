@@ -61,6 +61,9 @@
                                 <th pSortableColumn="status">
                                     Statut <p-sortIcon field="status"></p-sortIcon>
                                 </th>
+                                <th pSortableColumn="communityFilterActive">
+                                    Filtre communauté <p-sortIcon field="communityFilterActive"></p-sortIcon>
+                                </th>
                                 <th>Actions</th>
                             </tr>
                         </ng-template>
@@ -74,6 +77,14 @@
                                     <span [class]="'badge ' + (country.status === 'ACTIVATED' ? 'badge-success' : 'badge-warning')">
                                         {{ country.status || 'N/A' }}
                                     </span>
+                                </td>
+                                <td>
+                                    <p-toggleswitch
+                                        [(ngModel)]="country.communityFilterActive"
+                                        (onChange)="toggleCommunityFilter(country)"
+                                        pTooltip="Filtre par communauté"
+                                        tooltipPosition="top">
+                                    </p-toggleswitch>
                                 </td>
                                 <td>
                                     <p-button 
