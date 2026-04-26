@@ -19,4 +19,16 @@ export class ReservationService{
             })
         )
     }
+
+    validateReservation(id: string): Observable<Reservations> {
+        return this.http.put<Reservations>(`${this.apiUrl}/${id}/validate`, {});
+    }
+
+    rejectReservation(id: string): Observable<Reservations> {
+        return this.http.put<Reservations>(`${this.apiUrl}/${id}/reject`, {});
+    }
+
+    suspendReservation(id: string): Observable<Reservations> {
+        return this.http.put<Reservations>(`${this.apiUrl}/${id}/suspend`, {});
+    }
 }

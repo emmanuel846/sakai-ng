@@ -215,7 +215,19 @@ export interface ExpeditionLists {
 }
 export interface ArticlePreferences {
   categoryName: string;
-  maxQuantity:number;
+  maxQuantity?: number | null;
+  maxWeight?: number | null;
+  limitType?: 'QUANTITY' | 'WEIGHT';
+}
+export interface ArticleAvailabilities {
+  categoryName: string;
+  limitType: 'QUANTITY' | 'WEIGHT';
+  maxQuantity?: number | null;
+  reservedQuantity?: number | null;
+  availableQuantity?: number | null;
+  maxWeight?: number | null;
+  reservedWeight?: number | null;
+  availableWeight?: number | null;
 }
 export interface ExpeditionListsByMonth {
   month: number

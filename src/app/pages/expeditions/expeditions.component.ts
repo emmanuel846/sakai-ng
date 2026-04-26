@@ -171,7 +171,8 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit {
         .filter(pref => pref.selected)
         .map(pref => ({
           categoryName: pref.categoryName,
-          maxQuantity: pref.maxQuantity
+          maxQuantity: pref.maxQuantity,
+          limitType: 'QUANTITY' as const
         }));
       
       const updatedExpedition: Expedition = {
