@@ -91,7 +91,21 @@
                                         size="small"
                                         (onClick)="suspend(rowData.id)" />
                                 </div>
-
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td [attr.colspan]="pendingCols.length + 1" class="text-center p-4">
+                                Aucune réservation en attente de validation.
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </p-tabpanel>
+        </p-tabpanels>
+    </p-tabs>
+</div>
 <p-dialog
     header="Annuler la réservation"
     [(visible)]="cancelDialogVisible"
@@ -122,18 +136,3 @@
             (onClick)="confirmCancel()" />
     </ng-template>
 </p-dialog>
-                            </td>
-                        </tr>
-                    </ng-template>
-                    <ng-template pTemplate="emptymessage">
-                        <tr>
-                            <td [attr.colspan]="pendingCols.length + 1" class="text-center p-4">
-                                Aucune réservation en attente de validation.
-                            </td>
-                        </tr>
-                    </ng-template>
-                </p-table>
-            </p-tabpanel>
-        </p-tabpanels>
-    </p-tabs>
-</div>
