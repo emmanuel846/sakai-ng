@@ -9,7 +9,7 @@ import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextarea } from 'primeng/inputtextarea';
 interface Column {
   field: string;
   header: string;
@@ -17,7 +17,7 @@ interface Column {
 }
 @Component({
   selector: 'app-reservations',
-  imports: [TableModule, CommonModule, FormsModule, TabsModule, ButtonModule, TagModule, ToastModule, DialogModule, InputTextareaModule],
+  imports: [TableModule, CommonModule, FormsModule, TabsModule, ButtonModule, TagModule, ToastModule, DialogModule, InputTextarea],
   providers: [MessageService],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.scss'
