@@ -31,4 +31,10 @@ export class ReservationService{
     suspendReservation(id: string): Observable<Reservations> {
         return this.http.put<Reservations>(`${this.apiUrl}/${id}/suspend`, {});
     }
+
+    cancelReservation(id: string, reason?: string): Observable<Reservations> {
+        let params: any = { reservationId: id };
+        if (reason) params['reason'] = reason;
+        return this.http.post<Reservations>(`${this.apiUrl}/cancel`, {}, { params });
+    }
 }

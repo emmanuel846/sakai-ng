@@ -1,12 +1,15 @@
 import { Component, computed } from '@angular/core';
 import { ReservationService } from './reservations.service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextareaModule } from 'primeng/inputtextarea';
 interface Column {
   field: string;
   header: string;
@@ -14,13 +17,17 @@ interface Column {
 }
 @Component({
   selector: 'app-reservations',
-  imports: [TableModule, CommonModule, TabsModule, ButtonModule, TagModule, ToastModule],
+  imports: [TableModule, CommonModule, FormsModule, TabsModule, ButtonModule, TagModule, ToastModule, DialogModule, InputTextareaModule],
   providers: [MessageService],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.scss'
 })
 export class ReservationsComponent {
   reservations = computed(() => this.reservationService.reservations());
+
+  cancelDialogVisible = false;
+  cancelReservationId: string | null = null;
+  cancelReason = '';
   pendingReservations = computed(() =>
     Array.isArray(this.reservationService.reservations())
       ? this.reservationService.reservations().filter(r => r.status === 'CREATED')
@@ -104,6 +111,24 @@ export class ReservationsComponent {
         this.reservationService.reservationsList().subscribe({});
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de suspendre la réservation' })
+    });
+  }
+
+  openCancelDialog(id: string): void {
+    this.cancelReservationId = id;
+    this.cancelReason = '';
+    this.cancelDialogVisible = true;
+  }
+
+  confirmCancel(): void {
+    if (!this.cancelReservationId) return;
+    this.reservationService.cancelReservation(this.cancelReservationId, this.cancelReason).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'warn', summary: 'Annulé', detail: 'Réservation annulée' });
+        this.cancelDialogVisible = false;
+        this.reservationService.reservationsList().subscribe({});
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible d\'annuler la réservation' })
     });
   }
 }

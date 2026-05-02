@@ -22,6 +22,7 @@
                             <th *ngFor="let col of columns" [pSortableColumn]="col.field">
                                 {{ col.header }}
                             </th>
+                            <th>Actions</th>
                         </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-rowData let-columns="columns">
@@ -32,6 +33,14 @@
                                 } @else {
                                     {{ resolveFieldData(rowData, col.field) }}
                                 }
+                            </td>
+                            <td>
+                                <p-button
+                                    label="Annuler"
+                                    icon="pi pi-ban"
+                                    severity="danger"
+                                    size="small"
+                                    (onClick)="openCancelDialog(rowData.id)" />
                             </td>
                         </tr>
                     </ng-template>
@@ -82,6 +91,37 @@
                                         size="small"
                                         (onClick)="suspend(rowData.id)" />
                                 </div>
+
+<p-dialog
+    header="Annuler la réservation"
+    [(visible)]="cancelDialogVisible"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+    [closable]="true">
+    <div class="flex flex-column gap-3">
+        <label for="cancelReason">Raison de l'annulation (optionnel)</label>
+        <textarea
+            pInputTextarea
+            id="cancelReason"
+            [(ngModel)]="cancelReason"
+            rows="4"
+            placeholder="Saisissez la raison de l'annulation..."
+            class="w-full">
+        </textarea>
+    </div>
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Annuler"
+            icon="pi pi-times"
+            severity="secondary"
+            (onClick)="cancelDialogVisible = false" />
+        <p-button
+            label="Confirmer l'annulation"
+            icon="pi pi-ban"
+            severity="danger"
+            (onClick)="confirmCancel()" />
+    </ng-template>
+</p-dialog>
                             </td>
                         </tr>
                     </ng-template>
