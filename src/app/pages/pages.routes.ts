@@ -9,12 +9,14 @@ import { ExpeditionMainComponent } from './expeditions/expedition-main/expeditio
 import { CountryCityManagementComponent } from './country-city-management/country-city-management.component';
 import { CollectionPointManagementComponent } from './collection-point-management/collection-point-management.component';
 import { SettingsComponent } from './settings/settings.component';
+import { UserManagementComponent } from './user-management/user-management.component';
 
 export default [
     { path: 'documentation', component: Documentation },
     { path: 'crud', component: Crud },
     { path: 'empty', component: Empty },
     { path: 'clients', component: ClientsComponent },
+    { path: 'user-management', component: UserManagementComponent },
     { path: 'expeditions', component: ExpeditionMainComponent },
     { path: 'reservations', component: ReservationsComponent },
     { path: 'country-city-management', component: CountryCityManagementComponent },

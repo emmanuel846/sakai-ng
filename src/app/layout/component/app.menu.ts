@@ -80,7 +80,11 @@ export class AppMenu {
                         icon: 'pi pi-fw pi-pencil',
                         routerLink: ['/dashboard/pages/clients']
                     },
-                    
+                    {
+                        label: 'Gestion des utilisateurs',
+                        icon: 'pi pi-fw pi-users',
+                        routerLink: ['/dashboard/pages/user-management']
+                    },
                     {
                         label: 'Liste des expéditions',
                         icon: 'pi pi-fw pi-exclamation-circle',
