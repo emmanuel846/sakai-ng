@@ -157,17 +157,17 @@
             (actuel : {{ getStatusLabel(statusChangeTarget!.status) }})
         </span>
     </p>
-    <div class="flex flex-column gap-3">
-        <div *ngFor="let s of statusOptions" class="flex align-items-center gap-3">
-            <p-radioButton
-                [inputId]="'status-' + s.value"
-                [value]="s.value"
-                [(ngModel)]="selectedNewStatus">
-            </p-radioButton>
-            <label [for]="'status-' + s.value" class="cursor-pointer">
-                <p-tag [value]="s.label" [severity]="s.severity"></p-tag>
-            </label>
-        </div>
+    <div class="flex flex-column gap-2">
+        <label for="newStatus">Nouveau statut</label>
+        <p-dropdown
+            inputId="newStatus"
+            [options]="statusOptions"
+            [(ngModel)]="selectedNewStatus"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Sélectionner un statut"
+            [style]="{ width: '100%' }">
+        </p-dropdown>
     </div>
     <ng-template pTemplate="footer">
         <p-button

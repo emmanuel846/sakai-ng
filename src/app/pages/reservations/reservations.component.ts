@@ -10,7 +10,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextarea } from 'primeng/inputtextarea';
-import { RadioButtonModule } from 'primeng/radiobutton';
+import { DropdownModule } from 'primeng/dropdown';
 import { ReservationStatus } from '../../models/reservation.model';
 import { Reservations } from './reservation.model';
 
@@ -20,15 +20,9 @@ interface Column {
   type?: 'date' | 'number' | 'string' | 'boolean';
 }
 
-interface StatusOption {
-  label: string;
-  value: ReservationStatus;
-  severity: 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
-}
-
 @Component({
   selector: 'app-reservations',
-  imports: [TableModule, CommonModule, FormsModule, TabsModule, ButtonModule, TagModule, ToastModule, DialogModule, InputTextarea, RadioButtonModule],
+  imports: [TableModule, CommonModule, FormsModule, TabsModule, ButtonModule, TagModule, ToastModule, DialogModule, InputTextarea, DropdownModule],
   providers: [MessageService],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.scss'
@@ -45,17 +39,17 @@ export class ReservationsComponent {
   selectedNewStatus: ReservationStatus | null = null;
   updatingStatus = false;
 
-  readonly statusOptions: StatusOption[] = [
-    { label: 'Créée', value: ReservationStatus.CREATED, severity: 'info' },
-    { label: 'Payée', value: ReservationStatus.PAYED, severity: 'success' },
-    { label: 'En attente', value: ReservationStatus.PENDING, severity: 'warn' },
-    { label: 'Confirmée', value: ReservationStatus.CONFIRMED, severity: 'success' },
-    { label: 'Validée', value: ReservationStatus.VALIDATED, severity: 'success' },
-    { label: 'Rejetée', value: ReservationStatus.REJECTED, severity: 'danger' },
-    { label: 'Annulée', value: ReservationStatus.CANCELLED, severity: 'danger' },
-    { label: 'Déposée', value: ReservationStatus.DROPPED, severity: 'contrast' },
-    { label: 'Échouée', value: ReservationStatus.FAILED, severity: 'danger' },
-    { label: 'Supprimée', value: ReservationStatus.DELETED, severity: 'secondary' },
+  readonly statusOptions: { label: string; value: ReservationStatus }[] = [
+    { label: 'Créée', value: ReservationStatus.CREATED },
+    { label: 'Payée', value: ReservationStatus.PAYED },
+    { label: 'En attente', value: ReservationStatus.PENDING },
+    { label: 'Confirmée', value: ReservationStatus.CONFIRMED },
+    { label: 'Validée', value: ReservationStatus.VALIDATED },
+    { label: 'Rejetée', value: ReservationStatus.REJECTED },
+    { label: 'Annulée', value: ReservationStatus.CANCELLED },
+    { label: 'Déposée', value: ReservationStatus.DROPPED },
+    { label: 'Échouée', value: ReservationStatus.FAILED },
+    { label: 'Supprimée', value: ReservationStatus.DELETED },
   ];
 
   pendingReservations = computed(() =>
