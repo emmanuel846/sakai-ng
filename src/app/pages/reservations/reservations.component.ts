@@ -10,14 +10,25 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextarea } from 'primeng/inputtextarea';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { ReservationStatus } from '../../models/reservation.model';
+import { Reservations } from './reservation.model';
+
 interface Column {
   field: string;
   header: string;
   type?: 'date' | 'number' | 'string' | 'boolean';
 }
+
+interface StatusOption {
+  label: string;
+  value: ReservationStatus;
+  severity: 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
+}
+
 @Component({
   selector: 'app-reservations',
-  imports: [TableModule, CommonModule, FormsModule, TabsModule, ButtonModule, TagModule, ToastModule, DialogModule, InputTextarea],
+  imports: [TableModule, CommonModule, FormsModule, TabsModule, ButtonModule, TagModule, ToastModule, DialogModule, InputTextarea, RadioButtonModule],
   providers: [MessageService],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.scss'
@@ -28,6 +39,25 @@ export class ReservationsComponent {
   cancelDialogVisible = false;
   cancelReservationId: string | null = null;
   cancelReason = '';
+
+  statusDialogVisible = false;
+  statusChangeTarget: Reservations | null = null;
+  selectedNewStatus: ReservationStatus | null = null;
+  updatingStatus = false;
+
+  readonly statusOptions: StatusOption[] = [
+    { label: 'Créée', value: ReservationStatus.CREATED, severity: 'info' },
+    { label: 'Payée', value: ReservationStatus.PAYED, severity: 'success' },
+    { label: 'En attente', value: ReservationStatus.PENDING, severity: 'warn' },
+    { label: 'Confirmée', value: ReservationStatus.CONFIRMED, severity: 'success' },
+    { label: 'Validée', value: ReservationStatus.VALIDATED, severity: 'success' },
+    { label: 'Rejetée', value: ReservationStatus.REJECTED, severity: 'danger' },
+    { label: 'Annulée', value: ReservationStatus.CANCELLED, severity: 'danger' },
+    { label: 'Déposée', value: ReservationStatus.DROPPED, severity: 'contrast' },
+    { label: 'Échouée', value: ReservationStatus.FAILED, severity: 'danger' },
+    { label: 'Supprimée', value: ReservationStatus.DELETED, severity: 'secondary' },
+  ];
+
   pendingReservations = computed(() =>
     Array.isArray(this.reservationService.reservations())
       ? this.reservationService.reservations().filter(r => r.status === 'CREATED')
@@ -130,6 +160,34 @@ export class ReservationsComponent {
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible d\'annuler la réservation' })
     });
+  }
+
+  openStatusDialog(reservation: Reservations): void {
+    this.statusChangeTarget = reservation;
+    this.selectedNewStatus = (reservation.status as ReservationStatus) ?? null;
+    this.statusDialogVisible = true;
+  }
+
+  confirmStatusChange(): void {
+    if (!this.statusChangeTarget?.id || !this.selectedNewStatus) return;
+    this.updatingStatus = true;
+    this.reservationService.updateReservationStatus(this.statusChangeTarget.id, this.selectedNewStatus).subscribe({
+      next: () => {
+        const label = this.getStatusLabel(this.selectedNewStatus!);
+        this.messageService.add({ severity: 'success', summary: 'Statut modifié', detail: `Nouveau statut : ${label}` });
+        this.statusDialogVisible = false;
+        this.updatingStatus = false;
+        this.reservationService.reservationsList().subscribe({});
+      },
+      error: () => {
+        this.updatingStatus = false;
+        this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de modifier le statut' });
+      }
+    });
+  }
+
+  getStatusLabel(status: string): string {
+    return this.statusOptions.find(s => s.value === status)?.label ?? status;
   }
 }
 

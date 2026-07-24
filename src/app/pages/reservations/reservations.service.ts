@@ -37,4 +37,10 @@ export class ReservationService{
         if (reason) params['reason'] = reason;
         return this.http.post<Reservations>(`${this.apiUrl}/cancel`, {}, { params });
     }
+
+    updateReservationStatus(id: string, status: string): Observable<Reservations> {
+        return this.http.get<Reservations>(`${this.apiUrl}/updateStatus`, {
+            params: { reservationId: id, status }
+        });
+    }
 }

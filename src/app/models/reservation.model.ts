@@ -17,6 +17,7 @@ export interface Receiver {
 
 export enum ReservationStatus {
   CREATED = 'CREATED',
+  PAYED = 'PAYED',
   DELETED = 'DELETED',
   PENDING = 'PENDING',
   CANCELLED = 'CANCELLED',

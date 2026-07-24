@@ -35,12 +35,20 @@
                                 }
                             </td>
                             <td>
-                                <p-button
-                                    label="Annuler"
-                                    icon="pi pi-ban"
-                                    severity="danger"
-                                    size="small"
-                                    (onClick)="openCancelDialog(rowData.id)" />
+                                <div class="flex gap-2">
+                                    <p-button
+                                        label="Modifier le statut"
+                                        icon="pi pi-pencil"
+                                        severity="secondary"
+                                        size="small"
+                                        (onClick)="openStatusDialog(rowData)" />
+                                    <p-button
+                                        label="Annuler"
+                                        icon="pi pi-ban"
+                                        severity="danger"
+                                        size="small"
+                                        (onClick)="openCancelDialog(rowData.id)" />
+                                </div>
                             </td>
                         </tr>
                     </ng-template>
@@ -134,5 +142,44 @@
             icon="pi pi-ban"
             severity="danger"
             (onClick)="confirmCancel()" />
+    </ng-template>
+</p-dialog>
+
+<p-dialog
+    header="Modifier le statut"
+    [(visible)]="statusDialogVisible"
+    [modal]="true"
+    [style]="{ width: '420px' }"
+    [closable]="true">
+    <p class="text-600 mb-3">
+        Réservation : <strong>{{ statusChangeTarget?.id }}</strong>
+        <span *ngIf="statusChangeTarget?.status" class="ml-2">
+            (actuel : {{ getStatusLabel(statusChangeTarget!.status) }})
+        </span>
+    </p>
+    <div class="flex flex-column gap-3">
+        <div *ngFor="let s of statusOptions" class="flex align-items-center gap-3">
+            <p-radioButton
+                [inputId]="'status-' + s.value"
+                [value]="s.value"
+                [(ngModel)]="selectedNewStatus">
+            </p-radioButton>
+            <label [for]="'status-' + s.value" class="cursor-pointer">
+                <p-tag [value]="s.label" [severity]="s.severity"></p-tag>
+            </label>
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Fermer"
+            icon="pi pi-times"
+            severity="secondary"
+            (onClick)="statusDialogVisible = false" />
+        <p-button
+            label="Mettre à jour"
+            icon="pi pi-check"
+            [loading]="updatingStatus"
+            [disabled]="!selectedNewStatus || selectedNewStatus === statusChangeTarget?.status"
+            (onClick)="confirmStatusChange()" />
     </ng-template>
 </p-dialog>
