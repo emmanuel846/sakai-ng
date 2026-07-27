@@ -94,6 +94,9 @@
                     <p-button label="Mettre en attente" icon="pi pi-check" severity="primary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.CREATED); $event.stopPropagation()" />
                     <p-button label="Terminer" icon="pi pi-check" severity="secondary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.COMPLETED); $event.stopPropagation()" />
                 }
+                @if(expedition.expeditionStatus === expedtionStatus.STARTED) {
+                    <p-button label="Remettre en traitement" icon="pi pi-undo" severity="primary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.VALIDATED); $event.stopPropagation()" />
+                }
             </td>
         </tr>
     </ng-template>
