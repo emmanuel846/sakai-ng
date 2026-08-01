@@ -1,0 +1,14 @@
+node_modules
+dist
+.angular
+.git
+.idea
+.vscode
+*.md
+.netlify
+netlify
+coverage
+e2e
+*.log
+.env
+.env.*
