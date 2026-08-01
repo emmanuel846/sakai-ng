@@ -90,7 +90,8 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit {
     { name: 'Documents' },
     { name: 'Autres' }
   ];
-  selectedPreferences: Array<{selected: boolean, categoryName: string, maxQuantity: number}> = [];
+  selectedPreferences: Array<{ selected: boolean; categoryName: string; maxQuantity: number }> = [];
+
   constructor(
     private expeditionService: ExpeditionService,
     private fb: FormBuilder,
@@ -98,6 +99,11 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit {
   ) { }
 
   ngOnInit() {
+    this.selectedPreferences = this.categories.map((cat) => ({
+      selected: false,
+      categoryName: cat.name,
+      maxQuantity: 1
+    }));
     this.getAllExpeditions();
   }
   ngAfterContentInit() {

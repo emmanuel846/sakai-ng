@@ -289,25 +289,25 @@
                 <small class="text-muted block mb-3">Sélectionnez les catégories d'articles que vous acceptez de transporter et spécifiez la quantité maximale pour chacune.</small>
                 
                 <div class="grid formgrid preferences-grid">
-                    <div *ngFor="let category of categories; let i = index" class="col-12 md:col-6 lg:col-4 field">
-                        <div class="p-3 border-round border-1 surface-border hover:surface-hover transition-duration-150" [class.bg-primary-50]="selectedPreferences[i]?.selected">
+                    <div *ngFor="let pref of selectedPreferences; let i = index" class="col-12 md:col-6 lg:col-4 field">
+                        <div class="p-3 border-round border-1 surface-border hover:surface-hover transition-duration-150" [class.bg-primary-50]="pref.selected">
                             <div class="flex align-items-center justify-content-between mb-2">
                                 <label [for]="'pref-'+i" class="font-medium flex align-items-center cursor-pointer flex-1">
                                     <p-checkbox 
                                         [inputId]="'pref-'+i" 
                                         [binary]="true" 
-                                        [(ngModel)]="selectedPreferences[i].selected"
+                                        [(ngModel)]="pref.selected"
                                         [ngModelOptions]="{standalone: true}"
                                         class="mr-2"
                                     />
-                                    <span>{{ category.name }}</span>
+                                    <span>{{ pref.categoryName }}</span>
                                 </label>
                             </div>
-                            <div *ngIf="selectedPreferences[i]?.selected" class="mt-2">
+                            <div *ngIf="pref.selected" class="mt-2">
                                 <label [for]="'qty-'+i" class="text-sm text-muted block mb-1">Quantité max</label>
                                 <p-inputnumber 
                                     [inputId]="'qty-'+i"
-                                    [(ngModel)]="selectedPreferences[i].maxQuantity" 
+                                    [(ngModel)]="pref.maxQuantity" 
                                     [ngModelOptions]="{standalone: true}"
                                     [min]="1" 
                                     [showButtons]="true"
