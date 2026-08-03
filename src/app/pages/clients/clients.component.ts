@@ -10,7 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { Table, TableModule } from 'primeng/table';
+import { Table, TableModule, TableRowSelectEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
@@ -146,9 +146,13 @@ export class ClientsComponent implements OnInit, OnDestroy {
     }
   }
 
-  onRowSelect(event: { data: Profil }) {
-    this.selectedClient = event.data;
-    this.loadKycPreviews(event.data);
+  onRowSelect(event: TableRowSelectEvent) {
+    const client = event.data as Profil | undefined;
+    if (!client) {
+      return;
+    }
+    this.selectedClient = client;
+    this.loadKycPreviews(client);
   }
 
   onRowUnselect() {
