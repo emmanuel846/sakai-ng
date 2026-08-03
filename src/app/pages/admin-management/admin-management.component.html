@@ -2,8 +2,8 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="card">
-    <div class="flex justify-content-between flex-wrap gap-3 align-items-center mb-4">
-        <div class="flex flex-wrap gap-2 align-items-center">
+    <div class="flex justify-between flex-wrap gap-3 items-center mb-4">
+        <div class="flex flex-wrap gap-2 items-center">
             <h2 class="m-0 text-xl font-semibold">Administrateurs &amp; permissions</h2>
             <p-button
                 label="Nouvel administrateur"
@@ -12,7 +12,7 @@
             </p-button>
         </div>
 
-        <div class="flex flex-wrap gap-2 align-items-center">
+        <div class="flex flex-wrap gap-2 items-center">
             <span class="p-input-icon-left">
                 <i class="pi pi-search"></i>
                 <input
@@ -21,12 +21,13 @@
                     [(ngModel)]="searchTerm"
                     (input)="applyFilters()"
                     placeholder="Rechercher..."
-                    style="width: 220px" />
+                    class="w-56" />
             </span>
 
             <p-button
                 icon="pi pi-filter-slash"
-                class="p-button-outlined p-button-secondary"
+                [outlined]="true"
+                severity="secondary"
                 (click)="resetFilters()"
                 pTooltip="Réinitialiser"
                 tooltipPosition="top">
@@ -34,7 +35,7 @@
 
             <p-button
                 icon="pi pi-refresh"
-                class="p-button-outlined"
+                [outlined]="true"
                 (click)="loadAdmins()"
                 pTooltip="Actualiser"
                 tooltipPosition="top">
@@ -42,7 +43,7 @@
         </div>
     </div>
 
-    <p class="text-500 text-sm mb-3">
+    <p class="text-surface-500 text-sm mb-3">
         Créez des comptes administrateurs et attribuez-leur des permissions (rôles) pour accéder au backoffice.
     </p>
 
@@ -77,7 +78,7 @@
         <ng-template pTemplate="body" let-user>
             <tr class="admin-row">
                 <td>
-                    <div class="font-semibold text-900">{{ user.username }}</div>
+                    <div class="font-semibold">{{ user.username }}</div>
                 </td>
                 <td>
                     <span class="text-sm">{{ user.email }}</span>
@@ -90,7 +91,7 @@
                             [severity]="role.roleName === 'ADMIN' ? 'danger' : 'info'"
                             styleClass="text-xs">
                         </p-tag>
-                        <span *ngIf="!user.roles?.length" class="text-500">—</span>
+                        <span *ngIf="!user.roles?.length" class="text-surface-500">—</span>
                     </div>
                 </td>
                 <td>
@@ -102,16 +103,18 @@
                 <td class="text-center">
                     <p-button
                         icon="pi pi-key"
-                        class="p-button-rounded p-button-info p-button-text"
+                        [rounded]="true"
+                        [text]="true"
+                        severity="info"
                         (click)="openRolesDialog(user)"
                         pTooltip="Gérer les permissions"
                         tooltipPosition="top">
                     </p-button>
                     <p-button
                         [icon]="user.status === 'ACTIVATED' ? 'pi pi-ban' : 'pi pi-check'"
-                        [class]="user.status === 'ACTIVATED'
-                            ? 'p-button-rounded p-button-danger p-button-text'
-                            : 'p-button-rounded p-button-success p-button-text'"
+                        [rounded]="true"
+                        [text]="true"
+                        [severity]="user.status === 'ACTIVATED' ? 'danger' : 'success'"
                         (click)="toggleActivation(user)"
                         [pTooltip]="user.status === 'ACTIVATED' ? 'Désactiver' : 'Activer'"
                         tooltipPosition="top">
@@ -122,7 +125,7 @@
 
         <ng-template pTemplate="emptymessage">
             <tr>
-                <td colspan="5" class="text-center p-4 text-500">
+                <td colspan="5" class="text-center p-4 text-surface-500">
                     Aucun administrateur trouvé
                 </td>
             </tr>
@@ -135,34 +138,46 @@
     header="Nouvel administrateur"
     [(visible)]="showCreateDialog"
     [modal]="true"
-    [style]="{ width: '520px' }"
+    [style]="{ width: '520px', maxWidth: '95vw' }"
     [draggable]="false"
+    styleClass="admin-form-dialog"
     (onHide)="hideCreateDialog()">
 
-    <form [formGroup]="createForm" class="flex flex-column gap-3 pt-2">
-        <div class="flex flex-column gap-2">
-            <label for="admin-username" class="font-medium">Nom d'utilisateur</label>
-            <input id="admin-username" pInputText formControlName="username" placeholder="ex. admin.ops" />
+    <form [formGroup]="createForm" class="admin-form">
+        <div class="field">
+            <label for="admin-username">Nom d'utilisateur</label>
+            <input
+                id="admin-username"
+                pInputText
+                class="w-full"
+                formControlName="username"
+                placeholder="ex. admin.ops" />
             <small class="p-error" *ngIf="createForm.get('username')?.touched && createForm.get('username')?.invalid">
                 Identifiant requis (min. 3 caractères)
             </small>
         </div>
 
-        <div class="flex flex-column gap-2">
-            <label for="admin-email" class="font-medium">Email</label>
-            <input id="admin-email" pInputText type="email" formControlName="email" placeholder="ex. admin@exemple.com" />
+        <div class="field">
+            <label for="admin-email">Email</label>
+            <input
+                id="admin-email"
+                pInputText
+                type="email"
+                class="w-full"
+                formControlName="email"
+                placeholder="ex. admin@exemple.com" />
             <small class="p-error" *ngIf="createForm.get('email')?.touched && createForm.get('email')?.invalid">
                 Email valide requis
             </small>
         </div>
 
-        <div class="flex flex-column gap-2">
-            <label for="admin-password" class="font-medium">Mot de passe</label>
+        <div class="field">
+            <label for="admin-password">Mot de passe</label>
             <p-password
-                id="admin-password"
+                inputId="admin-password"
                 formControlName="password"
                 [toggleMask]="true"
-                [feedback]="true"
+                [feedback]="false"
                 styleClass="w-full"
                 inputStyleClass="w-full"
                 placeholder="Min. 6 caractères">
@@ -172,8 +187,8 @@
             </small>
         </div>
 
-        <div class="flex flex-column gap-2">
-            <label for="admin-roles" class="font-medium">Permissions (rôles)</label>
+        <div class="field">
+            <label for="admin-roles">Permissions (rôles)</label>
             <p-multiSelect
                 inputId="admin-roles"
                 [options]="roles"
@@ -186,22 +201,22 @@
                 filterPlaceHolder="Rechercher"
                 styleClass="w-full">
             </p-multiSelect>
-            <small class="text-500">Le rôle ADMIN est requis pour accéder au backoffice.</small>
+            <small class="field-hint">Le rôle ADMIN est requis pour accéder au backoffice.</small>
             <small class="p-error" *ngIf="createForm.get('roleIds')?.touched && createForm.get('roleIds')?.invalid">
                 Au moins une permission est requise
             </small>
         </div>
 
-        <div class="flex align-items-center gap-2">
+        <div class="activate-row">
             <p-checkbox formControlName="activate" [binary]="true" inputId="admin-activate"></p-checkbox>
-            <label for="admin-activate" class="font-medium m-0">Activer le compte immédiatement</label>
+            <label for="admin-activate">Activer le compte immédiatement</label>
         </div>
     </form>
 
     <ng-template pTemplate="footer">
         <p-button
             label="Annuler"
-            class="p-button-text"
+            [text]="true"
             (click)="hideCreateDialog()"
             [disabled]="saving">
         </p-button>
@@ -219,28 +234,31 @@
     [header]="'Permissions — ' + (rolesTarget?.username || '')"
     [(visible)]="showRolesDialog"
     [modal]="true"
-    [style]="{ width: '480px' }"
+    [style]="{ width: '480px', maxWidth: '95vw' }"
     [draggable]="false"
+    styleClass="admin-form-dialog"
     (onHide)="hideRolesDialog()">
 
-    <div class="flex flex-column gap-3 pt-2" *ngIf="rolesTarget">
-        <p class="m-0 text-500 text-sm">
+    <div class="admin-form" *ngIf="rolesTarget">
+        <p class="field-hint m-0 mb-3">
             Sélectionnez les permissions à attribuer à cet administrateur.
         </p>
 
-        <p-multiSelect
-            [options]="roles"
-            [(ngModel)]="selectedRoleIds"
-            optionLabel="roleName"
-            optionValue="id"
-            placeholder="Choisir des permissions"
-            display="chip"
-            [filter]="true"
-            filterPlaceHolder="Rechercher"
-            styleClass="w-full">
-        </p-multiSelect>
+        <div class="field">
+            <p-multiSelect
+                [options]="roles"
+                [(ngModel)]="selectedRoleIds"
+                optionLabel="roleName"
+                optionValue="id"
+                placeholder="Choisir des permissions"
+                display="chip"
+                [filter]="true"
+                filterPlaceHolder="Rechercher"
+                styleClass="w-full">
+            </p-multiSelect>
+        </div>
 
-        <div class="text-sm text-500" *ngIf="rolesTarget.roles?.length">
+        <div class="field-hint" *ngIf="rolesTarget.roles?.length">
             Permissions actuelles : <strong>{{ getRoleNames(rolesTarget) }}</strong>
         </div>
     </div>
@@ -248,7 +266,7 @@
     <ng-template pTemplate="footer">
         <p-button
             label="Annuler"
-            class="p-button-text"
+            [text]="true"
             (click)="hideRolesDialog()"
             [disabled]="saving">
         </p-button>

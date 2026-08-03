@@ -6,8 +6,60 @@
     }
 }
 
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 0.5rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+
+    label {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    input,
+    .p-inputtext {
+        width: 100%;
+    }
+}
+
+.field-hint {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+}
+
+.activate-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    label {
+        font-weight: 500;
+        margin: 0;
+        cursor: pointer;
+    }
+}
+
 :host ::ng-deep {
-    .p-password,
+    .admin-form-dialog {
+        .p-dialog-content {
+            overflow-x: hidden;
+        }
+    }
+
+    .p-password {
+        width: 100%;
+        display: block;
+    }
+
     .p-password-input {
         width: 100%;
     }

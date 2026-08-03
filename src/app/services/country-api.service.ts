@@ -13,10 +13,10 @@ export class CountryApiService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Récupère la liste de tous les pays
+   * Liste complète des pays (backoffice) — actifs et désactivés
    */
   getCountries(): Observable<Country[]> {
-    return this.http.get<Country[]>(`${this.baseUrl}/api/v1/countries/list`);
+    return this.http.get<Country[]>(`${this.baseUrl}/api/v1/countries/list/all`);
   }
 
   /**
