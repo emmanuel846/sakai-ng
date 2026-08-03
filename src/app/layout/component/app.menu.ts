@@ -86,6 +86,11 @@ export class AppMenu {
                         routerLink: ['/dashboard/pages/user-management']
                     },
                     {
+                        label: 'Administrateurs & permissions',
+                        icon: 'pi pi-fw pi-shield',
+                        routerLink: ['/dashboard/pages/admin-management']
+                    },
+                    {
                         label: 'Liste des expéditions',
                         icon: 'pi pi-fw pi-exclamation-circle',
                         routerLink: ['/dashboard/pages/expeditions']

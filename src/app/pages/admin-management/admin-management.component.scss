@@ -1,0 +1,18 @@
+.admin-row {
+    transition: background 0.15s;
+
+    &:hover td {
+        background: var(--surface-hover);
+    }
+}
+
+:host ::ng-deep {
+    .p-password,
+    .p-password-input {
+        width: 100%;
+    }
+
+    .p-multiselect {
+        width: 100%;
+    }
+}

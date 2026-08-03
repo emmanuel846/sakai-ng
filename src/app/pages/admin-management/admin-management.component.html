@@ -1,0 +1,262 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="card">
+    <div class="flex justify-content-between flex-wrap gap-3 align-items-center mb-4">
+        <div class="flex flex-wrap gap-2 align-items-center">
+            <h2 class="m-0 text-xl font-semibold">Administrateurs &amp; permissions</h2>
+            <p-button
+                label="Nouvel administrateur"
+                icon="pi pi-user-plus"
+                (click)="openCreate()">
+            </p-button>
+        </div>
+
+        <div class="flex flex-wrap gap-2 align-items-center">
+            <span class="p-input-icon-left">
+                <i class="pi pi-search"></i>
+                <input
+                    pInputText
+                    type="text"
+                    [(ngModel)]="searchTerm"
+                    (input)="applyFilters()"
+                    placeholder="Rechercher..."
+                    style="width: 220px" />
+            </span>
+
+            <p-button
+                icon="pi pi-filter-slash"
+                class="p-button-outlined p-button-secondary"
+                (click)="resetFilters()"
+                pTooltip="Réinitialiser"
+                tooltipPosition="top">
+            </p-button>
+
+            <p-button
+                icon="pi pi-refresh"
+                class="p-button-outlined"
+                (click)="loadAdmins()"
+                pTooltip="Actualiser"
+                tooltipPosition="top">
+            </p-button>
+        </div>
+    </div>
+
+    <p class="text-500 text-sm mb-3">
+        Créez des comptes administrateurs et attribuez-leur des permissions (rôles) pour accéder au backoffice.
+    </p>
+
+    <p-table
+        [value]="filteredAdmins"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} à {last} sur {totalRecords} administrateurs"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-gridlines"
+        dataKey="id">
+
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="username">
+                    Identifiant <p-sortIcon field="username"></p-sortIcon>
+                </th>
+                <th pSortableColumn="email">
+                    Email <p-sortIcon field="email"></p-sortIcon>
+                </th>
+                <th>Permissions</th>
+                <th pSortableColumn="status" style="width: 130px">
+                    Statut <p-sortIcon field="status"></p-sortIcon>
+                </th>
+                <th style="width: 160px; text-align: center">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-user>
+            <tr class="admin-row">
+                <td>
+                    <div class="font-semibold text-900">{{ user.username }}</div>
+                </td>
+                <td>
+                    <span class="text-sm">{{ user.email }}</span>
+                </td>
+                <td>
+                    <div class="flex flex-wrap gap-1">
+                        <p-tag
+                            *ngFor="let role of user.roles"
+                            [value]="role.roleName"
+                            [severity]="role.roleName === 'ADMIN' ? 'danger' : 'info'"
+                            styleClass="text-xs">
+                        </p-tag>
+                        <span *ngIf="!user.roles?.length" class="text-500">—</span>
+                    </div>
+                </td>
+                <td>
+                    <p-tag
+                        [value]="getStatusLabel(user.status)"
+                        [severity]="getStatusSeverity(user.status)">
+                    </p-tag>
+                </td>
+                <td class="text-center">
+                    <p-button
+                        icon="pi pi-key"
+                        class="p-button-rounded p-button-info p-button-text"
+                        (click)="openRolesDialog(user)"
+                        pTooltip="Gérer les permissions"
+                        tooltipPosition="top">
+                    </p-button>
+                    <p-button
+                        [icon]="user.status === 'ACTIVATED' ? 'pi pi-ban' : 'pi pi-check'"
+                        [class]="user.status === 'ACTIVATED'
+                            ? 'p-button-rounded p-button-danger p-button-text'
+                            : 'p-button-rounded p-button-success p-button-text'"
+                        (click)="toggleActivation(user)"
+                        [pTooltip]="user.status === 'ACTIVATED' ? 'Désactiver' : 'Activer'"
+                        tooltipPosition="top">
+                    </p-button>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="5" class="text-center p-4 text-500">
+                    Aucun administrateur trouvé
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- CREATE ADMIN DIALOG -->
+<p-dialog
+    header="Nouvel administrateur"
+    [(visible)]="showCreateDialog"
+    [modal]="true"
+    [style]="{ width: '520px' }"
+    [draggable]="false"
+    (onHide)="hideCreateDialog()">
+
+    <form [formGroup]="createForm" class="flex flex-column gap-3 pt-2">
+        <div class="flex flex-column gap-2">
+            <label for="admin-username" class="font-medium">Nom d'utilisateur</label>
+            <input id="admin-username" pInputText formControlName="username" placeholder="ex. admin.ops" />
+            <small class="p-error" *ngIf="createForm.get('username')?.touched && createForm.get('username')?.invalid">
+                Identifiant requis (min. 3 caractères)
+            </small>
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label for="admin-email" class="font-medium">Email</label>
+            <input id="admin-email" pInputText type="email" formControlName="email" placeholder="ex. admin@exemple.com" />
+            <small class="p-error" *ngIf="createForm.get('email')?.touched && createForm.get('email')?.invalid">
+                Email valide requis
+            </small>
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label for="admin-password" class="font-medium">Mot de passe</label>
+            <p-password
+                id="admin-password"
+                formControlName="password"
+                [toggleMask]="true"
+                [feedback]="true"
+                styleClass="w-full"
+                inputStyleClass="w-full"
+                placeholder="Min. 6 caractères">
+            </p-password>
+            <small class="p-error" *ngIf="createForm.get('password')?.touched && createForm.get('password')?.invalid">
+                Mot de passe requis (min. 6 caractères)
+            </small>
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label for="admin-roles" class="font-medium">Permissions (rôles)</label>
+            <p-multiSelect
+                inputId="admin-roles"
+                [options]="roles"
+                formControlName="roleIds"
+                optionLabel="roleName"
+                optionValue="id"
+                placeholder="Choisir des permissions"
+                display="chip"
+                [filter]="true"
+                filterPlaceHolder="Rechercher"
+                styleClass="w-full">
+            </p-multiSelect>
+            <small class="text-500">Le rôle ADMIN est requis pour accéder au backoffice.</small>
+            <small class="p-error" *ngIf="createForm.get('roleIds')?.touched && createForm.get('roleIds')?.invalid">
+                Au moins une permission est requise
+            </small>
+        </div>
+
+        <div class="flex align-items-center gap-2">
+            <p-checkbox formControlName="activate" [binary]="true" inputId="admin-activate"></p-checkbox>
+            <label for="admin-activate" class="font-medium m-0">Activer le compte immédiatement</label>
+        </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Annuler"
+            class="p-button-text"
+            (click)="hideCreateDialog()"
+            [disabled]="saving">
+        </p-button>
+        <p-button
+            label="Créer"
+            icon="pi pi-check"
+            (click)="saveAdmin()"
+            [loading]="saving">
+        </p-button>
+    </ng-template>
+</p-dialog>
+
+<!-- ROLES DIALOG -->
+<p-dialog
+    [header]="'Permissions — ' + (rolesTarget?.username || '')"
+    [(visible)]="showRolesDialog"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    [draggable]="false"
+    (onHide)="hideRolesDialog()">
+
+    <div class="flex flex-column gap-3 pt-2" *ngIf="rolesTarget">
+        <p class="m-0 text-500 text-sm">
+            Sélectionnez les permissions à attribuer à cet administrateur.
+        </p>
+
+        <p-multiSelect
+            [options]="roles"
+            [(ngModel)]="selectedRoleIds"
+            optionLabel="roleName"
+            optionValue="id"
+            placeholder="Choisir des permissions"
+            display="chip"
+            [filter]="true"
+            filterPlaceHolder="Rechercher"
+            styleClass="w-full">
+        </p-multiSelect>
+
+        <div class="text-sm text-500" *ngIf="rolesTarget.roles?.length">
+            Permissions actuelles : <strong>{{ getRoleNames(rolesTarget) }}</strong>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Annuler"
+            class="p-button-text"
+            (click)="hideRolesDialog()"
+            [disabled]="saving">
+        </p-button>
+        <p-button
+            label="Enregistrer"
+            icon="pi pi-check"
+            (click)="saveRoles()"
+            [loading]="saving">
+        </p-button>
+    </ng-template>
+</p-dialog>

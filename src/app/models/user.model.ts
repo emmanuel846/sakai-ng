@@ -40,6 +40,14 @@ export interface CreateUserRequest {
   password: string;
 }
 
+export interface CreateAdminUserRequest {
+  username: string;
+  email: string;
+  password: string;
+  roleIds: number[];
+  activate: boolean;
+}
+
 export interface CreateRoleRequest {
   roleName: string;
 }

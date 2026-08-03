@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import {
   ActivateAccountRequest,
   AddRoleRequest,
+  CreateAdminUserRequest,
   CreateRoleRequest,
   CreateUserRequest,
   Role,
@@ -31,6 +32,10 @@ export class UserApiService {
 
   create(dto: CreateUserRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.AUTH_BASE}/auth/register`, dto);
+  }
+
+  createAdmin(dto: CreateAdminUserRequest): Observable<User> {
+    return this.http.post<User>(`${this.AUTH_BASE}/admin/users`, dto);
   }
 
   activateAccount(dto: ActivateAccountRequest): Observable<User> {

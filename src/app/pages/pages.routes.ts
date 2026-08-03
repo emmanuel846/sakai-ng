@@ -10,6 +10,7 @@ import { CountryCityManagementComponent } from './country-city-management/countr
 import { CollectionPointManagementComponent } from './collection-point-management/collection-point-management.component';
 import { SettingsComponent } from './settings/settings.component';
 import { UserManagementComponent } from './user-management/user-management.component';
+import { AdminManagementComponent } from './admin-management/admin-management.component';
 
 export default [
     { path: 'documentation', component: Documentation },
@@ -17,6 +18,7 @@ export default [
     { path: 'empty', component: Empty },
     { path: 'clients', component: ClientsComponent },
     { path: 'user-management', component: UserManagementComponent },
+    { path: 'admin-management', component: AdminManagementComponent },
     { path: 'expeditions', component: ExpeditionMainComponent },
     { path: 'reservations', component: ReservationsComponent },
     { path: 'country-city-management', component: CountryCityManagementComponent },
