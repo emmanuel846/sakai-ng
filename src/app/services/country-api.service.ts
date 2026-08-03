@@ -53,4 +53,11 @@ export class CountryApiService {
   toggleCommunityFilter(id: string): Observable<Country> {
     return this.http.patch<Country>(`${this.baseUrl}/api/v1/countries/${id}/community-filter`, {});
   }
+
+  /**
+   * Active/désactive un pays
+   */
+  toggleStatus(id: string): Observable<Country> {
+    return this.http.patch<Country>(`${this.baseUrl}/api/v1/countries/${id}/status`, {});
+  }
 }

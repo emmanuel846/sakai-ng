@@ -234,6 +234,34 @@ export class CountryCityManagementComponent implements OnInit {
     });
   }
 
+  isCountryActive(country: Country): boolean {
+    return country.status === 'ACTIVATED';
+  }
+
+  toggleCountryStatus(country: Country, active: boolean) {
+    const previousStatus = country.status;
+    country.status = active ? 'ACTIVATED' : 'DESACTIVATED';
+
+    this.countryService.toggleStatus(country.id!).subscribe({
+      next: (updated) => {
+        country.status = updated.status;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Succès',
+          detail: `Pays ${updated.status === 'ACTIVATED' ? 'activé' : 'désactivé'} : ${updated.name}`
+        });
+      },
+      error: () => {
+        country.status = previousStatus;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Erreur lors de la mise à jour du statut'
+        });
+      }
+    });
+  }
+
   // === CRÉATION EN MASSE DES PAYS ===
   
   openBulkCountryCreate() {

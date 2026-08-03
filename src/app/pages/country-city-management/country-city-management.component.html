@@ -74,9 +74,12 @@
                                 <td>{{ country.iso2 }}</td>
                                 <td>{{ country.iso3 }}</td>
                                 <td>
-                                    <span [class]="'badge ' + (country.status === 'ACTIVATED' ? 'badge-success' : 'badge-warning')">
-                                        {{ country.status || 'N/A' }}
-                                    </span>
+                                    <p-toggleswitch
+                                        [ngModel]="isCountryActive(country)"
+                                        (ngModelChange)="toggleCountryStatus(country, $event)"
+                                        pTooltip="Activer / Désactiver le pays"
+                                        tooltipPosition="top">
+                                    </p-toggleswitch>
                                 </td>
                                 <td>
                                     <p-toggleswitch
