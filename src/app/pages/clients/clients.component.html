@@ -1,4 +1,5 @@
 <p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
 
 <div class="clients-page">
     <p-toolbar styleClass="mb-4">
@@ -37,7 +38,7 @@
                 [value]="filteredClients"
                 [rows]="10"
                 [paginator]="true"
-                [globalFilterFields]="['firstname', 'lastname', 'phoneNumber', 'country', 'verificationStatus', 'status']"
+                [globalFilterFields]="['firstname', 'lastname', 'phoneNumber', 'country', 'verificationStatus', 'status', 'public_pseudo']"
                 [rowHover]="true"
                 selectionMode="single"
                 [(selection)]="selectedClient"
@@ -89,7 +90,7 @@
                         <td>{{ client.birthdate | date: 'dd/MM/yyyy' }}</td>
                         <td>
                             <p-tag
-                                [value]="client.status || '—'"
+                                [value]="accountLabel(client.status)"
                                 [severity]="accountSeverity(client.status)">
                             </p-tag>
                         </td>
@@ -134,7 +135,7 @@
                                 [severity]="kycSeverity(selectedClient.verificationStatus)">
                             </p-tag>
                             <p-tag
-                                [value]="selectedClient.status || '—'"
+                                [value]="accountLabel(selectedClient.status)"
                                 [severity]="accountSeverity(selectedClient.status)">
                             </p-tag>
                         </div>
@@ -156,37 +157,111 @@
                     <h4 class="clients-detail__section-title">Identité</h4>
                     <dl class="clients-detail__grid">
                         <div>
+                            <dt>Prénom</dt>
+                            <dd>{{ displayValue(selectedClient.firstname) }}</dd>
+                        </div>
+                        <div>
+                            <dt>Nom</dt>
+                            <dd>{{ displayValue(selectedClient.lastname) }}</dd>
+                        </div>
+                        <div>
                             <dt>Date de naissance</dt>
                             <dd>{{ selectedClient.birthdate | date: 'dd/MM/yyyy' }}</dd>
                         </div>
                         <div>
                             <dt>Genre</dt>
-                            <dd>{{ selectedClient.gender || '—' }}</dd>
+                            <dd>{{ genderLabel(selectedClient.gender) }}</dd>
                         </div>
                         <div>
-                            <dt>Pays</dt>
-                            <dd>{{ selectedClient.country || '—' }}</dd>
+                            <dt>Pays de résidence</dt>
+                            <dd>{{ displayValue(selectedClient.country) }}</dd>
+                        </div>
+                        <div>
+                            <dt>Pays de naissance</dt>
+                            <dd>{{ displayValue(selectedClient.birthCountry) }}</dd>
                         </div>
                         <div>
                             <dt>Téléphone</dt>
                             <dd>
-                                {{ selectedClient.phoneNumber || '—' }}
+                                {{ displayValue(selectedClient.phoneNumber) }}
                                 @if (selectedClient.phoneVerified) {
                                     <i class="pi pi-verified text-green-500 ml-1" pTooltip="Téléphone vérifié"></i>
                                 }
                             </dd>
                         </div>
+                        <div>
+                            <dt>Pseudo public</dt>
+                            <dd>{{ displayValue(selectedClient.public_pseudo) }}</dd>
+                        </div>
                         <div class="clients-detail__full">
                             <dt>Adresse</dt>
-                            <dd>{{ selectedClient.address || '—' }}</dd>
+                            <dd>{{ displayValue(selectedClient.address) }}</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <p-divider />
+
+                <section class="clients-detail__section">
+                    <h4 class="clients-detail__section-title">Compte</h4>
+                    <dl class="clients-detail__grid">
+                        <div>
+                            <dt>Email</dt>
+                            <dd>
+                                @if (linkedUserLoading) {
+                                    …
+                                } @else {
+                                    {{ displayValue(linkedUser?.email || selectedClient.users?.email) }}
+                                }
+                            </dd>
                         </div>
                         <div>
-                            <dt>Pseudo</dt>
-                            <dd>{{ selectedClient.public_pseudo || '—' }}</dd>
+                            <dt>Username</dt>
+                            <dd>
+                                @if (linkedUserLoading) {
+                                    …
+                                } @else {
+                                    {{ displayValue(linkedUser?.username || selectedClient.users?.username) }}
+                                }
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>ID utilisateur</dt>
+                            <dd>{{ displayValue(selectedClient.usersId) }}</dd>
+                        </div>
+                        <div>
+                            <dt>Niveau</dt>
+                            <dd>{{ displayValue(selectedClient.level) }}</dd>
+                        </div>
+                        <div>
+                            <dt>Note</dt>
+                            <dd>{{ ratingLabel(selectedClient) }}</dd>
+                        </div>
+                        <div>
+                            <dt>Solde</dt>
+                            <dd>
+                                @if (selectedClient.balance === null || selectedClient.balance === undefined) {
+                                    —
+                                } @else {
+                                    {{ selectedClient.balance | number: '1.2-2' }} €
+                                }
+                            </dd>
                         </div>
                         <div>
                             <dt>Inscrit le</dt>
                             <dd>{{ selectedClient.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Mis à jour le</dt>
+                            <dd>{{ selectedClient.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                        </div>
+                        <div class="clients-detail__full">
+                            <dt>Bio</dt>
+                            <dd>{{ displayValue(selectedClient.bio) }}</dd>
+                        </div>
+                        <div class="clients-detail__full">
+                            <dt>Préférences</dt>
+                            <dd>{{ displayValue(selectedClient.preferences) }}</dd>
                         </div>
                     </dl>
                 </section>
@@ -200,6 +275,17 @@
                             {{ selectedClient.kycType || 'Type non renseigné' }}
                         </span>
                     </div>
+
+                    <dl class="clients-detail__grid mb-3">
+                        <div>
+                            <dt>Statut KYC</dt>
+                            <dd>{{ kycLabel(selectedClient.verificationStatus) }}</dd>
+                        </div>
+                        <div>
+                            <dt>Type de pièce</dt>
+                            <dd>{{ displayValue(selectedClient.kycType) }}</dd>
+                        </div>
+                    </dl>
 
                     @if (!hasKycDocuments(selectedClient)) {
                         <div class="clients-detail__no-docs">
@@ -264,7 +350,7 @@
                                 severity="success"
                                 [loading]="actionLoading"
                                 [disabled]="!hasKycDocuments(selectedClient)"
-                                (onClick)="validateAccount(verificationStatus.ACCEPTED)">
+                                (onClick)="confirmValidateAccount(verificationStatus.ACCEPTED, $event)">
                             </p-button>
                         }
                         @if (selectedClient.verificationStatus !== 'REJECTED') {
@@ -274,7 +360,7 @@
                                 severity="danger"
                                 [outlined]="true"
                                 [loading]="actionLoading"
-                                (onClick)="validateAccount(verificationStatus.REJECTED)">
+                                (onClick)="confirmValidateAccount(verificationStatus.REJECTED, $event)">
                             </p-button>
                         }
                         @if (selectedClient.status !== 'ACTIVATED') {
@@ -284,7 +370,7 @@
                                 severity="primary"
                                 [outlined]="true"
                                 [loading]="actionLoading"
-                                (onClick)="activateAccount()">
+                                (onClick)="confirmActivateAccount($event)">
                             </p-button>
                         }
                     </div>

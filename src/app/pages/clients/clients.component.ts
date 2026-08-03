@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DividerModule } from 'primeng/divider';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -18,6 +19,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { forkJoin, of, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Profil } from '../../models/profil.model';
+import { User } from '../../models/user.model';
+import { UserApiService } from '../../services/user-api.service';
 import { AccountStatus, VerificationStatus } from './accountstatus.enum';
 import { ClientService } from './client.service';
 
@@ -39,6 +42,7 @@ interface KycPreview {
     TableModule,
     ButtonModule,
     ToastModule,
+    ConfirmDialogModule,
     ToolbarModule,
     InputTextModule,
     InputIconModule,
@@ -50,7 +54,7 @@ interface KycPreview {
     TooltipModule,
     SelectButtonModule
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './clients.component.html',
   styleUrl: './clients.component.scss'
 })
@@ -58,6 +62,8 @@ export class ClientsComponent implements OnInit, OnDestroy {
   clients: Profil[] = [];
   filteredClients: Profil[] = [];
   selectedClient: Profil | null = null;
+  linkedUser: User | null = null;
+  linkedUserLoading = false;
   verificationStatus = VerificationStatus;
   loading = false;
   actionLoading = false;
@@ -73,11 +79,14 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
   kycPreview: KycPreview = this.emptyPreview();
   private previewSub?: Subscription;
+  private userSub?: Subscription;
   private objectUrls: string[] = [];
 
   constructor(
     private clientService: ClientService,
-    private messageService: MessageService
+    private userApi: UserApiService,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit() {
@@ -86,6 +95,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.previewSub?.unsubscribe();
+    this.userSub?.unsubscribe();
     this.revokeObjectUrls();
   }
 
@@ -100,6 +110,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
           this.selectedClient = refreshed;
           if (refreshed) {
             this.loadKycPreviews(refreshed);
+            this.loadLinkedUser(refreshed);
           } else {
             this.clearSelection();
           }
@@ -153,6 +164,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
     }
     this.selectedClient = client;
     this.loadKycPreviews(client);
+    this.loadLinkedUser(client);
   }
 
   onRowUnselect() {
@@ -161,9 +173,49 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
   clearSelection() {
     this.selectedClient = null;
+    this.linkedUser = null;
+    this.linkedUserLoading = false;
     this.previewSub?.unsubscribe();
+    this.userSub?.unsubscribe();
     this.revokeObjectUrls();
     this.kycPreview = this.emptyPreview();
+  }
+
+  confirmValidateAccount(status: VerificationStatus, event?: Event) {
+    if (!this.selectedClient) {
+      return;
+    }
+    const accepted = status === VerificationStatus.ACCEPTED;
+    const name = `${this.selectedClient.lastname} ${this.selectedClient.firstname}`;
+    this.confirmationService.confirm({
+      target: event?.currentTarget as EventTarget,
+      message: accepted
+        ? `Confirmer l’acceptation du KYC de <strong>${name}</strong> ?`
+        : `Confirmer le rejet du KYC de <strong>${name}</strong> ?`,
+      header: accepted ? 'Accepter le KYC' : 'Rejeter le KYC',
+      icon: accepted ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle',
+      acceptLabel: accepted ? 'Accepter' : 'Rejeter',
+      rejectLabel: 'Annuler',
+      acceptButtonStyleClass: accepted ? 'p-button-success' : 'p-button-danger',
+      accept: () => this.validateAccount(status)
+    });
+  }
+
+  confirmActivateAccount(event?: Event) {
+    if (!this.selectedClient) {
+      return;
+    }
+    const name = `${this.selectedClient.lastname} ${this.selectedClient.firstname}`;
+    this.confirmationService.confirm({
+      target: event?.currentTarget as EventTarget,
+      message: `Confirmer l’activation du compte de <strong>${name}</strong> ?`,
+      header: 'Activer le compte',
+      icon: 'pi pi-user-plus',
+      acceptLabel: 'Activer',
+      rejectLabel: 'Annuler',
+      acceptButtonStyleClass: 'p-button-primary',
+      accept: () => this.activateAccount()
+    });
   }
 
   validateAccount(status: VerificationStatus) {
@@ -262,11 +314,90 @@ export class ClientsComponent implements OnInit, OnDestroy {
     }
   }
 
+  accountLabel(status: string | null | undefined): string {
+    switch (status) {
+      case 'ACTIVATED':
+        return 'Activé';
+      case 'CREATED':
+        return 'Créé';
+      case 'SUSPENDED':
+        return 'Suspendu';
+      case 'DEACTIVATED':
+        return 'Désactivé';
+      default:
+        return status || '—';
+    }
+  }
+
+  genderLabel(gender: string | null | undefined): string {
+    switch ((gender || '').toUpperCase()) {
+      case 'MALE':
+        return 'Homme';
+      case 'FEMALE':
+        return 'Femme';
+      case 'OTHER':
+        return 'Autre';
+      default:
+        return gender || '—';
+    }
+  }
+
+  displayValue(value: string | number | null | undefined): string {
+    if (value === null || value === undefined || value === '') {
+      return '—';
+    }
+    return String(value);
+  }
+
+  ratingLabel(client: Profil | null): string {
+    if (!client) {
+      return '—';
+    }
+    const rating = client.rating ?? 0;
+    const counts = client.rating_counts ?? 0;
+    return `${rating}/5 (${counts} avis)`;
+  }
+
   hasKycDocuments(client: Profil | null): boolean {
     if (!client) {
       return false;
     }
     return !!(client.kycFileName || client.kycVersoFileName || client.kycSelfieFileName);
+  }
+
+  private loadLinkedUser(client: Profil) {
+    this.userSub?.unsubscribe();
+    this.linkedUser = null;
+
+    if (client.users?.email || client.users?.username) {
+      this.linkedUser = {
+        id: Number(client.users.id ?? client.usersId),
+        username: client.users.username || '—',
+        email: client.users.email || '—',
+        roles: [],
+        status: client.users.isActive ? 'ACTIVATED' : 'DEACTIVATED',
+        twoFactor: false,
+        locked: false,
+        emailVerifiated: false
+      };
+      return;
+    }
+
+    if (!client.usersId) {
+      return;
+    }
+
+    this.linkedUserLoading = true;
+    this.userSub = this.userApi.getById(client.usersId).pipe(catchError(() => of(null))).subscribe({
+      next: (user) => {
+        this.linkedUser = user;
+        this.linkedUserLoading = false;
+      },
+      error: () => {
+        this.linkedUser = null;
+        this.linkedUserLoading = false;
+      }
+    });
   }
 
   private loadKycPreviews(client: Profil) {
@@ -284,9 +415,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
       if (!fileName) {
         return of(null);
       }
-      return this.clientService.downloadFile(fileName).pipe(
-        catchError(() => of(null))
-      );
+      return this.clientService.downloadFile(fileName).pipe(catchError(() => of(null)));
     };
 
     this.previewSub = forkJoin({
@@ -300,10 +429,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
           versoUrl: this.toObjectUrl(verso),
           selfieUrl: this.toObjectUrl(selfie),
           loading: false,
-          error:
-            !recto && !verso && !selfie
-              ? 'Impossible de charger les documents KYC'
-              : null
+          error: !recto && !verso && !selfie ? 'Impossible de charger les documents KYC' : null
         };
       },
       error: () => {

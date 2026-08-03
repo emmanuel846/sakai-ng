@@ -1,3 +1,10 @@
+export interface ProfilUser {
+  id?: string | number;
+  email?: string;
+  username?: string;
+  isActive?: boolean;
+}
+
 export interface Profil {
   id: string;
   createdBy: string;
@@ -8,6 +15,7 @@ export interface Profil {
   firstname: string;
   lastname: string;
   country: string;
+  birthCountry?: string;
   birthdate: string;
   address: string;
   phoneNumber: string;
@@ -24,8 +32,10 @@ export interface Profil {
   kycSelfieFileName: string;
   bio: string;
   level: string;
+  balance?: number | null;
   usersId: number;
   public_pseudo: string;
+  users?: ProfilUser | null;
 }
 
 export interface updateProfile {

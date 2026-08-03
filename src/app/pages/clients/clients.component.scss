@@ -11,11 +11,11 @@
 
 @media (min-width: 1100px) {
   .clients-split {
-    grid-template-columns: minmax(0, 1fr) 22rem;
+    grid-template-columns: minmax(0, 1fr) 24rem;
   }
 
   .clients-split--open {
-    grid-template-columns: minmax(0, 1fr) minmax(22rem, 28rem);
+    grid-template-columns: minmax(0, 1fr) minmax(24rem, 32rem);
   }
 }
 
