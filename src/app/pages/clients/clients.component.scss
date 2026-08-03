@@ -167,13 +167,18 @@
 
 .clients-detail__actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 0.65rem;
+  justify-content: flex-end;
+  align-items: stretch;
 }
 
 .clients-detail__actions :deep(.p-button) {
-  width: 100%;
+  width: auto;
+  flex: 1 1 0;
   justify-content: center;
+  min-width: 11rem;
 }
 
 @media (max-width: 1099px) {

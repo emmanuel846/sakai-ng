@@ -334,16 +334,6 @@
                             <section class="clients-detail__section">
                                 <h4 class="clients-detail__section-title">Actions client</h4>
                                 <div class="clients-detail__actions">
-                                    @if (selectedClient.verificationStatus !== 'ACCEPTED') {
-                                        <p-button
-                                            label="Accepter le KYC"
-                                            icon="pi pi-check"
-                                            severity="success"
-                                            [loading]="actionLoading"
-                                            [disabled]="!hasKycDocuments(selectedClient)"
-                                            (onClick)="confirmValidateAccount(verificationStatus.ACCEPTED, $event)">
-                                        </p-button>
-                                    }
                                     @if (selectedClient.verificationStatus === 'REJECTED') {
                                         <p-button
                                             label="Annuler le rejet"
@@ -362,6 +352,16 @@
                                             [outlined]="true"
                                             [loading]="actionLoading"
                                             (onClick)="confirmValidateAccount(verificationStatus.REJECTED, $event)">
+                                        </p-button>
+                                    }
+                                    @if (selectedClient.verificationStatus !== 'ACCEPTED') {
+                                        <p-button
+                                            label="Accepter le KYC"
+                                            icon="pi pi-check"
+                                            severity="success"
+                                            [loading]="actionLoading"
+                                            [disabled]="!hasKycDocuments(selectedClient)"
+                                            (onClick)="confirmValidateAccount(verificationStatus.ACCEPTED, $event)">
                                         </p-button>
                                     }
                                     @if (selectedClient.status !== 'ACTIVATED') {
