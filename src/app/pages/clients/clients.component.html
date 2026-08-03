@@ -5,7 +5,7 @@
     <p-toolbar styleClass="mb-4">
         <ng-template #start>
             <div class="flex flex-wrap items-center gap-3">
-                <h2 class="m-0 text-xl font-semibold">Clients &amp; KYC</h2>
+                <h2 class="m-0 text-xl font-semibold">Gestion de comptes</h2>
                 <p-button
                     severity="secondary"
                     label="Rafraîchir"
@@ -46,13 +46,13 @@
                 (onRowUnselect)="onRowUnselect()"
                 dataKey="id"
                 [showCurrentPageReport]="true"
-                currentPageReportTemplate="{first} à {last} sur {totalRecords} clients"
+                currentPageReportTemplate="{first} à {last} sur {totalRecords} comptes"
                 [rowsPerPageOptions]="[10, 20, 30]"
                 styleClass="p-datatable-sm">
                 <ng-template #caption>
                     <div class="flex items-center justify-between gap-3 flex-wrap">
                         <span class="text-surface-500 text-sm">
-                            Cliquez sur un client pour afficher le détail KYC à droite
+                            Sélectionnez un compte pour gérer le profil client et l’utilisateur
                         </span>
                         <p-iconfield>
                             <p-inputicon styleClass="pi pi-search" />
@@ -106,7 +106,7 @@
                 <ng-template #emptymessage>
                     <tr>
                         <td colspan="5" class="text-center text-surface-500 py-6">
-                            Aucun client pour ce filtre
+                            Aucun compte pour ce filtre
                         </td>
                     </tr>
                 </ng-template>
@@ -117,15 +117,15 @@
             @if (!selectedClient) {
                 <div class="clients-detail__empty">
                     <i class="pi pi-id-card clients-detail__empty-icon"></i>
-                    <h3 class="m-0">Détail client</h3>
+                    <h3 class="m-0">Détail du compte</h3>
                     <p class="text-surface-500 m-0 text-center">
-                        Sélectionnez un client dans la liste pour consulter son profil et valider son KYC.
+                        Sélectionnez un compte pour consulter le profil client, le KYC et le compte utilisateur.
                     </p>
                 </div>
             } @else {
                 <div class="clients-detail__header">
                     <div class="min-w-0">
-                        <div class="text-xs uppercase tracking-wide text-surface-500 mb-1">Client</div>
+                        <div class="text-xs uppercase tracking-wide text-surface-500 mb-1">Compte</div>
                         <h3 class="m-0 text-xl font-semibold truncate">
                             {{ selectedClient.lastname }} {{ selectedClient.firstname }}
                         </h3>
@@ -138,6 +138,12 @@
                                 [value]="accountLabel(selectedClient.status)"
                                 [severity]="accountSeverity(selectedClient.status)">
                             </p-tag>
+                            @if (linkedUser) {
+                                <p-tag
+                                    [value]="'User: ' + accountLabel(linkedUser.status)"
+                                    [severity]="accountSeverity(linkedUser.status)">
+                                </p-tag>
+                            }
                         </div>
                     </div>
                     <p-button
@@ -151,231 +157,374 @@
                     </p-button>
                 </div>
 
-                <p-divider />
+                <p-tabs [(value)]="activeDetailTab" styleClass="clients-detail__tabs mt-3">
+                    <p-tablist>
+                        <p-tab value="client"><i class="pi pi-id-card mr-2"></i>Profil client</p-tab>
+                        <p-tab value="user"><i class="pi pi-user mr-2"></i>Compte utilisateur</p-tab>
+                    </p-tablist>
+                    <p-tabpanels>
+                        <p-tabpanel value="client">
+                            <section class="clients-detail__section">
+                                <h4 class="clients-detail__section-title">Identité</h4>
+                                <dl class="clients-detail__grid">
+                                    <div>
+                                        <dt>Prénom</dt>
+                                        <dd>{{ displayValue(selectedClient.firstname) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Nom</dt>
+                                        <dd>{{ displayValue(selectedClient.lastname) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Date de naissance</dt>
+                                        <dd>{{ selectedClient.birthdate | date: 'dd/MM/yyyy' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Genre</dt>
+                                        <dd>{{ genderLabel(selectedClient.gender) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pays de résidence</dt>
+                                        <dd>{{ displayValue(selectedClient.country) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pays de naissance</dt>
+                                        <dd>{{ displayValue(selectedClient.birthCountry) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Téléphone</dt>
+                                        <dd>
+                                            {{ displayValue(selectedClient.phoneNumber) }}
+                                            @if (selectedClient.phoneVerified) {
+                                                <i class="pi pi-verified text-green-500 ml-1" pTooltip="Téléphone vérifié"></i>
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pseudo public</dt>
+                                        <dd>{{ displayValue(selectedClient.public_pseudo) }}</dd>
+                                    </div>
+                                    <div class="clients-detail__full">
+                                        <dt>Adresse</dt>
+                                        <dd>{{ displayValue(selectedClient.address) }}</dd>
+                                    </div>
+                                </dl>
+                            </section>
 
-                <section class="clients-detail__section">
-                    <h4 class="clients-detail__section-title">Identité</h4>
-                    <dl class="clients-detail__grid">
-                        <div>
-                            <dt>Prénom</dt>
-                            <dd>{{ displayValue(selectedClient.firstname) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Nom</dt>
-                            <dd>{{ displayValue(selectedClient.lastname) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Date de naissance</dt>
-                            <dd>{{ selectedClient.birthdate | date: 'dd/MM/yyyy' }}</dd>
-                        </div>
-                        <div>
-                            <dt>Genre</dt>
-                            <dd>{{ genderLabel(selectedClient.gender) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Pays de résidence</dt>
-                            <dd>{{ displayValue(selectedClient.country) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Pays de naissance</dt>
-                            <dd>{{ displayValue(selectedClient.birthCountry) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Téléphone</dt>
-                            <dd>
-                                {{ displayValue(selectedClient.phoneNumber) }}
-                                @if (selectedClient.phoneVerified) {
-                                    <i class="pi pi-verified text-green-500 ml-1" pTooltip="Téléphone vérifié"></i>
-                                }
-                            </dd>
-                        </div>
-                        <div>
-                            <dt>Pseudo public</dt>
-                            <dd>{{ displayValue(selectedClient.public_pseudo) }}</dd>
-                        </div>
-                        <div class="clients-detail__full">
-                            <dt>Adresse</dt>
-                            <dd>{{ displayValue(selectedClient.address) }}</dd>
-                        </div>
-                    </dl>
-                </section>
+                            <p-divider />
 
-                <p-divider />
+                            <section class="clients-detail__section">
+                                <h4 class="clients-detail__section-title">Profil</h4>
+                                <dl class="clients-detail__grid">
+                                    <div>
+                                        <dt>Niveau</dt>
+                                        <dd>{{ displayValue(selectedClient.level) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Note</dt>
+                                        <dd>{{ ratingLabel(selectedClient) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Solde</dt>
+                                        <dd>
+                                            @if (selectedClient.balance === null || selectedClient.balance === undefined) {
+                                                —
+                                            } @else {
+                                                {{ selectedClient.balance | number: '1.2-2' }} €
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>Statut profil</dt>
+                                        <dd>{{ accountLabel(selectedClient.status) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Inscrit le</dt>
+                                        <dd>{{ selectedClient.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Mis à jour le</dt>
+                                        <dd>{{ selectedClient.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                                    </div>
+                                    <div class="clients-detail__full">
+                                        <dt>Bio</dt>
+                                        <dd>{{ displayValue(selectedClient.bio) }}</dd>
+                                    </div>
+                                    <div class="clients-detail__full">
+                                        <dt>Préférences</dt>
+                                        <dd>{{ displayValue(selectedClient.preferences) }}</dd>
+                                    </div>
+                                </dl>
+                            </section>
 
-                <section class="clients-detail__section">
-                    <h4 class="clients-detail__section-title">Compte</h4>
-                    <dl class="clients-detail__grid">
-                        <div>
-                            <dt>Email</dt>
-                            <dd>
-                                @if (linkedUserLoading) {
-                                    …
+                            <p-divider />
+
+                            <section class="clients-detail__section">
+                                <div class="flex items-center justify-between gap-2 mb-3">
+                                    <h4 class="clients-detail__section-title m-0">Documents KYC</h4>
+                                    <span class="text-sm text-surface-500">
+                                        {{ selectedClient.kycType || 'Type non renseigné' }}
+                                    </span>
+                                </div>
+
+                                <dl class="clients-detail__grid mb-3">
+                                    <div>
+                                        <dt>Statut KYC</dt>
+                                        <dd>{{ kycLabel(selectedClient.verificationStatus) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Type de pièce</dt>
+                                        <dd>{{ displayValue(selectedClient.kycType) }}</dd>
+                                    </div>
+                                </dl>
+
+                                @if (!hasKycDocuments(selectedClient)) {
+                                    <div class="clients-detail__no-docs">
+                                        <i class="pi pi-inbox"></i>
+                                        <span>Aucun document KYC soumis</span>
+                                    </div>
+                                } @else if (kycPreview.loading) {
+                                    <div class="clients-detail__loading">
+                                        <p-progressSpinner strokeWidth="3" [style]="{ width: '42px', height: '42px' }" />
+                                        <span>Chargement des documents…</span>
+                                    </div>
+                                } @else if (kycPreview.error) {
+                                    <div class="clients-detail__no-docs clients-detail__no-docs--error">
+                                        <i class="pi pi-exclamation-triangle"></i>
+                                        <span>{{ kycPreview.error }}</span>
+                                    </div>
                                 } @else {
-                                    {{ displayValue(linkedUser?.email || selectedClient.users?.email) }}
+                                    <div class="clients-kyc-docs">
+                                        <figure class="clients-kyc-doc">
+                                            <figcaption>Recto</figcaption>
+                                            @if (kycPreview.rectoUrl) {
+                                                <a [href]="kycPreview.rectoUrl" target="_blank" rel="noopener">
+                                                    <img [src]="kycPreview.rectoUrl" alt="Recto pièce d'identité" />
+                                                </a>
+                                            } @else {
+                                                <div class="clients-kyc-doc__missing">Non fourni</div>
+                                            }
+                                        </figure>
+                                        <figure class="clients-kyc-doc">
+                                            <figcaption>Verso</figcaption>
+                                            @if (kycPreview.versoUrl) {
+                                                <a [href]="kycPreview.versoUrl" target="_blank" rel="noopener">
+                                                    <img [src]="kycPreview.versoUrl" alt="Verso pièce d'identité" />
+                                                </a>
+                                            } @else {
+                                                <div class="clients-kyc-doc__missing">Non fourni</div>
+                                            }
+                                        </figure>
+                                        <figure class="clients-kyc-doc">
+                                            <figcaption>Selfie</figcaption>
+                                            @if (kycPreview.selfieUrl) {
+                                                <a [href]="kycPreview.selfieUrl" target="_blank" rel="noopener">
+                                                    <img [src]="kycPreview.selfieUrl" alt="Selfie KYC" />
+                                                </a>
+                                            } @else {
+                                                <div class="clients-kyc-doc__missing">Non fourni</div>
+                                            }
+                                        </figure>
+                                    </div>
                                 }
-                            </dd>
-                        </div>
-                        <div>
-                            <dt>Username</dt>
-                            <dd>
-                                @if (linkedUserLoading) {
-                                    …
-                                } @else {
-                                    {{ displayValue(linkedUser?.username || selectedClient.users?.username) }}
-                                }
-                            </dd>
-                        </div>
-                        <div>
-                            <dt>ID utilisateur</dt>
-                            <dd>{{ displayValue(selectedClient.usersId) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Niveau</dt>
-                            <dd>{{ displayValue(selectedClient.level) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Note</dt>
-                            <dd>{{ ratingLabel(selectedClient) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Solde</dt>
-                            <dd>
-                                @if (selectedClient.balance === null || selectedClient.balance === undefined) {
-                                    —
-                                } @else {
-                                    {{ selectedClient.balance | number: '1.2-2' }} €
-                                }
-                            </dd>
-                        </div>
-                        <div>
-                            <dt>Inscrit le</dt>
-                            <dd>{{ selectedClient.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-                        </div>
-                        <div>
-                            <dt>Mis à jour le</dt>
-                            <dd>{{ selectedClient.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-                        </div>
-                        <div class="clients-detail__full">
-                            <dt>Bio</dt>
-                            <dd>{{ displayValue(selectedClient.bio) }}</dd>
-                        </div>
-                        <div class="clients-detail__full">
-                            <dt>Préférences</dt>
-                            <dd>{{ displayValue(selectedClient.preferences) }}</dd>
-                        </div>
-                    </dl>
-                </section>
+                            </section>
 
-                <p-divider />
+                            <p-divider />
 
-                <section class="clients-detail__section">
-                    <div class="flex items-center justify-between gap-2 mb-3">
-                        <h4 class="clients-detail__section-title m-0">Documents KYC</h4>
-                        <span class="text-sm text-surface-500">
-                            {{ selectedClient.kycType || 'Type non renseigné' }}
-                        </span>
-                    </div>
+                            <section class="clients-detail__section">
+                                <h4 class="clients-detail__section-title">Actions client</h4>
+                                <div class="clients-detail__actions">
+                                    @if (selectedClient.verificationStatus !== 'ACCEPTED') {
+                                        <p-button
+                                            label="Accepter le KYC"
+                                            icon="pi pi-check"
+                                            severity="success"
+                                            [loading]="actionLoading"
+                                            [disabled]="!hasKycDocuments(selectedClient)"
+                                            (onClick)="confirmValidateAccount(verificationStatus.ACCEPTED, $event)">
+                                        </p-button>
+                                    }
+                                    @if (selectedClient.verificationStatus === 'REJECTED') {
+                                        <p-button
+                                            label="Annuler le rejet"
+                                            icon="pi pi-replay"
+                                            severity="warn"
+                                            [outlined]="true"
+                                            [loading]="actionLoading"
+                                            (onClick)="confirmValidateAccount(verificationStatus.PENDING, $event)">
+                                        </p-button>
+                                    }
+                                    @if (selectedClient.verificationStatus !== 'REJECTED') {
+                                        <p-button
+                                            label="Rejeter le KYC"
+                                            icon="pi pi-times"
+                                            severity="danger"
+                                            [outlined]="true"
+                                            [loading]="actionLoading"
+                                            (onClick)="confirmValidateAccount(verificationStatus.REJECTED, $event)">
+                                        </p-button>
+                                    }
+                                    @if (selectedClient.status !== 'ACTIVATED') {
+                                        <p-button
+                                            label="Activer le profil client"
+                                            icon="pi pi-user-plus"
+                                            severity="primary"
+                                            [outlined]="true"
+                                            [loading]="actionLoading"
+                                            (onClick)="confirmActivateClientAccount($event)">
+                                        </p-button>
+                                    }
+                                </div>
+                            </section>
+                        </p-tabpanel>
 
-                    <dl class="clients-detail__grid mb-3">
-                        <div>
-                            <dt>Statut KYC</dt>
-                            <dd>{{ kycLabel(selectedClient.verificationStatus) }}</dd>
-                        </div>
-                        <div>
-                            <dt>Type de pièce</dt>
-                            <dd>{{ displayValue(selectedClient.kycType) }}</dd>
-                        </div>
-                    </dl>
+                        <p-tabpanel value="user">
+                            @if (linkedUserLoading) {
+                                <div class="clients-detail__loading">
+                                    <p-progressSpinner strokeWidth="3" [style]="{ width: '42px', height: '42px' }" />
+                                    <span>Chargement du compte utilisateur…</span>
+                                </div>
+                            } @else if (!linkedUser) {
+                                <div class="clients-detail__no-docs">
+                                    <i class="pi pi-user-minus"></i>
+                                    <span>Aucun compte utilisateur lié à ce profil</span>
+                                </div>
+                            } @else {
+                                <section class="clients-detail__section">
+                                    <h4 class="clients-detail__section-title">Identifiants</h4>
+                                    <dl class="clients-detail__grid">
+                                        <div>
+                                            <dt>Username</dt>
+                                            <dd>{{ displayValue(linkedUser.username) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Email</dt>
+                                            <dd>
+                                                {{ displayValue(linkedUser.email) }}
+                                                @if (linkedUser.emailVerifiated) {
+                                                    <i class="pi pi-verified text-green-500 ml-1" pTooltip="Email vérifié"></i>
+                                                }
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt>Téléphone</dt>
+                                            <dd>{{ displayValue(linkedUser.phone) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>ID utilisateur</dt>
+                                            <dd>{{ displayValue(linkedUser.id) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Statut</dt>
+                                            <dd>
+                                                <p-tag
+                                                    [value]="accountLabel(linkedUser.status)"
+                                                    [severity]="accountSeverity(linkedUser.status)">
+                                                </p-tag>
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt>Verrouillé</dt>
+                                            <dd>
+                                                @if (linkedUser.locked) {
+                                                    <span class="text-red-500"><i class="pi pi-lock mr-1"></i>Oui</span>
+                                                } @else {
+                                                    Non
+                                                }
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt>2FA</dt>
+                                            <dd>{{ linkedUser.twoFactor ? 'Activé' : 'Désactivé' }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Email vérifié</dt>
+                                            <dd>{{ linkedUser.emailVerifiated ? 'Oui' : 'Non' }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Créé le</dt>
+                                            <dd>{{ linkedUser.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Mis à jour le</dt>
+                                            <dd>{{ linkedUser.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                                        </div>
+                                        <div class="clients-detail__full">
+                                            <dt>Rôles</dt>
+                                            <dd>
+                                                <div class="flex flex-wrap gap-1">
+                                                    @for (role of linkedUser.roles; track role.id) {
+                                                        <p-tag [value]="role.roleName" severity="info"></p-tag>
+                                                    } @empty {
+                                                        <span>—</span>
+                                                    }
+                                                </div>
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                </section>
 
-                    @if (!hasKycDocuments(selectedClient)) {
-                        <div class="clients-detail__no-docs">
-                            <i class="pi pi-inbox"></i>
-                            <span>Aucun document KYC soumis</span>
-                        </div>
-                    } @else if (kycPreview.loading) {
-                        <div class="clients-detail__loading">
-                            <p-progressSpinner strokeWidth="3" [style]="{ width: '42px', height: '42px' }" />
-                            <span>Chargement des documents…</span>
-                        </div>
-                    } @else if (kycPreview.error) {
-                        <div class="clients-detail__no-docs clients-detail__no-docs--error">
-                            <i class="pi pi-exclamation-triangle"></i>
-                            <span>{{ kycPreview.error }}</span>
-                        </div>
-                    } @else {
-                        <div class="clients-kyc-docs">
-                            <figure class="clients-kyc-doc">
-                                <figcaption>Recto</figcaption>
-                                @if (kycPreview.rectoUrl) {
-                                    <a [href]="kycPreview.rectoUrl" target="_blank" rel="noopener">
-                                        <img [src]="kycPreview.rectoUrl" alt="Recto pièce d'identité" />
-                                    </a>
-                                } @else {
-                                    <div class="clients-kyc-doc__missing">Non fourni</div>
-                                }
-                            </figure>
-                            <figure class="clients-kyc-doc">
-                                <figcaption>Verso</figcaption>
-                                @if (kycPreview.versoUrl) {
-                                    <a [href]="kycPreview.versoUrl" target="_blank" rel="noopener">
-                                        <img [src]="kycPreview.versoUrl" alt="Verso pièce d'identité" />
-                                    </a>
-                                } @else {
-                                    <div class="clients-kyc-doc__missing">Non fourni</div>
-                                }
-                            </figure>
-                            <figure class="clients-kyc-doc">
-                                <figcaption>Selfie</figcaption>
-                                @if (kycPreview.selfieUrl) {
-                                    <a [href]="kycPreview.selfieUrl" target="_blank" rel="noopener">
-                                        <img [src]="kycPreview.selfieUrl" alt="Selfie KYC" />
-                                    </a>
-                                } @else {
-                                    <div class="clients-kyc-doc__missing">Non fourni</div>
-                                }
-                            </figure>
-                        </div>
-                    }
-                </section>
+                                <p-divider />
 
-                <p-divider />
-
-                <section class="clients-detail__section">
-                    <h4 class="clients-detail__section-title">Actions</h4>
-                    <div class="clients-detail__actions">
-                        @if (selectedClient.verificationStatus !== 'ACCEPTED') {
-                            <p-button
-                                label="Accepter le KYC"
-                                icon="pi pi-check"
-                                severity="success"
-                                [loading]="actionLoading"
-                                [disabled]="!hasKycDocuments(selectedClient)"
-                                (onClick)="confirmValidateAccount(verificationStatus.ACCEPTED, $event)">
-                            </p-button>
-                        }
-                        @if (selectedClient.verificationStatus !== 'REJECTED') {
-                            <p-button
-                                label="Rejeter le KYC"
-                                icon="pi pi-times"
-                                severity="danger"
-                                [outlined]="true"
-                                [loading]="actionLoading"
-                                (onClick)="confirmValidateAccount(verificationStatus.REJECTED, $event)">
-                            </p-button>
-                        }
-                        @if (selectedClient.status !== 'ACTIVATED') {
-                            <p-button
-                                label="Activer le compte"
-                                icon="pi pi-user-plus"
-                                severity="primary"
-                                [outlined]="true"
-                                [loading]="actionLoading"
-                                (onClick)="confirmActivateAccount($event)">
-                            </p-button>
-                        }
-                    </div>
-                </section>
+                                <section class="clients-detail__section">
+                                    <h4 class="clients-detail__section-title">Actions utilisateur</h4>
+                                    <div class="clients-detail__actions">
+                                        <p-button
+                                            label="Gérer les rôles"
+                                            icon="pi pi-key"
+                                            severity="info"
+                                            [outlined]="true"
+                                            (onClick)="openRolesDialog()">
+                                        </p-button>
+                                        <p-button
+                                            [label]="linkedUser.status === 'ACTIVATED' ? 'Désactiver l’utilisateur' : 'Activer l’utilisateur'"
+                                            [icon]="linkedUser.status === 'ACTIVATED' ? 'pi pi-ban' : 'pi pi-check'"
+                                            [severity]="linkedUser.status === 'ACTIVATED' ? 'danger' : 'success'"
+                                            [outlined]="true"
+                                            [loading]="userActionLoading"
+                                            (onClick)="confirmToggleUserActivation($event)">
+                                        </p-button>
+                                    </div>
+                                </section>
+                            }
+                        </p-tabpanel>
+                    </p-tabpanels>
+                </p-tabs>
             }
         </aside>
     </div>
 </div>
+
+<p-dialog
+    [header]="'Rôles — ' + (linkedUser?.username || '')"
+    [(visible)]="showRolesDialog"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    [draggable]="false"
+    (onHide)="hideRolesDialog()">
+    <div class="flex flex-column gap-3 pt-2">
+        <p class="m-0 text-surface-500 text-sm">
+            Sélectionnez les rôles à attribuer à cet utilisateur.
+        </p>
+        <p-multiSelect
+            [options]="roles"
+            [(ngModel)]="selectedRoleIds"
+            optionLabel="roleName"
+            optionValue="id"
+            placeholder="Choisir des rôles"
+            display="chip"
+            [filter]="true"
+            filterPlaceHolder="Rechercher un rôle"
+            styleClass="w-full">
+        </p-multiSelect>
+        @if (linkedUser?.roles?.length) {
+            <div class="text-sm text-surface-500">
+                Rôles actuels : <strong>{{ roleNames(linkedUser) }}</strong>
+            </div>
+        }
+    </div>
+    <ng-template pTemplate="footer">
+        <p-button label="Annuler" [text]="true" (onClick)="hideRolesDialog()" [disabled]="rolesSaving"></p-button>
+        <p-button label="Enregistrer" icon="pi pi-check" (onClick)="saveRoles()" [loading]="rolesSaving"></p-button>
+    </ng-template>
+</p-dialog>

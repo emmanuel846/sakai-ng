@@ -11,11 +11,11 @@
 
 @media (min-width: 1100px) {
   .clients-split {
-    grid-template-columns: minmax(0, 1fr) 24rem;
+    grid-template-columns: minmax(0, 1fr) 28rem;
   }
 
   .clients-split--open {
-    grid-template-columns: minmax(0, 1fr) minmax(24rem, 32rem);
+    grid-template-columns: minmax(0, 1fr) minmax(34rem, 42rem);
   }
 }
 
@@ -59,6 +59,11 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.clients-detail__tabs {
+  flex: 1;
+  min-height: 0;
 }
 
 .clients-detail__section-title {
@@ -115,7 +120,14 @@
 
 .clients-kyc-docs {
   display: grid;
+  grid-template-columns: 1fr;
   gap: 0.85rem;
+}
+
+@media (min-width: 1100px) {
+  .clients-kyc-docs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .clients-kyc-doc {

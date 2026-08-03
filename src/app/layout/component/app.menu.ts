@@ -76,14 +76,9 @@ export class AppMenu {
                     //     ]
                     // },
                     {
-                        label: 'Liste des clients',
-                        icon: 'pi pi-fw pi-pencil',
-                        routerLink: ['/dashboard/pages/clients']
-                    },
-                    {
-                        label: 'Gestion des utilisateurs',
+                        label: 'Gestion de comptes',
                         icon: 'pi pi-fw pi-users',
-                        routerLink: ['/dashboard/pages/user-management']
+                        routerLink: ['/dashboard/pages/clients']
                     },
                     {
                         label: 'Administrateurs & permissions',

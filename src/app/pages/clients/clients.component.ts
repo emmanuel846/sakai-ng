@@ -4,22 +4,25 @@ import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { Table, TableModule, TableRowSelectEvent } from 'primeng/table';
+import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { forkJoin, of, Subscription } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 import { Profil } from '../../models/profil.model';
-import { User } from '../../models/user.model';
+import { Role, User } from '../../models/user.model';
 import { UserApiService } from '../../services/user-api.service';
 import { AccountStatus, VerificationStatus } from './accountstatus.enum';
 import { ClientService } from './client.service';
@@ -43,6 +46,8 @@ interface KycPreview {
     ButtonModule,
     ToastModule,
     ConfirmDialogModule,
+    DialogModule,
+    MultiSelectModule,
     ToolbarModule,
     InputTextModule,
     InputIconModule,
@@ -52,7 +57,8 @@ interface KycPreview {
     ProgressSpinnerModule,
     DividerModule,
     TooltipModule,
-    SelectButtonModule
+    SelectButtonModule,
+    TabsModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './clients.component.html',
@@ -67,6 +73,13 @@ export class ClientsComponent implements OnInit, OnDestroy {
   verificationStatus = VerificationStatus;
   loading = false;
   actionLoading = false;
+  userActionLoading = false;
+  activeDetailTab: string | number = 'client';
+
+  roles: Role[] = [];
+  showRolesDialog = false;
+  selectedRoleIds: number[] = [];
+  rolesSaving = false;
 
   kycFilter: KycFilter = 'ALL';
   kycFilterOptions = [
@@ -91,6 +104,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getAllClients();
+    this.loadRoles();
   }
 
   ngOnDestroy() {
@@ -122,9 +136,18 @@ export class ClientsComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Erreur',
-          detail: 'Impossible de charger les clients'
+          detail: 'Impossible de charger les comptes'
         });
       }
+    });
+  }
+
+  loadRoles() {
+    this.userApi.getRoles().subscribe({
+      next: (data) => {
+        this.roles = (data ?? []).filter((r) => !r.deleted);
+      },
+      error: () => undefined
     });
   }
 
@@ -163,6 +186,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
       return;
     }
     this.selectedClient = client;
+    this.activeDetailTab = 'client';
     this.loadKycPreviews(client);
     this.loadLinkedUser(client);
   }
@@ -175,6 +199,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.selectedClient = null;
     this.linkedUser = null;
     this.linkedUserLoading = false;
+    this.activeDetailTab = 'client';
     this.previewSub?.unsubscribe();
     this.userSub?.unsubscribe();
     this.revokeObjectUrls();
@@ -185,36 +210,52 @@ export class ClientsComponent implements OnInit, OnDestroy {
     if (!this.selectedClient) {
       return;
     }
-    const accepted = status === VerificationStatus.ACCEPTED;
     const name = `${this.selectedClient.lastname} ${this.selectedClient.firstname}`;
+    const dialog = this.kycActionDialog(status, name);
     this.confirmationService.confirm({
       target: event?.currentTarget as EventTarget,
-      message: accepted
-        ? `Confirmer l’acceptation du KYC de <strong>${name}</strong> ?`
-        : `Confirmer le rejet du KYC de <strong>${name}</strong> ?`,
-      header: accepted ? 'Accepter le KYC' : 'Rejeter le KYC',
-      icon: accepted ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle',
-      acceptLabel: accepted ? 'Accepter' : 'Rejeter',
+      message: dialog.message,
+      header: dialog.header,
+      icon: dialog.icon,
+      acceptLabel: dialog.acceptLabel,
       rejectLabel: 'Annuler',
-      acceptButtonStyleClass: accepted ? 'p-button-success' : 'p-button-danger',
+      acceptButtonStyleClass: dialog.acceptStyle,
       accept: () => this.validateAccount(status)
     });
   }
 
-  confirmActivateAccount(event?: Event) {
+  confirmActivateClientAccount(event?: Event) {
     if (!this.selectedClient) {
       return;
     }
     const name = `${this.selectedClient.lastname} ${this.selectedClient.firstname}`;
     this.confirmationService.confirm({
       target: event?.currentTarget as EventTarget,
-      message: `Confirmer l’activation du compte de <strong>${name}</strong> ?`,
-      header: 'Activer le compte',
+      message: `Confirmer l’activation du profil client de <strong>${name}</strong> ?`,
+      header: 'Activer le profil client',
       icon: 'pi pi-user-plus',
       acceptLabel: 'Activer',
       rejectLabel: 'Annuler',
       acceptButtonStyleClass: 'p-button-primary',
-      accept: () => this.activateAccount()
+      accept: () => this.activateClientAccount()
+    });
+  }
+
+  confirmToggleUserActivation(event?: Event) {
+    if (!this.linkedUser) {
+      return;
+    }
+    const activate = this.linkedUser.status !== 'ACTIVATED';
+    const action = activate ? 'activer' : 'désactiver';
+    this.confirmationService.confirm({
+      target: event?.currentTarget as EventTarget,
+      message: `Voulez-vous vraiment ${action} le compte utilisateur <strong>${this.linkedUser.username}</strong> ?`,
+      header: activate ? 'Activer l’utilisateur' : 'Désactiver l’utilisateur',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: activate ? 'Activer' : 'Désactiver',
+      rejectLabel: 'Annuler',
+      acceptButtonStyleClass: activate ? 'p-button-success' : 'p-button-danger',
+      accept: () => this.toggleUserActivation(activate)
     });
   }
 
@@ -226,9 +267,10 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.clientService.validate(this.selectedClient.id, status).subscribe({
       next: () => {
         this.actionLoading = false;
+        const feedback = this.kycActionFeedback(status);
         this.messageService.add({
-          severity: status === VerificationStatus.ACCEPTED ? 'success' : 'warn',
-          summary: status === VerificationStatus.ACCEPTED ? 'KYC accepté' : 'KYC rejeté',
+          severity: feedback.severity,
+          summary: feedback.summary,
           detail: `${this.selectedClient!.lastname} ${this.selectedClient!.firstname}`
         });
         this.getAllClients();
@@ -244,7 +286,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
     });
   }
 
-  activateAccount() {
+  activateClientAccount() {
     if (!this.selectedClient) {
       return;
     }
@@ -254,7 +296,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
         this.actionLoading = false;
         this.messageService.add({
           severity: 'success',
-          summary: 'Compte activé',
+          summary: 'Profil client activé',
           detail: `${this.selectedClient!.lastname} ${this.selectedClient!.firstname}`
         });
         this.getAllClients();
@@ -264,10 +306,143 @@ export class ClientsComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Erreur',
-          detail: 'Impossible d’activer le compte'
+          detail: 'Impossible d’activer le profil client'
         });
       }
     });
+  }
+
+  toggleUserActivation(activate: boolean) {
+    if (!this.linkedUser) {
+      return;
+    }
+    this.userActionLoading = true;
+    this.userApi.activateAccount({ userId: this.linkedUser.id, value: activate }).subscribe({
+      next: (user) => {
+        this.linkedUser = {
+          ...user,
+          roles: Array.isArray(user.roles) ? user.roles : user.roles ? [user.roles as unknown as Role] : []
+        };
+        this.userActionLoading = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: activate ? 'Utilisateur activé' : 'Utilisateur désactivé',
+          detail: this.linkedUser.username
+        });
+      },
+      error: () => {
+        this.userActionLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: `Impossible de ${activate ? 'activer' : 'désactiver'} l’utilisateur`
+        });
+      }
+    });
+  }
+
+  openRolesDialog() {
+    if (!this.linkedUser) {
+      return;
+    }
+    this.selectedRoleIds = (this.linkedUser.roles ?? []).map((r) => r.id);
+    this.showRolesDialog = true;
+  }
+
+  hideRolesDialog() {
+    this.showRolesDialog = false;
+    this.selectedRoleIds = [];
+    this.rolesSaving = false;
+  }
+
+  saveRoles() {
+    if (!this.linkedUser) {
+      return;
+    }
+
+    const currentIds = new Set((this.linkedUser.roles ?? []).map((r) => r.id));
+    const nextIds = new Set(this.selectedRoleIds);
+    const toAdd = [...nextIds].filter((id) => !currentIds.has(id));
+    const toRemove = [...currentIds].filter((id) => !nextIds.has(id));
+
+    if (!toAdd.length && !toRemove.length) {
+      this.hideRolesDialog();
+      return;
+    }
+
+    this.rolesSaving = true;
+    const userId = this.linkedUser.id;
+    const add$ = toAdd.length ? this.userApi.addRoles({ userId, roleIds: toAdd }) : of({ message: 'noop' });
+    const remove$ = toRemove.length
+      ? this.userApi.removeRoles({ userId, roleIds: toRemove })
+      : of({ message: 'noop' });
+
+    forkJoin([add$, remove$])
+      .pipe(switchMap(() => this.userApi.getById(userId)))
+      .subscribe({
+        next: (user) => {
+          this.linkedUser = {
+            ...user,
+            roles: Array.isArray(user.roles) ? user.roles : user.roles ? [user.roles as unknown as Role] : []
+          };
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Rôles mis à jour',
+            detail: this.linkedUser.username
+          });
+          this.hideRolesDialog();
+        },
+        error: (err) => {
+          const detail = err?.error?.error || err?.error?.message || 'Impossible de mettre à jour les rôles';
+          this.messageService.add({ severity: 'error', summary: 'Erreur', detail });
+          this.rolesSaving = false;
+        }
+      });
+  }
+
+  private kycActionDialog(
+    status: VerificationStatus,
+    name: string
+  ): { message: string; header: string; icon: string; acceptLabel: string; acceptStyle: string } {
+    switch (status) {
+      case VerificationStatus.ACCEPTED:
+        return {
+          message: `Confirmer l’acceptation du KYC de <strong>${name}</strong> ?`,
+          header: 'Accepter le KYC',
+          icon: 'pi pi-check-circle',
+          acceptLabel: 'Accepter',
+          acceptStyle: 'p-button-success'
+        };
+      case VerificationStatus.PENDING:
+        return {
+          message: `Annuler le rejet et remettre le KYC de <strong>${name}</strong> en attente ?`,
+          header: 'Annuler le rejet',
+          icon: 'pi pi-replay',
+          acceptLabel: 'Confirmer',
+          acceptStyle: 'p-button-warning'
+        };
+      default:
+        return {
+          message: `Confirmer le rejet du KYC de <strong>${name}</strong> ?`,
+          header: 'Rejeter le KYC',
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: 'Rejeter',
+          acceptStyle: 'p-button-danger'
+        };
+    }
+  }
+
+  private kycActionFeedback(
+    status: VerificationStatus
+  ): { severity: 'success' | 'warn' | 'info'; summary: string } {
+    switch (status) {
+      case VerificationStatus.ACCEPTED:
+        return { severity: 'success', summary: 'KYC accepté' };
+      case VerificationStatus.PENDING:
+        return { severity: 'info', summary: 'Rejet annulé — KYC remis en attente' };
+      default:
+        return { severity: 'warn', summary: 'KYC rejeté' };
+    }
   }
 
   kycSeverity(status: string | null | undefined): 'success' | 'warn' | 'danger' | 'secondary' | 'info' {
@@ -358,6 +533,10 @@ export class ClientsComponent implements OnInit, OnDestroy {
     return `${rating}/5 (${counts} avis)`;
   }
 
+  roleNames(user: User | null): string {
+    return user?.roles?.map((r) => r.roleName).join(', ') || '—';
+  }
+
   hasKycDocuments(client: Profil | null): boolean {
     if (!client) {
       return false;
@@ -369,28 +548,20 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.userSub?.unsubscribe();
     this.linkedUser = null;
 
-    if (client.users?.email || client.users?.username) {
-      this.linkedUser = {
-        id: Number(client.users.id ?? client.usersId),
-        username: client.users.username || '—',
-        email: client.users.email || '—',
-        roles: [],
-        status: client.users.isActive ? 'ACTIVATED' : 'DEACTIVATED',
-        twoFactor: false,
-        locked: false,
-        emailVerifiated: false
-      };
-      return;
-    }
-
     if (!client.usersId) {
+      this.linkedUserLoading = false;
       return;
     }
 
     this.linkedUserLoading = true;
     this.userSub = this.userApi.getById(client.usersId).pipe(catchError(() => of(null))).subscribe({
       next: (user) => {
-        this.linkedUser = user;
+        this.linkedUser = user
+          ? {
+              ...user,
+              roles: Array.isArray(user.roles) ? user.roles : user.roles ? [user.roles as unknown as Role] : []
+            }
+          : null;
         this.linkedUserLoading = false;
       },
       error: () => {
