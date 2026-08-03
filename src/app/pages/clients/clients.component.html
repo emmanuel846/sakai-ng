@@ -1,89 +1,295 @@
-<p-toolbar styleClass="mb-6">
-    <ng-template #start>
-        <!-- <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2"  /> -->
-        <p-button severity="secondary" label="Rafraichir" icon="pi pi-refresh" outlined (onClick)="getAllClients();" />
-    </ng-template>
+<p-toast></p-toast>
 
-    <ng-template #end>
-        <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
-    </ng-template>
-</p-toolbar>
+<div class="clients-page">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #start>
+            <div class="flex flex-wrap items-center gap-3">
+                <h2 class="m-0 text-xl font-semibold">Clients &amp; KYC</h2>
+                <p-button
+                    severity="secondary"
+                    label="Rafraîchir"
+                    icon="pi pi-refresh"
+                    [outlined]="true"
+                    (onClick)="getAllClients()">
+                </p-button>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <p-selectButton
+                [options]="kycFilterOptions"
+                [(ngModel)]="kycFilter"
+                (ngModelChange)="onKycFilterChange()"
+                optionLabel="label"
+                optionValue="value"
+                [allowEmpty]="false">
+            </p-selectButton>
+        </ng-template>
+    </p-toolbar>
 
-<p-table
-    #dt
-    [value]="clients"
-    [rows]="10"
-    [paginator]="true"
-    [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
-    [tableStyle]="{ 'min-width': '75rem' }"
-    [rowHover]="true"
-    selectionMode="single" [(selection)]="selectedClient"
-    (onRowSelect)="onRowSelect($event)"
-    dataKey="id"
-    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
-    [showCurrentPageReport]="true"
-    [rowsPerPageOptions]="[10, 20, 30]"
->
-    <ng-template #caption>
-        @if (loading) {
-            <p-progressbar mode="indeterminate" [style]="{ height: '6px' }" ></p-progressbar>
-        }
-        <div class="flex items-center justify-between">
-            <h5 class="m-0">Liste des clients</h5>
-            <p-iconfield>
-                <p-inputicon styleClass="pi pi-search" />
-                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
-            </p-iconfield>
+    <div class="clients-split" [class.clients-split--open]="!!selectedClient">
+        <div class="clients-list card">
+            @if (loading) {
+                <p-progressbar mode="indeterminate" [style]="{ height: '4px' }"></p-progressbar>
+            }
+
+            <p-table
+                #dt
+                [value]="filteredClients"
+                [rows]="10"
+                [paginator]="true"
+                [globalFilterFields]="['firstname', 'lastname', 'phoneNumber', 'country', 'verificationStatus', 'status']"
+                [rowHover]="true"
+                selectionMode="single"
+                [(selection)]="selectedClient"
+                (onRowSelect)="onRowSelect($event)"
+                (onRowUnselect)="onRowUnselect()"
+                dataKey="id"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="{first} à {last} sur {totalRecords} clients"
+                [rowsPerPageOptions]="[10, 20, 30]"
+                styleClass="p-datatable-sm">
+                <ng-template #caption>
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <span class="text-surface-500 text-sm">
+                            Cliquez sur un client pour afficher le détail KYC à droite
+                        </span>
+                        <p-iconfield>
+                            <p-inputicon styleClass="pi pi-search" />
+                            <input
+                                pInputText
+                                type="text"
+                                (input)="onGlobalFilter(dt, $event)"
+                                placeholder="Rechercher..." />
+                        </p-iconfield>
+                    </div>
+                </ng-template>
+
+                <ng-template #header>
+                    <tr>
+                        <th style="min-width: 8rem">Date</th>
+                        <th pSortableColumn="lastname" style="min-width: 12rem">
+                            Nom
+                            <p-sortIcon field="lastname" />
+                        </th>
+                        <th style="min-width: 8rem">Naissance</th>
+                        <th style="min-width: 8rem">Compte</th>
+                        <th style="min-width: 8rem">KYC</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template #body let-client>
+                    <tr
+                        [pSelectableRow]="client"
+                        [class.clients-row--selected]="selectedClient?.id === client.id">
+                        <td>{{ client.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                        <td>
+                            <div class="font-medium">{{ client.lastname }} {{ client.firstname }}</div>
+                            <div class="text-surface-500 text-xs">{{ client.phoneNumber || '—' }}</div>
+                        </td>
+                        <td>{{ client.birthdate | date: 'dd/MM/yyyy' }}</td>
+                        <td>
+                            <p-tag
+                                [value]="client.status || '—'"
+                                [severity]="accountSeverity(client.status)">
+                            </p-tag>
+                        </td>
+                        <td>
+                            <p-tag
+                                [value]="kycLabel(client.verificationStatus)"
+                                [severity]="kycSeverity(client.verificationStatus)">
+                            </p-tag>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="5" class="text-center text-surface-500 py-6">
+                            Aucun client pour ce filtre
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
         </div>
-    </ng-template>
-    <ng-template #header>
-        <tr>
-            <th style="width: 3rem">
-                <!-- <p-tableHeaderCheckbox /> -->
-                 Date
-            </th>
-            <!-- <th style="min-width: 16rem">Code</th> -->
-            <th pSortableColumn="name" style="min-width:16rem">
-                Nom et prénoms
-                <p-sortIcon field="name" />
-            </th>
-            <th pSortableColumn="price" style="min-width: 8rem">
-                Date de naissance
-                <p-sortIcon field="price" />
-            </th>
-            <th pSortableColumn="rating" style="min-width: 12rem">
-                Status
-                <p-sortIcon field="rating" />
-            </th>
-          
-            <th style="min-width: 12rem"></th>
-        </tr>
-    </ng-template>
-    <ng-template #body let-client>
-        <tr [pSelectableRow]="client">
-            <td style="width: 3rem">
-                <!-- <p-tableCheckbox [value]="client" /> -->
-                 {{client.createdAt | date: 'dd/MM/YYYY HH:mm:ss'}}
-            </td>
-            <td style="min-width: 12rem">{{ client.lastname }} {{ client.firstname }}</td>
-            <td>
-                {{ client.birthdate | date : 'dd/MM/yyyy' }}
-            </td>
-            <td>{{ client.status }}</td>
-           
-            <td class="w-full flex ">
-                @if (client.verificationStatus == "ACCEPTED") {
-                    <p-badge value="KYC validé" badgeSize="xlarge" severity="success" />
-                }@else {
-                    <p-button label="Valider" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;validateAccount(verifcationStatus.ACCEPTED)" />
-                }
-                @if (client.status == 'ACTIVATED') {
-                   &nbsp; <p-badge value="Profil activé" badgeSize="xlarge" severity="success" />
-                }@else {
-                  &nbsp;  <p-button label="Activer" icon="pi pi-check" severity="primary" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;activateAccount()"/>
-                }
-                <p-button [severity]="'warn'" label="Invalider" icon="pi pi-pencil" class="mr-2 ml-2" [rounded]="true" [outlined]="true" (onClick)="selectedClient=client;validateAccount(verifcationStatus.REJECTED)" />
-            </td>
-        </tr>
-    </ng-template>
-</p-table>
+
+        <aside class="clients-detail card" [class.clients-detail--visible]="!!selectedClient">
+            @if (!selectedClient) {
+                <div class="clients-detail__empty">
+                    <i class="pi pi-id-card clients-detail__empty-icon"></i>
+                    <h3 class="m-0">Détail client</h3>
+                    <p class="text-surface-500 m-0 text-center">
+                        Sélectionnez un client dans la liste pour consulter son profil et valider son KYC.
+                    </p>
+                </div>
+            } @else {
+                <div class="clients-detail__header">
+                    <div class="min-w-0">
+                        <div class="text-xs uppercase tracking-wide text-surface-500 mb-1">Client</div>
+                        <h3 class="m-0 text-xl font-semibold truncate">
+                            {{ selectedClient.lastname }} {{ selectedClient.firstname }}
+                        </h3>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <p-tag
+                                [value]="kycLabel(selectedClient.verificationStatus)"
+                                [severity]="kycSeverity(selectedClient.verificationStatus)">
+                            </p-tag>
+                            <p-tag
+                                [value]="selectedClient.status || '—'"
+                                [severity]="accountSeverity(selectedClient.status)">
+                            </p-tag>
+                        </div>
+                    </div>
+                    <p-button
+                        icon="pi pi-times"
+                        [rounded]="true"
+                        [text]="true"
+                        severity="secondary"
+                        (onClick)="clearSelection()"
+                        pTooltip="Fermer"
+                        tooltipPosition="left">
+                    </p-button>
+                </div>
+
+                <p-divider />
+
+                <section class="clients-detail__section">
+                    <h4 class="clients-detail__section-title">Identité</h4>
+                    <dl class="clients-detail__grid">
+                        <div>
+                            <dt>Date de naissance</dt>
+                            <dd>{{ selectedClient.birthdate | date: 'dd/MM/yyyy' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Genre</dt>
+                            <dd>{{ selectedClient.gender || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Pays</dt>
+                            <dd>{{ selectedClient.country || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Téléphone</dt>
+                            <dd>
+                                {{ selectedClient.phoneNumber || '—' }}
+                                @if (selectedClient.phoneVerified) {
+                                    <i class="pi pi-verified text-green-500 ml-1" pTooltip="Téléphone vérifié"></i>
+                                }
+                            </dd>
+                        </div>
+                        <div class="clients-detail__full">
+                            <dt>Adresse</dt>
+                            <dd>{{ selectedClient.address || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Pseudo</dt>
+                            <dd>{{ selectedClient.public_pseudo || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Inscrit le</dt>
+                            <dd>{{ selectedClient.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <p-divider />
+
+                <section class="clients-detail__section">
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <h4 class="clients-detail__section-title m-0">Documents KYC</h4>
+                        <span class="text-sm text-surface-500">
+                            {{ selectedClient.kycType || 'Type non renseigné' }}
+                        </span>
+                    </div>
+
+                    @if (!hasKycDocuments(selectedClient)) {
+                        <div class="clients-detail__no-docs">
+                            <i class="pi pi-inbox"></i>
+                            <span>Aucun document KYC soumis</span>
+                        </div>
+                    } @else if (kycPreview.loading) {
+                        <div class="clients-detail__loading">
+                            <p-progressSpinner strokeWidth="3" [style]="{ width: '42px', height: '42px' }" />
+                            <span>Chargement des documents…</span>
+                        </div>
+                    } @else if (kycPreview.error) {
+                        <div class="clients-detail__no-docs clients-detail__no-docs--error">
+                            <i class="pi pi-exclamation-triangle"></i>
+                            <span>{{ kycPreview.error }}</span>
+                        </div>
+                    } @else {
+                        <div class="clients-kyc-docs">
+                            <figure class="clients-kyc-doc">
+                                <figcaption>Recto</figcaption>
+                                @if (kycPreview.rectoUrl) {
+                                    <a [href]="kycPreview.rectoUrl" target="_blank" rel="noopener">
+                                        <img [src]="kycPreview.rectoUrl" alt="Recto pièce d'identité" />
+                                    </a>
+                                } @else {
+                                    <div class="clients-kyc-doc__missing">Non fourni</div>
+                                }
+                            </figure>
+                            <figure class="clients-kyc-doc">
+                                <figcaption>Verso</figcaption>
+                                @if (kycPreview.versoUrl) {
+                                    <a [href]="kycPreview.versoUrl" target="_blank" rel="noopener">
+                                        <img [src]="kycPreview.versoUrl" alt="Verso pièce d'identité" />
+                                    </a>
+                                } @else {
+                                    <div class="clients-kyc-doc__missing">Non fourni</div>
+                                }
+                            </figure>
+                            <figure class="clients-kyc-doc">
+                                <figcaption>Selfie</figcaption>
+                                @if (kycPreview.selfieUrl) {
+                                    <a [href]="kycPreview.selfieUrl" target="_blank" rel="noopener">
+                                        <img [src]="kycPreview.selfieUrl" alt="Selfie KYC" />
+                                    </a>
+                                } @else {
+                                    <div class="clients-kyc-doc__missing">Non fourni</div>
+                                }
+                            </figure>
+                        </div>
+                    }
+                </section>
+
+                <p-divider />
+
+                <section class="clients-detail__section">
+                    <h4 class="clients-detail__section-title">Actions</h4>
+                    <div class="clients-detail__actions">
+                        @if (selectedClient.verificationStatus !== 'ACCEPTED') {
+                            <p-button
+                                label="Accepter le KYC"
+                                icon="pi pi-check"
+                                severity="success"
+                                [loading]="actionLoading"
+                                [disabled]="!hasKycDocuments(selectedClient)"
+                                (onClick)="validateAccount(verificationStatus.ACCEPTED)">
+                            </p-button>
+                        }
+                        @if (selectedClient.verificationStatus !== 'REJECTED') {
+                            <p-button
+                                label="Rejeter le KYC"
+                                icon="pi pi-times"
+                                severity="danger"
+                                [outlined]="true"
+                                [loading]="actionLoading"
+                                (onClick)="validateAccount(verificationStatus.REJECTED)">
+                            </p-button>
+                        }
+                        @if (selectedClient.status !== 'ACTIVATED') {
+                            <p-button
+                                label="Activer le compte"
+                                icon="pi pi-user-plus"
+                                severity="primary"
+                                [outlined]="true"
+                                [loading]="actionLoading"
+                                (onClick)="activateAccount()">
+                            </p-button>
+                        }
+                    </div>
+                </section>
+            }
+        </aside>
+    </div>
+</div>

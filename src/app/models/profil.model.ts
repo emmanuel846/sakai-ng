@@ -20,6 +20,7 @@ export interface Profil {
   status: string;
   kycType: string;
   kycFileName: string;
+  kycVersoFileName: string;
   kycSelfieFileName: string;
   bio: string;
   level: string;

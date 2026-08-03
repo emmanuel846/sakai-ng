@@ -10,6 +10,7 @@ import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '../service/layout.service';
 import { AdminNotificationService } from '../../services/admin-notification.service';
 import { AdminNotification, AdminNotificationEventType } from '../../models/admin-notification.model';
+import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -74,8 +75,8 @@ import { Subscription } from 'rxjs';
             </button>
 
             <p-popover #notifPanel (onShow)="loadNotifications()">
-                <div class="flex flex-column gap-2" style="width: min(22rem, 90vw); max-height: 24rem;">
-                    <div class="flex justify-content-between align-items-center mb-2">
+                <div class="flex flex-col gap-2" style="width: min(22rem, 90vw); max-height: 24rem;">
+                    <div class="flex justify-between items-center mb-2">
                         <span class="font-semibold">Notifications</span>
                         <button
                             pButton
@@ -86,23 +87,23 @@ import { Subscription } from 'rxjs';
                             [disabled]="!notifications.length || unreadCount === 0"
                         ></button>
                     </div>
-                    <div *ngIf="loadingNotifs" class="text-center text-500 py-3">Chargement…</div>
-                    <div *ngIf="!loadingNotifs && !notifications.length" class="text-center text-500 py-3">Aucune notification</div>
+                    <div *ngIf="loadingNotifs" class="text-center text-surface-500 py-3">Chargement…</div>
+                    <div *ngIf="!loadingNotifs && !notifications.length" class="text-center text-surface-500 py-3">Aucune notification</div>
                     <ul class="list-none p-0 m-0 overflow-auto" style="max-height: 18rem;">
                         <li
                             *ngFor="let n of notifications"
-                            class="p-2 border-bottom-1 surface-border cursor-pointer hover:surface-hover"
+                            class="p-2 border-b border-surface-200 cursor-pointer hover:bg-surface-100"
                             [class.font-semibold]="!n.read"
                             (click)="openNotification(n, notifPanel)"
                         >
-                            <div class="flex align-items-start gap-2">
+                            <div class="flex items-start gap-2">
                                 <i [class]="iconFor(n.eventType)" class="mt-1"></i>
                                 <div class="flex-1">
                                     <div class="text-sm">{{ n.title }}</div>
-                                    <div class="text-xs text-500 line-height-3">{{ n.content }}</div>
-                                    <div class="text-xs text-400 mt-1">{{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+                                    <div class="text-xs text-surface-500 leading-snug">{{ n.content }}</div>
+                                    <div class="text-xs text-surface-400 mt-1">{{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}</div>
                                 </div>
-                                <span *ngIf="!n.read" class="w-0.5rem h-0.5rem border-circle bg-primary mt-2 shrink-0"></span>
+                                <span *ngIf="!n.read" class="w-2 h-2 rounded-full bg-primary mt-2 shrink-0"></span>
                             </div>
                         </li>
                     </ul>
@@ -123,6 +124,10 @@ import { Subscription } from 'rxjs';
                         <i class="pi pi-user"></i>
                         <span>Admins</span>
                     </button>
+                    <button type="button" class="layout-topbar-action" (click)="logout()" title="Déconnexion">
+                        <i class="pi pi-sign-out"></i>
+                        <span>Déconnexion</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -139,6 +144,7 @@ export class AppTopbar implements OnInit, OnDestroy {
     constructor(
         public layoutService: LayoutService,
         private adminNotificationService: AdminNotificationService,
+        private authService: AuthService,
         private router: Router
     ) {}
 
@@ -161,6 +167,11 @@ export class AppTopbar implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         this.subs.unsubscribe();
         this.adminNotificationService.stopSse();
+    }
+
+    logout(): void {
+        this.adminNotificationService.stopSse();
+        this.authService.logout();
     }
 
     toggleDarkMode() {
@@ -223,7 +234,7 @@ export class AppTopbar implements OnInit, OnDestroy {
             case 'KYC_ENVOYE':
                 return 'pi pi-id-card text-purple-500';
             default:
-                return 'pi pi-bell text-500';
+                return 'pi pi-bell text-surface-500';
         }
     }
 
