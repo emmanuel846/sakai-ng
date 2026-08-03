@@ -9,6 +9,7 @@
   <p-tablist>
     <p-tab [value]="0"><i class="pi pi-sliders-h mr-2"></i>Paramètres généraux</p-tab>
     <p-tab [value]="1"><i class="pi pi-list mr-2"></i>Catalogue d'articles</p-tab>
+    <p-tab [value]="2"><i class="pi pi-envelope mr-2"></i>Alertes admin</p-tab>
   </p-tablist>
   <p-tabpanels>
     <p-tabpanel [value]="0">
@@ -317,6 +318,59 @@
   </p-table>
 </div>
 
+    </p-tabpanel>
+
+    <p-tabpanel [value]="2">
+      <div class="card">
+        <div class="mb-3">
+          <div class="font-semibold text-xl mb-1">Liste de diffusion email</div>
+          <p class="text-500 m-0 text-sm">
+            Les notifications in-app + SSE partent toujours à tous les administrateurs.
+            Cette liste contrôle uniquement les destinataires email. Si elle est vide, tous les emails des comptes ADMIN sont utilisés.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-3">
+          <input
+            pInputText
+            class="flex-1"
+            style="min-width: 16rem"
+            [(ngModel)]="newAdminEmail"
+            placeholder="email@exemple.com"
+            (keyup.enter)="addAdminEmail()"
+          />
+          <button pButton type="button" icon="pi pi-plus" label="Ajouter" (click)="addAdminEmail()"></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-save"
+            label="Enregistrer"
+            class="p-button-success"
+            [loading]="adminEmailsSaving"
+            (click)="saveAdminEmails()"
+          ></button>
+        </div>
+
+        <div *ngIf="adminEmailsLoading" class="text-500 py-3">Chargement…</div>
+        <div *ngIf="!adminEmailsLoading && !adminEmails.length" class="text-500 py-3">
+          Aucune adresse configurée — diffusion email à tous les ADMIN.
+        </div>
+        <ul class="list-none p-0 m-0" *ngIf="adminEmails.length">
+          <li
+            *ngFor="let email of adminEmails; let i = index"
+            class="flex justify-content-between align-items-center py-2 border-bottom-1 surface-border"
+          >
+            <span>{{ email }}</span>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-text p-button-danger"
+              (click)="removeAdminEmail(i)"
+            ></button>
+          </li>
+        </ul>
+      </div>
     </p-tabpanel>
   </p-tabpanels>
 </p-tabs>

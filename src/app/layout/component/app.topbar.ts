@@ -1,15 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { StyleClassModule } from 'primeng/styleclass';
+import { BadgeModule } from 'primeng/badge';
+import { Popover, PopoverModule } from 'primeng/popover';
+import { ButtonModule } from 'primeng/button';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '../service/layout.service';
+import { AdminNotificationService } from '../../services/admin-notification.service';
+import { AdminNotification, AdminNotificationEventType } from '../../models/admin-notification.model';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator],
+    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator, BadgeModule, PopoverModule, ButtonModule],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
             <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
@@ -33,7 +39,7 @@ import { LayoutService } from '../service/layout.service';
                         />
                     </g>
                 </svg>
-                <span>SAKAI</span>
+                <span>WhoTraveling</span>
             </a>
         </div>
 
@@ -58,35 +64,180 @@ import { LayoutService } from '../service/layout.service';
                 </div>
             </div>
 
+            <button type="button" class="layout-topbar-action relative" (click)="toggleNotifications($event, notifPanel)">
+                <i class="pi pi-bell"></i>
+                <span
+                    *ngIf="unreadCount > 0"
+                    class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1 min-w-4 text-center"
+                    style="font-size: 0.65rem; line-height: 1rem;"
+                >{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+            </button>
+
+            <p-popover #notifPanel (onShow)="loadNotifications()">
+                <div class="flex flex-column gap-2" style="width: min(22rem, 90vw); max-height: 24rem;">
+                    <div class="flex justify-content-between align-items-center mb-2">
+                        <span class="font-semibold">Notifications</span>
+                        <button
+                            pButton
+                            type="button"
+                            class="p-button-text p-button-sm"
+                            label="Tout lu"
+                            (click)="markAllAsRead()"
+                            [disabled]="!notifications.length || unreadCount === 0"
+                        ></button>
+                    </div>
+                    <div *ngIf="loadingNotifs" class="text-center text-500 py-3">Chargement…</div>
+                    <div *ngIf="!loadingNotifs && !notifications.length" class="text-center text-500 py-3">Aucune notification</div>
+                    <ul class="list-none p-0 m-0 overflow-auto" style="max-height: 18rem;">
+                        <li
+                            *ngFor="let n of notifications"
+                            class="p-2 border-bottom-1 surface-border cursor-pointer hover:surface-hover"
+                            [class.font-semibold]="!n.read"
+                            (click)="openNotification(n, notifPanel)"
+                        >
+                            <div class="flex align-items-start gap-2">
+                                <i [class]="iconFor(n.eventType)" class="mt-1"></i>
+                                <div class="flex-1">
+                                    <div class="text-sm">{{ n.title }}</div>
+                                    <div class="text-xs text-500 line-height-3">{{ n.content }}</div>
+                                    <div class="text-xs text-400 mt-1">{{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+                                </div>
+                                <span *ngIf="!n.read" class="w-0.5rem h-0.5rem border-circle bg-primary mt-2 shrink-0"></span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </p-popover>
+
             <button class="layout-topbar-menu-button layout-topbar-action" pStyleClass="@next" enterFromClass="hidden" enterActiveClass="animate-scalein" leaveToClass="hidden" leaveActiveClass="animate-fadeout" [hideOnOutsideClick]="true">
                 <i class="pi pi-ellipsis-v"></i>
             </button>
 
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-calendar"></i>
-                        <span>Calendar</span>
+                    <button type="button" class="layout-topbar-action" routerLink="/dashboard/pages/settings">
+                        <i class="pi pi-cog"></i>
+                        <span>Paramètres</span>
                     </button>
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-inbox"></i>
-                        <span>Messages</span>
-                    </button>
-                    <button type="button" class="layout-topbar-action">
+                    <button type="button" class="layout-topbar-action" routerLink="/dashboard/pages/admin-management">
                         <i class="pi pi-user"></i>
-                        <span>Profile</span>
+                        <span>Admins</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>`
 })
-export class AppTopbar {
+export class AppTopbar implements OnInit, OnDestroy {
     items!: MenuItem[];
+    notifications: AdminNotification[] = [];
+    unreadCount = 0;
+    loadingNotifs = false;
 
-    constructor(public layoutService: LayoutService) {}
+    private subs = new Subscription();
+
+    constructor(
+        public layoutService: LayoutService,
+        private adminNotificationService: AdminNotificationService,
+        private router: Router
+    ) {}
+
+    ngOnInit(): void {
+        this.adminNotificationService.requestBrowserPermission();
+        this.adminNotificationService.refreshUnreadCount();
+        this.adminNotificationService.startSse();
+        this.subs.add(
+            this.adminNotificationService.unreadCount$.subscribe((count) => {
+                this.unreadCount = count;
+            })
+        );
+        this.subs.add(
+            this.adminNotificationService.live$.subscribe(() => {
+                // Liste rafraîchie à l'ouverture du panneau ; le badge est déjà à jour
+            })
+        );
+    }
+
+    ngOnDestroy(): void {
+        this.subs.unsubscribe();
+        this.adminNotificationService.stopSse();
+    }
 
     toggleDarkMode() {
         this.layoutService.layoutConfig.update((state) => ({ ...state, darkTheme: !state.darkTheme }));
+    }
+
+    toggleNotifications(event: Event, panel: Popover) {
+        this.adminNotificationService.requestBrowserPermission();
+        panel.toggle(event);
+    }
+
+    loadNotifications() {
+        this.loadingNotifs = true;
+        this.adminNotificationService.list().subscribe({
+            next: (data) => {
+                this.notifications = data ?? [];
+                this.loadingNotifs = false;
+            },
+            error: () => {
+                this.loadingNotifs = false;
+            }
+        });
+        this.adminNotificationService.refreshUnreadCount();
+    }
+
+    markAllAsRead() {
+        this.adminNotificationService.markAllAsRead().subscribe({
+            next: () => {
+                this.notifications = this.notifications.map((n) => ({ ...n, read: true }));
+            }
+        });
+    }
+
+    openNotification(notification: AdminNotification, panel: Popover) {
+        const navigate = () => {
+            panel.hide();
+            this.router.navigateByUrl(this.routeFor(notification.eventType));
+        };
+        if (!notification.read) {
+            this.adminNotificationService.markAsRead(notification.id).subscribe({
+                next: () => {
+                    notification.read = true;
+                    navigate();
+                },
+                error: () => navigate()
+            });
+        } else {
+            navigate();
+        }
+    }
+
+    iconFor(eventType: AdminNotificationEventType): string {
+        switch (eventType) {
+            case 'TRAJET_CREE':
+                return 'pi pi-send text-blue-500';
+            case 'TRAJET_DEMARRE':
+                return 'pi pi-play text-orange-500';
+            case 'RESERVATION_EFFECTUEE':
+                return 'pi pi-shopping-cart text-green-500';
+            case 'KYC_ENVOYE':
+                return 'pi pi-id-card text-purple-500';
+            default:
+                return 'pi pi-bell text-500';
+        }
+    }
+
+    private routeFor(eventType: AdminNotificationEventType): string {
+        switch (eventType) {
+            case 'TRAJET_CREE':
+            case 'TRAJET_DEMARRE':
+                return '/dashboard/pages/expeditions';
+            case 'RESERVATION_EFFECTUEE':
+                return '/dashboard/pages/reservations';
+            case 'KYC_ENVOYE':
+                return '/dashboard/pages/clients';
+            default:
+                return '/dashboard';
+        }
     }
 }

@@ -19,6 +19,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { AppSetting, AppSettingRequest, SettingValueType, ArticlePreferenceCatalogEntry } from '../../models/app-setting.model';
 import { AppSettingApiService } from '../../services/app-setting-api.service';
+import { AdminNotificationService } from '../../services/admin-notification.service';
 
 @Component({
   selector: 'app-settings',
@@ -72,6 +73,12 @@ export class SettingsComponent implements OnInit {
   editingCatalogIndex: number | null = null;
   catalogForm!: FormGroup;
 
+  // ─── Admin emails ────────────────────────────────────────────────────────
+  adminEmails: string[] = [];
+  newAdminEmail = '';
+  adminEmailsLoading = false;
+  adminEmailsSaving = false;
+
   readonly limitTypeOptions = [
     { label: 'Quantité (pièces)', value: 'QUANTITY' },
     { label: 'Poids (kg)',        value: 'WEIGHT'   },
@@ -100,6 +107,7 @@ export class SettingsComponent implements OnInit {
 
   constructor(
     private service: AppSettingApiService,
+    private adminNotificationService: AdminNotificationService,
     private fb: FormBuilder,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
@@ -110,6 +118,7 @@ export class SettingsComponent implements OnInit {
     this.buildCatalogForm();
     this.loadAll();
     this.loadCatalog();
+    this.loadAdminEmails();
   }
 
   // ─── Form ─────────────────────────────────────────────────────────────────
@@ -436,5 +445,70 @@ export class SettingsComponent implements OnInit {
 
   closeCatalogDialog(): void {
     this.showCatalogDialog = false;
+  }
+
+  // ─── Admin email distribution ─────────────────────────────────────────────
+
+  loadAdminEmails(): void {
+    this.adminEmailsLoading = true;
+    this.adminNotificationService.getEmails().subscribe({
+      next: (res) => {
+        this.adminEmails = res?.emails ?? [];
+        this.adminEmailsLoading = false;
+      },
+      error: () => {
+        this.adminEmailsLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger la liste d\'emails admin.'
+        });
+      }
+    });
+  }
+
+  addAdminEmail(): void {
+    const email = (this.newAdminEmail || '').trim().toLowerCase();
+    if (!email) return;
+    const valid = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email);
+    if (!valid) {
+      this.messageService.add({ severity: 'warn', summary: 'Email invalide', detail: email });
+      return;
+    }
+    if (this.adminEmails.includes(email)) {
+      this.messageService.add({ severity: 'warn', summary: 'Déjà présent', detail: email });
+      return;
+    }
+    this.adminEmails = [...this.adminEmails, email];
+    this.newAdminEmail = '';
+  }
+
+  removeAdminEmail(index: number): void {
+    this.adminEmails = this.adminEmails.filter((_, i) => i !== index);
+  }
+
+  saveAdminEmails(): void {
+    this.adminEmailsSaving = true;
+    this.adminNotificationService.updateEmails(this.adminEmails).subscribe({
+      next: (res) => {
+        this.adminEmails = res?.emails ?? [];
+        this.adminEmailsSaving = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Enregistré',
+          detail: this.adminEmails.length
+            ? `${this.adminEmails.length} destinataire(s) email`
+            : 'Liste vide : emails envoyés à tous les ADMIN'
+        });
+      },
+      error: (err) => {
+        this.adminEmailsSaving = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: err?.error?.message || 'Enregistrement impossible'
+        });
+      }
+    });
   }
 }
