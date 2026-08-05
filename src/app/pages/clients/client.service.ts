@@ -22,8 +22,8 @@ export class ClientService {
         return this.http.get<Profil>(this.url + '/clientById?clientId=' + clientId);
     }
 
-    validate(clientId: string, status: VerificationStatus): Observable<any> {
-        return this.http.put(this.url + '/validateKyc?clientId=' + clientId + '&status=' + status, {});
+    validate(clientId: string, status: VerificationStatus): Observable<Profil> {
+        return this.http.put<Profil>(this.url + '/validateKyc?clientId=' + clientId + '&status=' + status, {});
     }
 
     activateAccount(clientId: string, status: AccountStatus): Observable<any> {

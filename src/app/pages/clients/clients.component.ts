@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -7,6 +8,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
 import { IconFieldModule } from 'primeng/iconfield';
+import { ImageModule } from 'primeng/image';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -28,11 +30,18 @@ import { AccountStatus, VerificationStatus } from './accountstatus.enum';
 import { ClientService } from './client.service';
 
 type KycFilter = 'ALL' | 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'NONE';
+type KycDocKind = 'image' | 'pdf';
+
+interface KycDocPreview {
+  label: string;
+  url: string | null;
+  kind: KycDocKind;
+  fileName: string | null;
+  missing: boolean;
+}
 
 interface KycPreview {
-  rectoUrl: string | null;
-  versoUrl: string | null;
-  selfieUrl: string | null;
+  docs: KycDocPreview[];
   loading: boolean;
   error: string | null;
 }
@@ -58,7 +67,8 @@ interface KycPreview {
     DividerModule,
     TooltipModule,
     SelectButtonModule,
-    TabsModule
+    TabsModule,
+    ImageModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './clients.component.html',
@@ -91,6 +101,9 @@ export class ClientsComponent implements OnInit, OnDestroy {
   ];
 
   kycPreview: KycPreview = this.emptyPreview();
+  pdfPreviewVisible = false;
+  pdfPreviewTitle = '';
+  pdfPreviewUrl: SafeResourceUrl | null = null;
   private previewSub?: Subscription;
   private userSub?: Subscription;
   private objectUrls: string[] = [];
@@ -99,7 +112,8 @@ export class ClientsComponent implements OnInit, OnDestroy {
     private clientService: ClientService,
     private userApi: UserApiService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit() {
@@ -110,6 +124,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.previewSub?.unsubscribe();
     this.userSub?.unsubscribe();
+    this.closePdfPreview();
     this.revokeObjectUrls();
   }
 
@@ -202,6 +217,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.activeDetailTab = 'client';
     this.previewSub?.unsubscribe();
     this.userSub?.unsubscribe();
+    this.closePdfPreview();
     this.revokeObjectUrls();
     this.kycPreview = this.emptyPreview();
   }
@@ -265,8 +281,11 @@ export class ClientsComponent implements OnInit, OnDestroy {
     }
     this.actionLoading = true;
     this.clientService.validate(this.selectedClient.id, status).subscribe({
-      next: () => {
+      next: (updated) => {
         this.actionLoading = false;
+        if (updated) {
+          this.selectedClient = updated;
+        }
         const feedback = this.kycActionFeedback(status);
         this.messageService.add({
           severity: feedback.severity,
@@ -571,8 +590,24 @@ export class ClientsComponent implements OnInit, OnDestroy {
     });
   }
 
+  openPdfPreview(doc: KycDocPreview) {
+    if (!doc.url || doc.kind !== 'pdf') {
+      return;
+    }
+    this.pdfPreviewTitle = `${doc.label}${doc.fileName ? ' — ' + doc.fileName : ''}`;
+    this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(doc.url);
+    this.pdfPreviewVisible = true;
+  }
+
+  closePdfPreview() {
+    this.pdfPreviewVisible = false;
+    this.pdfPreviewTitle = '';
+    this.pdfPreviewUrl = null;
+  }
+
   private loadKycPreviews(client: Profil) {
     this.previewSub?.unsubscribe();
+    this.closePdfPreview();
     this.revokeObjectUrls();
     this.kycPreview = this.emptyPreview();
 
@@ -582,25 +617,46 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
     this.kycPreview.loading = true;
 
-    const load = (fileName: string | null | undefined) => {
+    const slots: { label: string; fileName: string | null | undefined }[] = [
+      { label: 'Recto', fileName: client.kycFileName },
+      { label: 'Verso', fileName: client.kycVersoFileName },
+      { label: 'Selfie', fileName: client.kycSelfieFileName }
+    ];
+
+    const requests = slots.map(({ fileName }) => {
       if (!fileName) {
         return of(null);
       }
       return this.clientService.downloadFile(fileName).pipe(catchError(() => of(null)));
-    };
+    });
 
-    this.previewSub = forkJoin({
-      recto: load(client.kycFileName),
-      verso: load(client.kycVersoFileName),
-      selfie: load(client.kycSelfieFileName)
-    }).subscribe({
-      next: ({ recto, verso, selfie }) => {
+    this.previewSub = forkJoin(requests).subscribe({
+      next: (blobs) => {
+        const docs: KycDocPreview[] = slots.map((slot, index) => {
+          const blob = blobs[index];
+          if (!slot.fileName || !blob) {
+            return {
+              label: slot.label,
+              url: null,
+              kind: 'image' as KycDocKind,
+              fileName: slot.fileName ?? null,
+              missing: true
+            };
+          }
+          return {
+            label: slot.label,
+            url: this.toObjectUrl(blob, slot.fileName),
+            kind: this.isPdfFile(slot.fileName, blob) ? 'pdf' : 'image',
+            fileName: slot.fileName,
+            missing: false
+          };
+        });
+
+        const loaded = docs.some((doc) => !!doc.url);
         this.kycPreview = {
-          rectoUrl: this.toObjectUrl(recto),
-          versoUrl: this.toObjectUrl(verso),
-          selfieUrl: this.toObjectUrl(selfie),
+          docs,
           loading: false,
-          error: !recto && !verso && !selfie ? 'Impossible de charger les documents KYC' : null
+          error: loaded ? null : 'Impossible de charger les documents KYC'
         };
       },
       error: () => {
@@ -612,13 +668,54 @@ export class ClientsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private toObjectUrl(blob: Blob | null): string | null {
+  private toObjectUrl(blob: Blob | null, fileName?: string): string | null {
     if (!blob) {
       return null;
     }
-    const url = URL.createObjectURL(blob);
+    const typed = this.withCorrectMime(blob, fileName);
+    const url = URL.createObjectURL(typed);
     this.objectUrls.push(url);
     return url;
+  }
+
+  private withCorrectMime(blob: Blob, fileName?: string): Blob {
+    const mime = this.guessMimeType(fileName);
+    if (!mime || mime === blob.type) {
+      return blob;
+    }
+    return new Blob([blob], { type: mime });
+  }
+
+  private guessMimeType(fileName?: string): string | null {
+    if (!fileName) {
+      return null;
+    }
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'webp':
+        return 'image/webp';
+      case 'gif':
+        return 'image/gif';
+      case 'heic':
+      case 'heif':
+        return 'image/heic';
+      default:
+        return null;
+    }
+  }
+
+  private isPdfFile(fileName: string, blob?: Blob | null): boolean {
+    if (fileName.toLowerCase().endsWith('.pdf')) {
+      return true;
+    }
+    return !!blob?.type && blob.type.includes('pdf');
   }
 
   private revokeObjectUrls() {
@@ -630,9 +727,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
   private emptyPreview(): KycPreview {
     return {
-      rectoUrl: null,
-      versoUrl: null,
-      selfieUrl: null,
+      docs: [],
       loading: false,
       error: null
     };

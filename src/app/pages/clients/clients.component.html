@@ -295,36 +295,32 @@
                                     </div>
                                 } @else {
                                     <div class="clients-kyc-docs">
-                                        <figure class="clients-kyc-doc">
-                                            <figcaption>Recto</figcaption>
-                                            @if (kycPreview.rectoUrl) {
-                                                <a [href]="kycPreview.rectoUrl" target="_blank" rel="noopener">
-                                                    <img [src]="kycPreview.rectoUrl" alt="Recto pièce d'identité" />
-                                                </a>
-                                            } @else {
-                                                <div class="clients-kyc-doc__missing">Non fourni</div>
-                                            }
-                                        </figure>
-                                        <figure class="clients-kyc-doc">
-                                            <figcaption>Verso</figcaption>
-                                            @if (kycPreview.versoUrl) {
-                                                <a [href]="kycPreview.versoUrl" target="_blank" rel="noopener">
-                                                    <img [src]="kycPreview.versoUrl" alt="Verso pièce d'identité" />
-                                                </a>
-                                            } @else {
-                                                <div class="clients-kyc-doc__missing">Non fourni</div>
-                                            }
-                                        </figure>
-                                        <figure class="clients-kyc-doc">
-                                            <figcaption>Selfie</figcaption>
-                                            @if (kycPreview.selfieUrl) {
-                                                <a [href]="kycPreview.selfieUrl" target="_blank" rel="noopener">
-                                                    <img [src]="kycPreview.selfieUrl" alt="Selfie KYC" />
-                                                </a>
-                                            } @else {
-                                                <div class="clients-kyc-doc__missing">Non fourni</div>
-                                            }
-                                        </figure>
+                                        @for (doc of kycPreview.docs; track doc.label) {
+                                            <figure class="clients-kyc-doc">
+                                                <figcaption>{{ doc.label }}</figcaption>
+                                                @if (doc.missing || !doc.url) {
+                                                    <div class="clients-kyc-doc__missing">Non fourni</div>
+                                                } @else if (doc.kind === 'pdf') {
+                                                    <button
+                                                        type="button"
+                                                        class="clients-kyc-doc__pdf"
+                                                        (click)="openPdfPreview(doc)"
+                                                        [attr.aria-label]="'Voir le PDF ' + doc.label">
+                                                        <i class="pi pi-file-pdf"></i>
+                                                        <span>Voir le PDF</span>
+                                                    </button>
+                                                } @else {
+                                                    <p-image
+                                                        [src]="doc.url"
+                                                        [alt]="doc.label"
+                                                        [preview]="true"
+                                                        appendTo="body"
+                                                        imageClass="clients-kyc-doc__image"
+                                                        styleClass="clients-kyc-doc__image-wrap">
+                                                    </p-image>
+                                                }
+                                            </figure>
+                                        }
                                     </div>
                                 }
                             </section>
@@ -494,6 +490,19 @@
         </aside>
     </div>
 </div>
+
+<p-dialog
+    [header]="pdfPreviewTitle"
+    [(visible)]="pdfPreviewVisible"
+    [modal]="true"
+    [style]="{ width: '90vw', maxWidth: '1100px' }"
+    [contentStyle]="{ padding: '0', height: '80vh' }"
+    [draggable]="false"
+    (onHide)="closePdfPreview()">
+    @if (pdfPreviewUrl) {
+        <iframe class="clients-kyc-pdf-frame" [src]="pdfPreviewUrl" title="Aperçu document KYC"></iframe>
+    }
+</p-dialog>
 
 <p-dialog
     [header]="'Rôles — ' + (linkedUser?.username || '')"
