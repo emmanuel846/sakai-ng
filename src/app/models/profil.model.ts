@@ -30,6 +30,8 @@ export interface Profil {
   kycFileName: string;
   kycVersoFileName: string;
   kycSelfieFileName: string;
+  kycSubmittedAt?: string | null;
+  kycValidatedAt?: string | null;
   bio: string;
   level: string;
   balance?: number | null;

@@ -48,6 +48,8 @@ export interface IndentityFileResponse {
   kycFileName: string;
   kycVersoFileName: string;
   kycSelfieFileName: string;
+  kycSubmittedAt?: string | null;
+  kycValidatedAt?: string | null;
   bio: string;
   level: string;
   usersId: number;

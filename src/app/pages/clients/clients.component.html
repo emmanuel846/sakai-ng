@@ -276,6 +276,26 @@
                                         <dt>Type de pièce</dt>
                                         <dd>{{ displayValue(selectedClient.kycType) }}</dd>
                                     </div>
+                                    <div>
+                                        <dt>Soumis le</dt>
+                                        <dd>
+                                            @if (selectedClient.kycSubmittedAt) {
+                                                {{ selectedClient.kycSubmittedAt | date: 'dd/MM/yyyy HH:mm' }}
+                                            } @else {
+                                                —
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>Décision le</dt>
+                                        <dd>
+                                            @if (selectedClient.kycValidatedAt) {
+                                                {{ selectedClient.kycValidatedAt | date: 'dd/MM/yyyy HH:mm' }}
+                                            } @else {
+                                                —
+                                            }
+                                        </dd>
+                                    </div>
                                 </dl>
 
                                 @if (!hasKycDocuments(selectedClient)) {
