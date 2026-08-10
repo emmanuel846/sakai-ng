@@ -161,6 +161,7 @@
                     <p-tablist>
                         <p-tab value="client"><i class="pi pi-id-card mr-2"></i>Profil client</p-tab>
                         <p-tab value="user"><i class="pi pi-user mr-2"></i>Compte utilisateur</p-tab>
+                        <p-tab value="bank"><i class="pi pi-wallet mr-2"></i>Infos bancaires</p-tab>
                     </p-tablist>
                     <p-tabpanels>
                         <p-tabpanel value="client">
@@ -502,6 +503,101 @@
                                         </p-button>
                                     </div>
                                 </section>
+                            }
+                        </p-tabpanel>
+
+                        <p-tabpanel value="bank">
+                            @if (payoutLoading) {
+                                <div class="clients-detail__loading">
+                                    <p-progressSpinner strokeWidth="3" [style]="{ width: '42px', height: '42px' }" />
+                                    <span>Chargement des infos bancaires…</span>
+                                </div>
+                            } @else if (!payoutMethods.length) {
+                                <div class="clients-detail__no-docs">
+                                    <i class="pi pi-wallet"></i>
+                                    <span>Aucun compte bancaire enregistré</span>
+                                </div>
+                            } @else {
+                                @for (method of payoutMethods; track method.id; let last = $last) {
+                                    <section class="clients-detail__section">
+                                        <h4 class="clients-detail__section-title">
+                                            {{ method.bankName || 'Compte bancaire' }}
+                                            @if (method.isDefault) {
+                                                <p-tag value="Par défaut" severity="info" class="ml-2"></p-tag>
+                                            }
+                                            @if (method.isVerified) {
+                                                <p-tag value="Vérifié" severity="success" class="ml-2"></p-tag>
+                                            } @else {
+                                                <p-tag value="En attente" severity="warn" class="ml-2"></p-tag>
+                                            }
+                                        </h4>
+                                        <dl class="clients-detail__grid">
+                                            <div>
+                                                <dt>Titulaire</dt>
+                                                <dd>{{ displayValue(method.accountHolderName) }}</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Banque</dt>
+                                                <dd>{{ displayValue(method.bankName) }}</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Pays</dt>
+                                                <dd>{{ displayValue(method.country) }}</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Type</dt>
+                                                <dd>{{ displayValue(method.payoutType) }}</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Email</dt>
+                                                <dd>{{ displayValue(method.email) }}</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Téléphone</dt>
+                                                <dd>{{ displayValue(method.phoneNumber) }}</dd>
+                                            </div>
+                                            <div class="clients-detail__full">
+                                                <dt>IBAN</dt>
+                                                <dd class="clients-detail__iban">
+                                                    <span class="font-mono">{{ displayIban(method) }}</span>
+                                                    <span class="clients-detail__iban-actions">
+                                                        <p-button
+                                                            [icon]="isIbanRevealed(method) ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                                                            [text]="true"
+                                                            [rounded]="true"
+                                                            severity="secondary"
+                                                            [loading]="isIbanRevealing(method)"
+                                                            (onClick)="toggleIbanReveal(method)"
+                                                            [pTooltip]="isIbanRevealed(method) ? 'Masquer l’IBAN' : 'Afficher l’IBAN'"
+                                                            tooltipPosition="top">
+                                                        </p-button>
+                                                        <p-button
+                                                            icon="pi pi-copy"
+                                                            [text]="true"
+                                                            [rounded]="true"
+                                                            severity="secondary"
+                                                            [loading]="isIbanRevealing(method)"
+                                                            (onClick)="copyIban(method)"
+                                                            pTooltip="Copier l’IBAN"
+                                                            tooltipPosition="top">
+                                                        </p-button>
+                                                    </span>
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt>BIC / SWIFT</dt>
+                                                <dd class="font-mono">{{ displayValue(method.rib) }}</dd>
+                                            </div>
+                                            <div class="clients-detail__full">
+                                                <dt>Note</dt>
+                                                <dd>{{ displayValue(method.note) }}</dd>
+                                            </div>
+                                        </dl>
+                                    </section>
+                                    @if (!last) {
+                                        <p-divider />
+                                    }
+                                }
                             }
                         </p-tabpanel>
                     </p-tabpanels>

@@ -4,6 +4,19 @@ import { AuthService } from './auth.service'; // Chemin vers votre AuthService
 import { catchError, finalize, switchMap, throwError } from 'rxjs';
 import { LoaderService } from './loader.service';
 
+/**
+ * Match exact path segments only (optional query/hash).
+ * Prevents `/api/v1/countries/list` from excluding `/api/v1/countries/list/all`.
+ */
+function matchesExcludedUrl(requestUrl: string, excludedUrl: string): boolean {
+  const index = requestUrl.indexOf(excludedUrl);
+  if (index === -1) {
+    return false;
+  }
+  const nextChar = requestUrl.charAt(index + excludedUrl.length);
+  return nextChar === '' || nextChar === '?' || nextChar === '#';
+}
+
 export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) {
   // Inject AuthService pour récupérer le token d'authentification
   const authService = inject(AuthService);
@@ -28,7 +41,7 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) 
     '/api/v1/expedition/searchByCountryOnly',
   ];
 
-  const isExcluded = excludedUrls.some(url => req.url.includes(url));
+  const isExcluded = excludedUrls.some(url => matchesExcludedUrl(req.url, url));
   loaderService.showLoader();
   if (isExcluded) {
     return next(req).pipe(

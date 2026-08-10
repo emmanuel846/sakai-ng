@@ -24,7 +24,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { forkJoin, of, Subscription } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { Profil } from '../../models/profil.model';
+import { PayoutMethod } from '../../models/payout-method.model';
 import { Role, User } from '../../models/user.model';
+import { PayoutMethodApiService } from '../../services/payout-method-api.service';
 import { UserApiService } from '../../services/user-api.service';
 import { AccountStatus, VerificationStatus } from './accountstatus.enum';
 import { ClientService } from './client.service';
@@ -80,6 +82,11 @@ export class ClientsComponent implements OnInit, OnDestroy {
   selectedClient: Profil | null = null;
   linkedUser: User | null = null;
   linkedUserLoading = false;
+  payoutMethods: PayoutMethod[] = [];
+  payoutLoading = false;
+  /** IBANs révélés en clair (id → valeur). */
+  revealedIbans = new Map<string, string>();
+  revealingIbanIds = new Set<string>();
   verificationStatus = VerificationStatus;
   loading = false;
   actionLoading = false;
@@ -106,11 +113,13 @@ export class ClientsComponent implements OnInit, OnDestroy {
   pdfPreviewUrl: SafeResourceUrl | null = null;
   private previewSub?: Subscription;
   private userSub?: Subscription;
+  private payoutSub?: Subscription;
   private objectUrls: string[] = [];
 
   constructor(
     private clientService: ClientService,
     private userApi: UserApiService,
+    private payoutApi: PayoutMethodApiService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private sanitizer: DomSanitizer
@@ -124,6 +133,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.previewSub?.unsubscribe();
     this.userSub?.unsubscribe();
+    this.payoutSub?.unsubscribe();
     this.closePdfPreview();
     this.revokeObjectUrls();
   }
@@ -140,6 +150,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
           if (refreshed) {
             this.loadKycPreviews(refreshed);
             this.loadLinkedUser(refreshed);
+            this.loadPayoutMethods(refreshed);
           } else {
             this.clearSelection();
           }
@@ -204,6 +215,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.activeDetailTab = 'client';
     this.loadKycPreviews(client);
     this.loadLinkedUser(client);
+    this.loadPayoutMethods(client);
   }
 
   onRowUnselect() {
@@ -214,9 +226,14 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.selectedClient = null;
     this.linkedUser = null;
     this.linkedUserLoading = false;
+    this.payoutMethods = [];
+    this.payoutLoading = false;
+    this.revealedIbans.clear();
+    this.revealingIbanIds.clear();
     this.activeDetailTab = 'client';
     this.previewSub?.unsubscribe();
     this.userSub?.unsubscribe();
+    this.payoutSub?.unsubscribe();
     this.closePdfPreview();
     this.revokeObjectUrls();
     this.kycPreview = this.emptyPreview();
@@ -586,6 +603,125 @@ export class ClientsComponent implements OnInit, OnDestroy {
       error: () => {
         this.linkedUser = null;
         this.linkedUserLoading = false;
+      }
+    });
+  }
+
+  private loadPayoutMethods(client: Profil) {
+    this.payoutSub?.unsubscribe();
+    this.payoutMethods = [];
+    this.revealedIbans.clear();
+    this.revealingIbanIds.clear();
+
+    if (!client.id) {
+      this.payoutLoading = false;
+      return;
+    }
+
+    this.payoutLoading = true;
+    this.payoutSub = this.payoutApi.getByClient(client.id).pipe(catchError(() => of([]))).subscribe({
+      next: (methods) => {
+        this.payoutMethods = methods ?? [];
+        this.payoutLoading = false;
+      },
+      error: () => {
+        this.payoutMethods = [];
+        this.payoutLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger les infos bancaires'
+        });
+      }
+    });
+  }
+
+  displayIban(method: PayoutMethod): string {
+    if (!method?.id) {
+      return '—';
+    }
+    return this.revealedIbans.get(method.id) ?? method.iban ?? '—';
+  }
+
+  isIbanRevealed(method: PayoutMethod): boolean {
+    return !!method?.id && this.revealedIbans.has(method.id);
+  }
+
+  isIbanRevealing(method: PayoutMethod): boolean {
+    return !!method?.id && this.revealingIbanIds.has(method.id);
+  }
+
+  toggleIbanReveal(method: PayoutMethod) {
+    if (!method?.id) {
+      return;
+    }
+    if (this.revealedIbans.has(method.id)) {
+      this.revealedIbans.delete(method.id);
+      return;
+    }
+    this.revealingIbanIds.add(method.id);
+    this.payoutApi.reveal(method.id).subscribe({
+      next: (full) => {
+        this.revealingIbanIds.delete(method.id);
+        if (full?.iban) {
+          this.revealedIbans.set(method.id, full.iban);
+        }
+      },
+      error: () => {
+        this.revealingIbanIds.delete(method.id);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de révéler l’IBAN'
+        });
+      }
+    });
+  }
+
+  async copyIban(method: PayoutMethod) {
+    if (!method?.id) {
+      return;
+    }
+
+    const copyValue = async (value: string) => {
+      try {
+        await navigator.clipboard.writeText(value);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Copié',
+          detail: 'IBAN copié dans le presse-papiers'
+        });
+      } catch {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de copier l’IBAN'
+        });
+      }
+    };
+
+    const revealed = this.revealedIbans.get(method.id);
+    if (revealed) {
+      await copyValue(revealed);
+      return;
+    }
+
+    this.revealingIbanIds.add(method.id);
+    this.payoutApi.reveal(method.id).subscribe({
+      next: async (full) => {
+        this.revealingIbanIds.delete(method.id);
+        if (full?.iban) {
+          this.revealedIbans.set(method.id, full.iban);
+          await copyValue(full.iban);
+        }
+      },
+      error: () => {
+        this.revealingIbanIds.delete(method.id);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de récupérer l’IBAN à copier'
+        });
       }
     });
   }
