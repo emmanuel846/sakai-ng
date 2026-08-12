@@ -10,6 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { TabsModule } from 'primeng/tabs';
 import { RatingModule } from 'primeng/rating';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MessageService } from 'primeng/api';
 import { forkJoin } from 'rxjs';
 
@@ -30,7 +31,8 @@ import { RatingApiService } from '../../services/rating-api.service';
     ToastModule,
     TooltipModule,
     TabsModule,
-    RatingModule
+    RatingModule,
+    ToggleSwitchModule
   ],
   providers: [MessageService],
   templateUrl: './ratings-reviews.component.html',
@@ -45,10 +47,12 @@ export class RatingsReviewsComponent implements OnInit {
   filteredPlatformFeedback: PlatformFeedbackAdmin[] = [];
 
   loading = false;
+  togglingFeaturedId: string | null = null;
   userSearch = '';
   platformSearch = '';
   userScoreFilter: number | null = null;
   platformScoreFilter: number | null = null;
+  platformFeaturedOnly = false;
 
   readonly scoreOptions = [
     { label: 'Toutes les notes', value: null },
@@ -100,6 +104,10 @@ export class RatingsReviewsComponent implements OnInit {
     return this.platformFeedback.length;
   }
 
+  get featuredOnHomeCount(): number {
+    return this.platformFeedback.filter((r) => r.featuredOnHome).length;
+  }
+
   get userAverage(): number {
     if (!this.userRatings.length) {
       return 0;
@@ -143,6 +151,9 @@ export class RatingsReviewsComponent implements OnInit {
   applyPlatformFilter(): void {
     const term = this.platformSearch.trim().toLowerCase();
     this.filteredPlatformFeedback = this.platformFeedback.filter((r) => {
+      if (this.platformFeaturedOnly && !r.featuredOnHome) {
+        return false;
+      }
       if (this.platformScoreFilter != null && r.score !== this.platformScoreFilter) {
         return false;
       }
@@ -160,6 +171,41 @@ export class RatingsReviewsComponent implements OnInit {
         .join(' ')
         .toLowerCase();
       return haystack.includes(term);
+    });
+  }
+
+  toggleFeatured(row: PlatformFeedbackAdmin, featured: boolean): void {
+    if (!row?.id || this.togglingFeaturedId) {
+      return;
+    }
+    const previous = row.featuredOnHome;
+    row.featuredOnHome = featured;
+    this.togglingFeaturedId = row.id;
+    this.ratingApi.setPlatformFeedbackFeatured(row.id, featured).subscribe({
+      next: (updated) => {
+        const idx = this.platformFeedback.findIndex((r) => r.id === row.id);
+        if (idx >= 0) {
+          this.platformFeedback[idx] = { ...this.platformFeedback[idx], ...updated };
+        }
+        this.applyPlatformFilter();
+        this.togglingFeaturedId = null;
+        this.messageService.add({
+          severity: 'success',
+          summary: featured ? 'Affiché sur l’accueil' : 'Retiré de l’accueil',
+          detail: featured
+            ? 'Cet avis apparaîtra sur la page d’accueil.'
+            : 'Cet avis n’apparaîtra plus sur la page d’accueil.'
+        });
+      },
+      error: () => {
+        row.featuredOnHome = previous;
+        this.togglingFeaturedId = null;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de mettre à jour la sélection pour l’accueil.'
+        });
+      }
     });
   }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { PlatformFeedbackAdmin, UserRatingAdmin } from '../models/rating.model';
@@ -19,5 +19,14 @@ export class RatingApiService {
 
   listPlatformFeedback(): Observable<PlatformFeedbackAdmin[]> {
     return this.http.get<PlatformFeedbackAdmin[]>(`${this.feedbackBase}/admin/list`);
+  }
+
+  setPlatformFeedbackFeatured(id: string, featured: boolean): Observable<PlatformFeedbackAdmin> {
+    const params = new HttpParams().set('featured', String(featured));
+    return this.http.patch<PlatformFeedbackAdmin>(
+      `${this.feedbackBase}/admin/${id}/featured`,
+      null,
+      { params }
+    );
   }
 }

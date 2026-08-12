@@ -21,5 +21,15 @@ export interface PlatformFeedbackAdmin {
   expeditionId: string | null;
   score: number;
   comment: string;
+  featuredOnHome: boolean;
+  createdAt: string;
+}
+
+export interface HomepageReview {
+  id: string;
+  author: string;
+  title: string;
+  comment: string;
+  score: number;
   createdAt: string;
 }

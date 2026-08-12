@@ -16,6 +16,13 @@
   justify-content: center;
 }
 
+.featured-filter {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.5rem;
+  background: var(--surface-0);
+}
+
 .tab-count {
   margin-left: 0.5rem;
   display: inline-flex;
