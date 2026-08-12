@@ -593,6 +593,18 @@
                                                 <dd>{{ displayValue(method.note) }}</dd>
                                             </div>
                                         </dl>
+                                        @if (!method.isVerified) {
+                                            <div class="clients-detail__actions mt-3">
+                                                <p-button
+                                                    label="Valider"
+                                                    icon="pi pi-check"
+                                                    severity="success"
+                                                    [outlined]="true"
+                                                    [loading]="isPayoutVerifying(method)"
+                                                    (onClick)="confirmVerifyPayout(method, $event)">
+                                                </p-button>
+                                            </div>
+                                        }
                                     </section>
                                     @if (!last) {
                                         <p-divider />

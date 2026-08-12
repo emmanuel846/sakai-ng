@@ -22,4 +22,9 @@ export class PayoutMethodApiService {
   reveal(id: string): Observable<PayoutMethod> {
     return this.http.get<PayoutMethod>(`${this.BASE}/${id}/reveal`);
   }
+
+  /** Valider un compte bancaire — ADMIN. */
+  verify(id: string): Observable<PayoutMethod> {
+    return this.http.patch<PayoutMethod>(`${this.BASE}/${id}/verify`, {});
+  }
 }

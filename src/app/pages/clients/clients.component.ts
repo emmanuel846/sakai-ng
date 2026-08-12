@@ -87,6 +87,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
   /** IBANs révélés en clair (id → valeur). */
   revealedIbans = new Map<string, string>();
   revealingIbanIds = new Set<string>();
+  verifyingPayoutIds = new Set<string>();
   verificationStatus = VerificationStatus;
   loading = false;
   actionLoading = false;
@@ -230,6 +231,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.payoutLoading = false;
     this.revealedIbans.clear();
     this.revealingIbanIds.clear();
+    this.verifyingPayoutIds.clear();
     this.activeDetailTab = 'client';
     this.previewSub?.unsubscribe();
     this.userSub?.unsubscribe();
@@ -612,6 +614,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.payoutMethods = [];
     this.revealedIbans.clear();
     this.revealingIbanIds.clear();
+    this.verifyingPayoutIds.clear();
 
     if (!client.id) {
       this.payoutLoading = false;
@@ -721,6 +724,55 @@ export class ClientsComponent implements OnInit, OnDestroy {
           severity: 'error',
           summary: 'Erreur',
           detail: 'Impossible de récupérer l’IBAN à copier'
+        });
+      }
+    });
+  }
+
+  isPayoutVerifying(method: PayoutMethod): boolean {
+    return !!method?.id && this.verifyingPayoutIds.has(method.id);
+  }
+
+  confirmVerifyPayout(method: PayoutMethod, event?: Event) {
+    if (!method?.id || method.isVerified) {
+      return;
+    }
+    const label = method.bankName || method.accountHolderName || 'ce compte';
+    this.confirmationService.confirm({
+      target: event?.currentTarget as EventTarget,
+      message: `Confirmer la validation du compte bancaire <strong>${label}</strong> (${method.iban}) ?`,
+      header: 'Valider le compte bancaire',
+      icon: 'pi pi-check-circle',
+      acceptLabel: 'Valider',
+      rejectLabel: 'Annuler',
+      acceptButtonStyleClass: 'p-button-success',
+      accept: () => this.verifyPayout(method)
+    });
+  }
+
+  verifyPayout(method: PayoutMethod) {
+    if (!method?.id) {
+      return;
+    }
+    this.verifyingPayoutIds.add(method.id);
+    this.payoutApi.verify(method.id).subscribe({
+      next: (updated) => {
+        this.verifyingPayoutIds.delete(method.id);
+        this.payoutMethods = this.payoutMethods.map((m) =>
+          m.id === method.id ? { ...m, ...updated, isVerified: true } : m
+        );
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Compte validé',
+          detail: 'Le compte bancaire a été marqué comme vérifié'
+        });
+      },
+      error: () => {
+        this.verifyingPayoutIds.delete(method.id);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de valider le compte bancaire'
         });
       }
     });
