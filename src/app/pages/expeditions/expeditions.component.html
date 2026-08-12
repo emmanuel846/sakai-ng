@@ -1,196 +1,958 @@
-<p-toolbar styleClass="mb-6">
-    <ng-template #start>
-        <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2"  />
-        <p-button severity="secondary" label="Rafraichir" icon="pi pi-refresh" outlined (onClick)="getAllExpeditions()" />
-    </ng-template>
+<p-toast></p-toast>
 
-    <ng-template #end>
-        <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
-    </ng-template>
-</p-toolbar>
-
-<p-table
-    #dt
-    [value]="expeditions"
-    [rows]="10"
-    [paginator]="true"
-    [globalFilterFields]="['createdAt', 'countryDep', 'countryArr', 'clients.lastname', 'clients.firstname', 'status']"
-    [tableStyle]="{ 'min-width': '75rem' }"
-    [rowHover]="true"
-    dataKey="id"
-    currentPageReportTemplate="Affichage {first} to {last} of {totalRecords} Expéditions"
-    [showCurrentPageReport]="true"
-    [rowsPerPageOptions]="[10, 20, 30]"
->
-    <ng-template #caption>
-        @if (loading) {
-            <p-progressbar mode="indeterminate" [style]="{ height: '6px' }"></p-progressbar>
-        }
-        <div class="flex items-center justify-between">
-            <h5 class="m-0">Liste des expéditions</h5>
+<div class="expeditions-page">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #start>
+            <div class="flex flex-wrap items-center gap-3">
+                <h2 class="m-0 text-xl font-semibold">Liste des expéditions</h2>
+                <p-button
+                    severity="secondary"
+                    label="Rafraîchir"
+                    icon="pi pi-refresh"
+                    [outlined]="true"
+                    (onClick)="getAllExpeditions()">
+                </p-button>
+            </div>
+        </ng-template>
+        <ng-template #end>
             <p-iconfield>
                 <p-inputicon styleClass="pi pi-search" />
-                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
+                <input
+                    pInputText
+                    type="text"
+                    (input)="onGlobalFilter(dt, $event)"
+                    placeholder="Rechercher…" />
             </p-iconfield>
-        </div>
-    </ng-template>
-    <ng-template #header>
-        <tr>
-            <th style="width: 3rem">
-                <p-tableHeaderCheckbox />
-            </th>
-            <th pSortableColumn="createdAt" style="min-width:16rem">Date de création</th>
-            <th pSortableColumn="countryDep" style="width:6rem">
-              Pays départ
-                <p-sortIcon field="name" />
-            </th>
-            <th>Pays arrivé</th>
-            <th pSortableColumn="countryArr" style="min-width: 8rem">
-              Client
-                <p-sortIcon field="price" />
-            </th>
-            <th pSortableColumn="category" style="min-width:10rem">
-                Code de reservation de vol
-                <p-sortIcon field="category" />
-            </th>
-            <th pSortableColumn="rating" style="min-width: 12rem">
-                Date Départ
-                <p-sortIcon field="rating" />
-            </th>
-            <th pSortableColumn="rating" style="min-width: 12rem">
-                Date de dépôt
-                <p-sortIcon field="rating" />
-            </th>
-            <th pSortableColumn="inventoryStatus" style="min-width: 12rem">
-               Date de livraison
-                <p-sortIcon field="inventoryStatus" />
-            </th>
-            
-            <th style="min-width: 12rem"></th>
-        </tr>
-    </ng-template>
-    <ng-template #body let-expedition>
-        <tr (click)="openDetails(expedition)" style="cursor:pointer;">
-            <td style="width: 3rem">
-                <p-tableCheckbox [value]="expedition" />
-            </td>
-            <td>{{ expedition.createdAt | date: 'dd/MM/YYYY HH:mm:ss' }}</td>
-            <td>{{ expedition.countryDep }}</td>
-            <td>{{ expedition.countryArr }}</td>
-            <td style="min-width: 12rem">{{ expedition.clients.lastname }} {{ expedition.clients.firstname }}</td>
-            <td>{{ expedition.numVol }}</td>
-            <td>{{ expedition.depDateStart | date : 'dd/MM/YYYY'}}</td>
-            <td>{{ expedition.receiptDate | date : 'dd/MM/YYYY'}}</td>
-            <td>
-                {{ expedition.deliveryDate  | date : 'dd/MM/YYYY' }}
-            </td>
-            <td style="min-width: 30rem">
-                <p-button label="Modifier" icon="pi pi-pencil" severity="info" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="openEditDialog(expedition); $event.stopPropagation()" />
-                @if (expedition.expeditionStatus === expedtionStatus.CREATED) {
-                    <p-button label="Valider" icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.VALIDATED); $event.stopPropagation()" />
-                    <p-button label="Rejeter" icon="pi pi-times" severity="warn" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.REJECTED); $event.stopPropagation()" />
-                }
-                @if(expedition.expeditionStatus === expedtionStatus.VALIDATED) {
-                    <p-button label="Mettre en attente" icon="pi pi-check" severity="primary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.CREATED); $event.stopPropagation()" />
-                    <p-button label="Terminer" icon="pi pi-check" severity="secondary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.COMPLETED); $event.stopPropagation()" />
-                }
-                @if(expedition.expeditionStatus === expedtionStatus.STARTED) {
-                    <p-button label="Remettre en traitement" icon="pi pi-undo" severity="primary" [rounded]="true" [outlined]="true" (onClick)="selectedExpedition=expedition;validate(expedtionStatus.VALIDATED); $event.stopPropagation()" />
-                }
-            </td>
-        </tr>
-    </ng-template>
-</p-table>
+        </ng-template>
+    </p-toolbar>
 
-<p-sidebar [(visible)]="drawerVisible" position="right" [baseZIndex]="10000" [modal]="true" styleClass="expedition-drawer w-50rem">
-    <ng-container *ngIf="selectedExpedition">
-        <div class="expedition-details-header flex align-items-center justify-content-between mb-3">
-            <div>
-                <h2 class="m-0"><i class="pi pi-send mr-2"></i>Détails de l'expédition</h2>
-                <span class="text-secondary">N° Vol : <b>{{ selectedExpedition.numVol }}</b></span>
-            </div>
-            <p-button icon="pi pi-times" class="p-button-rounded p-button-text" (onClick)="drawerVisible=false"></p-button>
+    <div class="expeditions-split" [class.expeditions-split--open]="!!selectedExpedition">
+        <div class="expeditions-list card">
+            @if (loading) {
+                <p-progressbar mode="indeterminate" [style]="{ height: '4px' }"></p-progressbar>
+            }
+
+            <p-table
+                #dt
+                [value]="expeditions"
+                [rows]="10"
+                [paginator]="true"
+                [globalFilterFields]="['createdAt', 'countryDep', 'countryArr', 'clients.lastname', 'clients.firstname', 'numVol', 'expeditionStatus']"
+                [tableStyle]="{ 'min-width': '60rem' }"
+                [rowHover]="true"
+                selectionMode="single"
+                [(selection)]="selectedExpedition"
+                (onRowSelect)="onRowSelect($event)"
+                (onRowUnselect)="onRowUnselect()"
+                dataKey="id"
+                currentPageReportTemplate="{first} à {last} sur {totalRecords} expéditions"
+                [showCurrentPageReport]="true"
+                [rowsPerPageOptions]="[10, 20, 30]">
+                <ng-template #header>
+                    <tr>
+                        <th pSortableColumn="createdAt" style="min-width:10rem">
+                            Création
+                            <p-sortIcon field="createdAt" />
+                        </th>
+                        <th pSortableColumn="countryDep">Départ</th>
+                        <th pSortableColumn="countryArr">Arrivée</th>
+                        <th>Voyageur</th>
+                        <th pSortableColumn="numVol">N° vol</th>
+                        <th pSortableColumn="depDateStart">Départ</th>
+                        <th pSortableColumn="receiptDate">Dépôt</th>
+                        <th pSortableColumn="deliveryDate">Livraison</th>
+                        <th style="min-width: 14rem"></th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-expedition>
+                    <tr
+                        [pSelectableRow]="expedition"
+                        [class.expeditions-row--selected]="selectedExpedition?.id === expedition.id"
+                        style="cursor: pointer">
+                        <td>{{ expedition.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                        <td>{{ expedition.countryDep }} / {{ expedition.villeDep }}</td>
+                        <td>{{ expedition.countryArr }} / {{ expedition.villeArr }}</td>
+                        <td>{{ expedition.clients?.lastname }} {{ expedition.clients?.firstname }}</td>
+                        <td>{{ expedition.numVol }}</td>
+                        <td>{{ expedition.depDateStart | date: 'dd/MM/yyyy' }}</td>
+                        <td>{{ expedition.receiptDate | date: 'dd/MM/yyyy' }}</td>
+                        <td>{{ expedition.deliveryDate | date: 'dd/MM/yyyy' }}</td>
+                        <td (click)="$event.stopPropagation()">
+                            <div class="flex flex-wrap gap-1 justify-end">
+                                @if (filterBy() === expedtionStatus.CREATED) {
+                                    <p-button
+                                        label="Valider"
+                                        icon="pi pi-check"
+                                        [rounded]="true"
+                                        [outlined]="true"
+                                        (onClick)="validate(expedtionStatus.VALIDATED, expedition)">
+                                    </p-button>
+                                    <p-button
+                                        label="Rejeter"
+                                        icon="pi pi-times"
+                                        severity="warn"
+                                        [rounded]="true"
+                                        [outlined]="true"
+                                        (onClick)="validate(expedtionStatus.REJECTED, expedition)">
+                                    </p-button>
+                                }
+                                @if (filterBy() === expedtionStatus.VALIDATED) {
+                                    <p-button
+                                        label="En attente"
+                                        icon="pi pi-clock"
+                                        severity="secondary"
+                                        [rounded]="true"
+                                        [outlined]="true"
+                                        (onClick)="validate(expedtionStatus.CREATED, expedition)">
+                                    </p-button>
+                                    <p-button
+                                        label="Terminer"
+                                        icon="pi pi-check"
+                                        severity="success"
+                                        [rounded]="true"
+                                        [outlined]="true"
+                                        (onClick)="validate(expedtionStatus.COMPLETED, expedition)">
+                                    </p-button>
+                                    <p-button
+                                        icon="pi pi-pencil"
+                                        [rounded]="true"
+                                        [outlined]="true"
+                                        pTooltip="Modifier"
+                                        (onClick)="openEditDialog(expedition, $event)">
+                                    </p-button>
+                                }
+                                @if (filterBy() === expedtionStatus.STARTED) {
+                                    <p-button
+                                        label="Remettre en traitement"
+                                        icon="pi pi-undo"
+                                        severity="primary"
+                                        [rounded]="true"
+                                        [outlined]="true"
+                                        (onClick)="validate(expedtionStatus.VALIDATED, expedition)">
+                                    </p-button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="9" class="text-center text-surface-500 py-6">
+                            Aucune expédition dans cet onglet.
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
         </div>
-        <hr>
-        <div class="expedition-details-grid">
-            <div>
-                <i class="pi pi-flag mr-2 text-primary"></i>
-                <b>Pays départ :</b> {{ selectedExpedition.countryDep }}
-            </div>
-            <div>
-                <i class="pi pi-flag-fill mr-2 text-success"></i>
-                <b>Pays arrivé :</b> {{ selectedExpedition.countryArr }}
-            </div>
-            <div>
-                <i class="pi pi-map-marker mr-2 text-primary"></i>
-                <b>Ville départ :</b> {{ selectedExpedition.villeDep }}
-            </div>
-            <div>
-                <i class="pi pi-map-marker-fill mr-2 text-success"></i>
-                <b>Ville arrivée :</b> {{ selectedExpedition.villeArr }}
-            </div>
-            <div>
-                <i class="pi pi-calendar mr-2"></i>
-                <b>Date départ :</b> {{ selectedExpedition.depDateStart | date:'dd/MM/yyyy' }}
-            </div>
-            <div>
-                <i class="pi pi-calendar-plus mr-2"></i>
-                <b>Date arrivée :</b> {{ selectedExpedition.arrivalStartDate | date:'dd/MM/yyyy' }}
-            </div>
-            <div>
-                <i class="pi pi-clock mr-2"></i>
-                <b>Date de dépôt :</b> {{ selectedExpedition.receiptDate | date:'dd/MM/yyyy' }}
-            </div>
-            <div>
-                <i class="pi pi-calendar-minus mr-2"></i>
-                <b>Date de livraison :</b> {{ selectedExpedition.deliveryDate | date:'dd/MM/yyyy' }}
-            </div>
-            <div>
-                <i class="pi pi-weight mr-2"></i>
-                <b>Poids à charger :</b> {{ selectedExpedition.weightToLoad }} kg
-            </div>
-            <div>
-                <i class="pi pi-inbox mr-2"></i>
-                <b>Poids réservé :</b> {{ selectedExpedition.weightReserved }} kg
-            </div>
-            <div>
-                <i class="pi pi-info-circle mr-2"></i>
-                <b>Statut :</b> <span [ngClass]="{
-                    'text-success': selectedExpedition.expeditionStatus === 'DELIVERED' || selectedExpedition.expeditionStatus === 'COMPLETED',
-                    'text-warning': selectedExpedition.expeditionStatus === 'RESERVED' || selectedExpedition.expeditionStatus === 'ONGOING',
-                    'text-danger': selectedExpedition.expeditionStatus === 'DELETED'
-                }">{{ selectedExpedition.expeditionStatus }}</span>
-            </div>
-            <div>
-                <i class="pi pi-user mr-2"></i>
-                <b>Client :</b> {{ selectedExpedition.clients.lastname }} {{ selectedExpedition.clients.firstname }}
-            </div>
-            <div>
-                <i class="pi pi-star mr-2"></i>
-                <b>Préférences :</b> 
-                <div *ngFor="let pref of selectedExpedition.preferences; let last = last">
-                    <span>{{ pref.categoryName }}: {{ pref.maxQuantity }}</span><span *ngIf="!last">, </span>
+
+        <aside class="expeditions-detail card" [class.expeditions-detail--visible]="!!selectedExpedition">
+            @if (!selectedExpedition) {
+                <div class="expeditions-detail__empty">
+                    <i class="pi pi-send expeditions-detail__empty-icon"></i>
+                    <h3 class="m-0">Détail de l’expédition</h3>
+                    <p class="text-surface-500 m-0 text-center">
+                        Sélectionnez une expédition pour voir le trajet, les tarifs, les points de collecte,
+                        le voyageur et toutes les réservations (colis, photos, destinataires).
+                    </p>
                 </div>
-            </div>
-        </div>
-        <hr>
-        <div class="mt-4 flex justify-content-end">
-            <p-button label="Fermer" icon="pi pi-times" (onClick)="drawerVisible=false" severity="secondary"></p-button>
-        </div>
-    </ng-container>
-</p-sidebar>
+            } @else {
+                <div class="expeditions-detail__header">
+                    <div class="min-w-0">
+                        <div class="text-xs uppercase tracking-wide text-surface-500 mb-1">Expédition</div>
+                        <h3 class="m-0 text-xl font-semibold truncate">
+                            {{ selectedExpedition.countryDep }} → {{ selectedExpedition.countryArr }}
+                        </h3>
+                        <div class="text-sm text-surface-500 mt-1">
+                            Vol <b>{{ displayValue(selectedExpedition.numVol) }}</b>
+                            @if (selectedExpedition.nomBillet) {
+                                · Billet {{ selectedExpedition.nomBillet }}
+                            }
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <p-tag
+                                [value]="selectedExpedition.expeditionStatus"
+                                [severity]="statusSeverity(selectedExpedition.expeditionStatus)">
+                            </p-tag>
+                            @if (selectedExpedition.deliverySteps) {
+                                <p-tag [value]="selectedExpedition.deliverySteps" severity="info"></p-tag>
+                            }
+                            <p-tag
+                                [value]="(selectedExpedition.weightReserved || 0) + ' / ' + (selectedExpedition.weightToLoad || 0) + ' kg'"
+                                severity="secondary">
+                            </p-tag>
+                        </div>
+                    </div>
+                    <p-button
+                        icon="pi pi-times"
+                        [rounded]="true"
+                        [text]="true"
+                        severity="secondary"
+                        (onClick)="clearSelection()"
+                        pTooltip="Fermer"
+                        tooltipPosition="left">
+                    </p-button>
+                </div>
 
-<p-dialog [(visible)]="editDialogVisible" [modal]="true" [style]="{width: '75vw', maxHeight: '90vh'}" [dismissableMask]="true" [draggable]="false" [resizable]="false" styleClass="expedition-edit-dialog">
+                <p-tabs [(value)]="activeDetailTab" styleClass="expeditions-detail__tabs mt-3">
+                    <p-tablist>
+                        <p-tab value="trajet"><i class="pi pi-map mr-2"></i>Trajet</p-tab>
+                        <p-tab value="tarifs"><i class="pi pi-wallet mr-2"></i>Vol & tarifs</p-tab>
+                        <p-tab value="collecte"><i class="pi pi-building mr-2"></i>Collecte</p-tab>
+                        <p-tab value="voyageur"><i class="pi pi-user mr-2"></i>Voyageur</p-tab>
+                        <p-tab value="prefs"><i class="pi pi-list mr-2"></i>Préférences</p-tab>
+                        <p-tab value="reservations">
+                            <i class="pi pi-box mr-2"></i>Réservations
+                            @if (reservations.length) {
+                                <span class="expeditions-detail__badge">{{ reservations.length }}</span>
+                            }
+                        </p-tab>
+                    </p-tablist>
+                    <p-tabpanels>
+                        <!-- Trajet -->
+                        <p-tabpanel value="trajet">
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Itinéraire</h4>
+                                <dl class="expeditions-detail__grid">
+                                    <div>
+                                        <dt>Pays départ</dt>
+                                        <dd>{{ displayValue(selectedExpedition.countryDep) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Ville départ</dt>
+                                        <dd>{{ displayValue(selectedExpedition.villeDep) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pays arrivée</dt>
+                                        <dd>{{ displayValue(selectedExpedition.countryArr) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Ville arrivée</dt>
+                                        <dd>{{ displayValue(selectedExpedition.villeArr) }}</dd>
+                                    </div>
+                                    <div class="expeditions-detail__full">
+                                        <dt>Étapes de livraison</dt>
+                                        <dd>{{ displayValue(selectedExpedition.deliverySteps) }}</dd>
+                                    </div>
+                                </dl>
+                            </section>
+
+                            <p-divider />
+
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Calendrier</h4>
+                                <dl class="expeditions-detail__grid">
+                                    <div>
+                                        <dt>Départ (début)</dt>
+                                        <dd>{{ selectedExpedition.depDateStart | date: 'dd/MM/yyyy' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Départ (fin)</dt>
+                                        <dd>
+                                            @if (selectedExpedition.depDateEnd) {
+                                                {{ selectedExpedition.depDateEnd | date: 'dd/MM/yyyy' }}
+                                            } @else {
+                                                —
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>Arrivée (début)</dt>
+                                        <dd>{{ selectedExpedition.arrivalStartDate | date: 'dd/MM/yyyy' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Arrivée (fin)</dt>
+                                        <dd>
+                                            @if (selectedExpedition.arrivalEndDate) {
+                                                {{ selectedExpedition.arrivalEndDate | date: 'dd/MM/yyyy' }}
+                                            } @else {
+                                                —
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>Date de dépôt</dt>
+                                        <dd>{{ selectedExpedition.receiptDate | date: 'dd/MM/yyyy' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Date de livraison</dt>
+                                        <dd>{{ selectedExpedition.deliveryDate | date: 'dd/MM/yyyy' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Retrait colis</dt>
+                                        <dd>
+                                            @if (selectedExpedition.packageRetrivalDate) {
+                                                {{ selectedExpedition.packageRetrivalDate | date: 'dd/MM/yyyy' }}
+                                            } @else {
+                                                —
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>Créée le</dt>
+                                        <dd>
+                                            @if (selectedExpedition.createdAt) {
+                                                {{ selectedExpedition.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                                            } @else {
+                                                —
+                                            }
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </section>
+
+                            <p-divider />
+
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Capacité</h4>
+                                <dl class="expeditions-detail__grid">
+                                    <div>
+                                        <dt>Poids à charger</dt>
+                                        <dd>{{ selectedExpedition.weightToLoad }} kg</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Poids réservé</dt>
+                                        <dd>{{ selectedExpedition.weightReserved || 0 }} kg</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Reste disponible</dt>
+                                        <dd>{{ remainingWeight(selectedExpedition) }} kg</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Statut</dt>
+                                        <dd>{{ selectedExpedition.expeditionStatus }}</dd>
+                                    </div>
+                                </dl>
+                            </section>
+
+                            <p-divider />
+
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Actions</h4>
+                                <div class="expeditions-detail__actions">
+                                    @if (selectedExpedition.expeditionStatus === expedtionStatus.CREATED) {
+                                        <p-button
+                                            label="Valider"
+                                            icon="pi pi-check"
+                                            severity="success"
+                                            (onClick)="validate(expedtionStatus.VALIDATED)">
+                                        </p-button>
+                                        <p-button
+                                            label="Rejeter"
+                                            icon="pi pi-times"
+                                            severity="danger"
+                                            [outlined]="true"
+                                            (onClick)="validate(expedtionStatus.REJECTED)">
+                                        </p-button>
+                                    }
+                                    @if (selectedExpedition.expeditionStatus === expedtionStatus.VALIDATED) {
+                                        <p-button
+                                            label="Mettre en attente"
+                                            icon="pi pi-clock"
+                                            severity="secondary"
+                                            [outlined]="true"
+                                            (onClick)="validate(expedtionStatus.CREATED)">
+                                        </p-button>
+                                        <p-button
+                                            label="Terminer"
+                                            icon="pi pi-check"
+                                            severity="success"
+                                            (onClick)="validate(expedtionStatus.COMPLETED)">
+                                        </p-button>
+                                        <p-button
+                                            label="Modifier"
+                                            icon="pi pi-pencil"
+                                            [outlined]="true"
+                                            (onClick)="openEditDialog(selectedExpedition!)">
+                                        </p-button>
+                                    }
+                                    @if (selectedExpedition.expeditionStatus === expedtionStatus.STARTED) {
+                                        <p-button
+                                            label="Remettre en traitement"
+                                            icon="pi pi-undo"
+                                            [outlined]="true"
+                                            (onClick)="validate(expedtionStatus.VALIDATED)">
+                                        </p-button>
+                                    }
+                                </div>
+                            </section>
+                        </p-tabpanel>
+
+                        <!-- Vol & tarifs -->
+                        <p-tabpanel value="tarifs">
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Vol</h4>
+                                <dl class="expeditions-detail__grid">
+                                    <div>
+                                        <dt>Numéro de vol</dt>
+                                        <dd>{{ displayValue(selectedExpedition.numVol) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Nom / référence billet</dt>
+                                        <dd>{{ displayValue(selectedExpedition.nomBillet) }}</dd>
+                                    </div>
+                                </dl>
+                            </section>
+
+                            <p-divider />
+
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Tarification</h4>
+                                <dl class="expeditions-detail__grid">
+                                    <div>
+                                        <dt>Frais douane / kg</dt>
+                                        <dd>{{ formatMoney(selectedExpedition.customsFees) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Frais totaux</dt>
+                                        <dd>{{ formatMoney(selectedExpedition.totalFees ?? selectedExpedition.fees) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Taux TVA</dt>
+                                        <dd>{{ formatPercent(selectedExpedition.tvaRate) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Commission</dt>
+                                        <dd>{{ formatPercent(selectedExpedition.commissionRate) }}</dd>
+                                    </div>
+                                </dl>
+                            </section>
+                        </p-tabpanel>
+
+                        <!-- Collecte -->
+                        <p-tabpanel value="collecte">
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Point de collecte départ</h4>
+                                @if (!selectedExpedition.collectionPoints) {
+                                    <div class="expeditions-detail__no-docs">
+                                        <i class="pi pi-inbox"></i>
+                                        <span>Aucun point de collecte départ</span>
+                                    </div>
+                                } @else {
+                                    <dl class="expeditions-detail__grid">
+                                        <div>
+                                            <dt>Nom</dt>
+                                            <dd>{{ displayValue(selectedExpedition.collectionPoints.name) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Statut</dt>
+                                            <dd>{{ displayValue(selectedExpedition.collectionPoints.status) }}</dd>
+                                        </div>
+                                        <div class="expeditions-detail__full">
+                                            <dt>Adresse</dt>
+                                            <dd>{{ displayValue(selectedExpedition.collectionPoints.adresse) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Contacts</dt>
+                                            <dd>{{ displayValue(selectedExpedition.collectionPoints.contacts) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Horaires</dt>
+                                            <dd>{{ displayValue(selectedExpedition.collectionPoints.openHours) }}</dd>
+                                        </div>
+                                        <div class="expeditions-detail__full">
+                                            <dt>Lien carte</dt>
+                                            <dd>
+                                                @if (collectionLocation(selectedExpedition.collectionPoints); as url) {
+                                                    <a [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                                                } @else {
+                                                    —
+                                                }
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                }
+                            </section>
+
+                            <p-divider />
+
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Point de collecte destination</h4>
+                                @if (!selectedExpedition.destCollectionPoints) {
+                                    <div class="expeditions-detail__no-docs">
+                                        <i class="pi pi-inbox"></i>
+                                        <span>Aucun point de collecte destination</span>
+                                    </div>
+                                } @else {
+                                    <dl class="expeditions-detail__grid">
+                                        <div>
+                                            <dt>Nom</dt>
+                                            <dd>{{ displayValue(selectedExpedition.destCollectionPoints.name) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Statut</dt>
+                                            <dd>{{ displayValue(selectedExpedition.destCollectionPoints.status) }}</dd>
+                                        </div>
+                                        <div class="expeditions-detail__full">
+                                            <dt>Adresse</dt>
+                                            <dd>{{ displayValue(selectedExpedition.destCollectionPoints.adresse) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Contacts</dt>
+                                            <dd>{{ displayValue(selectedExpedition.destCollectionPoints.contacts) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Horaires</dt>
+                                            <dd>{{ displayValue(selectedExpedition.destCollectionPoints.openHours) }}</dd>
+                                        </div>
+                                        <div class="expeditions-detail__full">
+                                            <dt>Lien carte</dt>
+                                            <dd>
+                                                @if (collectionLocation(selectedExpedition.destCollectionPoints); as url) {
+                                                    <a [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                                                } @else {
+                                                    —
+                                                }
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                }
+                            </section>
+                        </p-tabpanel>
+
+                        <!-- Voyageur -->
+                        <p-tabpanel value="voyageur">
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Identité</h4>
+                                <dl class="expeditions-detail__grid">
+                                    <div>
+                                        <dt>Prénom</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.firstname) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Nom</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.lastname) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pseudo</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.public_pseudo) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Genre</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.gender) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Date de naissance</dt>
+                                        <dd>
+                                            @if (selectedExpedition.clients.birthdate) {
+                                                {{ selectedExpedition.clients.birthdate | date: 'dd/MM/yyyy' }}
+                                            } @else {
+                                                —
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pays</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.country) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Téléphone</dt>
+                                        <dd>
+                                            {{ displayValue(selectedExpedition.clients.phoneNumber) }}
+                                            @if (selectedExpedition.clients.phoneVerified) {
+                                                <i class="pi pi-verified text-green-500 ml-1" pTooltip="Téléphone vérifié"></i>
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div class="expeditions-detail__full">
+                                        <dt>Adresse</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.address) }}</dd>
+                                    </div>
+                                </dl>
+                            </section>
+
+                            <p-divider />
+
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Profil</h4>
+                                <dl class="expeditions-detail__grid">
+                                    <div>
+                                        <dt>Niveau</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.level) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Note</dt>
+                                        <dd>
+                                            {{ selectedExpedition.clients.rating }}
+                                            @if (selectedExpedition.clients.rating_counts) {
+                                                ({{ selectedExpedition.clients.rating_counts }})
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>KYC</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.verificationStatus) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Statut compte</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.status) }}</dd>
+                                    </div>
+                                    <div class="expeditions-detail__full">
+                                        <dt>Bio</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.bio) }}</dd>
+                                    </div>
+                                    <div class="expeditions-detail__full">
+                                        <dt>Préférences client</dt>
+                                        <dd>{{ displayValue(selectedExpedition.clients.preferences) }}</dd>
+                                    </div>
+                                </dl>
+                            </section>
+                        </p-tabpanel>
+
+                        <!-- Préférences -->
+                        <p-tabpanel value="prefs">
+                            <section class="expeditions-detail__section">
+                                <h4 class="expeditions-detail__section-title">Articles acceptés</h4>
+                                @if (!selectedExpedition.preferences?.length) {
+                                    <div class="expeditions-detail__no-docs">
+                                        <i class="pi pi-inbox"></i>
+                                        <span>Aucune préférence renseignée</span>
+                                    </div>
+                                } @else {
+                                    <div class="expeditions-prefs">
+                                        @for (pref of selectedExpedition.preferences; track pref.categoryName) {
+                                            <div class="expeditions-prefs__item">
+                                                <i class="pi pi-check-circle text-primary"></i>
+                                                <span>{{ preferenceLabel(pref) }}</span>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </section>
+                        </p-tabpanel>
+
+                        <!-- Réservations -->
+                        <p-tabpanel value="reservations">
+                            @if (reservationsLoading) {
+                                <div class="expeditions-detail__loading">
+                                    <p-progressSpinner strokeWidth="3" [style]="{ width: '42px', height: '42px' }" />
+                                    <span>Chargement des réservations…</span>
+                                </div>
+                            } @else if (reservationsError) {
+                                <div class="expeditions-detail__no-docs expeditions-detail__no-docs--error">
+                                    <i class="pi pi-exclamation-triangle"></i>
+                                    <span>{{ reservationsError }}</span>
+                                </div>
+                            } @else if (!reservations.length) {
+                                <div class="expeditions-detail__no-docs">
+                                    <i class="pi pi-inbox"></i>
+                                    <span>Aucune réservation sur cette expédition</span>
+                                </div>
+                            } @else {
+                                @if (picturesLoading) {
+                                    <div class="expeditions-detail__loading mb-3" style="min-height: 4rem">
+                                        <p-progressSpinner strokeWidth="3" [style]="{ width: '28px', height: '28px' }" />
+                                        <span>Chargement des photos…</span>
+                                    </div>
+                                }
+                                @if (picturesError) {
+                                    <div class="expeditions-detail__no-docs expeditions-detail__no-docs--error mb-3" style="min-height: 3.5rem">
+                                        <i class="pi pi-exclamation-triangle"></i>
+                                        <span>{{ picturesError }}</span>
+                                    </div>
+                                }
+
+                                <p-accordion [multiple]="true" value="0">
+                                    @for (reservation of reservations; track reservation.id; let i = $index) {
+                                        <p-accordion-panel [value]="'' + i">
+                                            <p-accordion-header>
+                                                <div class="expeditions-resa-header">
+                                                    <span class="font-semibold">
+                                                        {{ reservation.clients?.lastname }} {{ reservation.clients?.firstname }}
+                                                    </span>
+                                                    <p-tag
+                                                        [value]="reservation.status"
+                                                        [severity]="reservationSeverity(reservation.status)">
+                                                    </p-tag>
+                                                    <span class="text-sm text-surface-500">
+                                                        {{ reservation.amount | number: '1.2-2' }} € ·
+                                                        {{ reservation.totalWeight }} kg ·
+                                                        {{ reservation.colis?.length || 0 }} colis
+                                                    </span>
+                                                </div>
+                                            </p-accordion-header>
+                                            <p-accordion-content>
+                                                <section class="expeditions-detail__section">
+                                                    <h4 class="expeditions-detail__section-title">Réservation</h4>
+                                                    <dl class="expeditions-detail__grid">
+                                                        <div>
+                                                            <dt>ID</dt>
+                                                            <dd class="text-xs break-all">{{ reservation.id }}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Statut</dt>
+                                                            <dd>{{ reservation.status }}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Montant</dt>
+                                                            <dd>{{ reservation.amount | number: '1.2-2' }} €</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Poids total</dt>
+                                                            <dd>{{ reservation.totalWeight }} kg</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Créée le</dt>
+                                                            <dd>
+                                                                @if (reservation.createdAt) {
+                                                                    {{ reservation.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                                                                } @else {
+                                                                    —
+                                                                }
+                                                            </dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Mise à jour</dt>
+                                                            <dd>
+                                                                @if (reservation.updatedAt) {
+                                                                    {{ reservation.updatedAt | date: 'dd/MM/yyyy HH:mm' }}
+                                                                } @else {
+                                                                    —
+                                                                }
+                                                            </dd>
+                                                        </div>
+                                                    </dl>
+                                                </section>
+
+                                                <p-divider />
+
+                                                <section class="expeditions-detail__section">
+                                                    <h4 class="expeditions-detail__section-title">Client expéditeur</h4>
+                                                    <dl class="expeditions-detail__grid">
+                                                        <div>
+                                                            <dt>Nom</dt>
+                                                            <dd>
+                                                                {{ displayValue(reservation.clients?.lastname) }}
+                                                                {{ displayValue(reservation.clients?.firstname) }}
+                                                            </dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Téléphone</dt>
+                                                            <dd>{{ displayValue(reservation.clients?.phoneNumber) }}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Pays</dt>
+                                                            <dd>{{ displayValue(reservation.clients?.country) }}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>KYC</dt>
+                                                            <dd>{{ displayValue(reservation.clients?.verificationStatus) }}</dd>
+                                                        </div>
+                                                        <div class="expeditions-detail__full">
+                                                            <dt>Adresse</dt>
+                                                            <dd>{{ displayValue(reservation.clients?.address) }}</dd>
+                                                        </div>
+                                                    </dl>
+                                                </section>
+
+                                                <p-divider />
+
+                                                <section class="expeditions-detail__section">
+                                                    <h4 class="expeditions-detail__section-title">Destinataire</h4>
+                                                    @if (!reservation.receiver) {
+                                                        <div class="expeditions-detail__no-docs" style="min-height: 4rem">
+                                                            <i class="pi pi-user"></i>
+                                                            <span>Destinataire non renseigné</span>
+                                                        </div>
+                                                    } @else {
+                                                        <dl class="expeditions-detail__grid">
+                                                            <div>
+                                                                <dt>Nom complet</dt>
+                                                                <dd>{{ displayValue(reservation.receiver.fullName) }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt>Téléphone</dt>
+                                                                <dd>{{ displayValue(reservation.receiver.phoneNumber) }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt>Email</dt>
+                                                                <dd>{{ displayValue(reservation.receiver.email) }}</dd>
+                                                            </div>
+                                                            <div class="expeditions-detail__full">
+                                                                <dt>Adresse</dt>
+                                                                <dd>{{ displayValue(reservation.receiver.address) }}</dd>
+                                                            </div>
+                                                        </dl>
+
+                                                        <div class="mt-3">
+                                                            <div class="text-xs uppercase tracking-wide text-surface-500 mb-2">
+                                                                Pièce d’identité destinataire
+                                                            </div>
+                                                            @if (receiverIdFileName(reservation.receiver); as idFile) {
+                                                                @if (pictureUrl(idFile); as url) {
+                                                                    <figure class="expeditions-photo">
+                                                                        <p-image
+                                                                            [src]="url"
+                                                                            alt="Pièce d'identité destinataire"
+                                                                            [preview]="true"
+                                                                            appendTo="body"
+                                                                            imageClass="expeditions-photo__img"
+                                                                            styleClass="expeditions-photo__wrap">
+                                                                        </p-image>
+                                                                    </figure>
+                                                                } @else {
+                                                                    <div class="expeditions-detail__no-docs" style="min-height: 4rem">
+                                                                        <span>Fichier : {{ idFile }} (non chargé)</span>
+                                                                    </div>
+                                                                }
+                                                            } @else {
+                                                                <div class="expeditions-detail__no-docs" style="min-height: 4rem">
+                                                                    <span>Aucune pièce d’identité</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </section>
+
+                                                <p-divider />
+
+                                                <section class="expeditions-detail__section">
+                                                    <h4 class="expeditions-detail__section-title">
+                                                        Colis ({{ reservation.colis?.length || 0 }})
+                                                    </h4>
+                                                    @if (!reservation.colis?.length) {
+                                                        <div class="expeditions-detail__no-docs" style="min-height: 4rem">
+                                                            <span>Aucun colis</span>
+                                                        </div>
+                                                    } @else {
+                                                        @for (coli of reservation.colis; track coli.id || $index; let ci = $index) {
+                                                            <div class="expeditions-coli">
+                                                                <div class="expeditions-coli__title">
+                                                                    Colis {{ ci + 1 }}
+                                                                    @if (coli.coliStatus) {
+                                                                        <p-tag [value]="coli.coliStatus" severity="secondary"></p-tag>
+                                                                    }
+                                                                </div>
+                                                                <dl class="expeditions-detail__grid">
+                                                                    <div>
+                                                                        <dt>Poids</dt>
+                                                                        <dd>{{ coli.weight }} kg</dd>
+                                                                    </div>
+                                                                    <div>
+                                                                        <dt>Dimensions</dt>
+                                                                        <dd>{{ displayValue(coli.dimension) }}</dd>
+                                                                    </div>
+                                                                    <div>
+                                                                        <dt>Type</dt>
+                                                                        <dd>{{ displayValue(coli.type) }}</dd>
+                                                                    </div>
+                                                                    <div>
+                                                                        <dt>Prix déclaré</dt>
+                                                                        <dd>{{ coli.declaredPrice | number: '1.2-2' }} €</dd>
+                                                                    </div>
+                                                                    <div class="expeditions-detail__full">
+                                                                        <dt>Contenu</dt>
+                                                                        <dd>{{ displayValue(coli.contains) }}</dd>
+                                                                    </div>
+                                                                    <div class="expeditions-detail__full">
+                                                                        <dt>Description</dt>
+                                                                        <dd>{{ displayValue(coli.description) }}</dd>
+                                                                    </div>
+                                                                    <div>
+                                                                        <dt>Valid. expéditeur</dt>
+                                                                        <dd>{{ boolLabel(coli.expeditorValidation) }}</dd>
+                                                                    </div>
+                                                                    <div>
+                                                                        <dt>Valid. voyageur</dt>
+                                                                        <dd>{{ boolLabel(coli.travellerValidation) }}</dd>
+                                                                    </div>
+                                                                    <div>
+                                                                        <dt>Valid. destinataire</dt>
+                                                                        <dd>{{ boolLabel(coli.receiverValidation) }}</dd>
+                                                                    </div>
+                                                                </dl>
+
+                                                                @if (coli.reservedArticles?.length) {
+                                                                    <div class="mt-3">
+                                                                        <div class="text-xs uppercase tracking-wide text-surface-500 mb-2">
+                                                                            Articles réservés
+                                                                        </div>
+                                                                        <div class="expeditions-prefs">
+                                                                            @for (article of coli.reservedArticles; track $index) {
+                                                                                <div class="expeditions-prefs__item">
+                                                                                    <i class="pi pi-tag text-primary"></i>
+                                                                                    <span>
+                                                                                        {{ article.articleCategory || 'Article' }}
+                                                                                        @if (article.quantity != null) {
+                                                                                            — qty {{ article.quantity }}
+                                                                                        }
+                                                                                        @if (article.weight != null) {
+                                                                                            — {{ article.weight }} kg
+                                                                                        }
+                                                                                    </span>
+                                                                                </div>
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                }
+
+                                                                @for (group of coliPictures(coli); track group.label) {
+                                                                    <div class="mt-3">
+                                                                        <div class="text-xs uppercase tracking-wide text-surface-500 mb-2">
+                                                                            Photos — {{ group.label }}
+                                                                            ({{ group.pictures.length }})
+                                                                        </div>
+                                                                        @if (!group.pictures.length) {
+                                                                            <div class="expeditions-detail__no-docs" style="min-height: 3rem">
+                                                                                <span>Aucune photo</span>
+                                                                            </div>
+                                                                        } @else {
+                                                                            <div class="expeditions-photos-grid">
+                                                                                @for (pic of group.pictures; track pic.id || pic.fileName) {
+                                                                                    @if (pictureUrl(pic.fileName); as url) {
+                                                                                        <figure class="expeditions-photo">
+                                                                                            <p-image
+                                                                                                [src]="url"
+                                                                                                [alt]="'Photo ' + group.label"
+                                                                                                [preview]="true"
+                                                                                                appendTo="body"
+                                                                                                imageClass="expeditions-photo__img"
+                                                                                                styleClass="expeditions-photo__wrap">
+                                                                                            </p-image>
+                                                                                        </figure>
+                                                                                    } @else {
+                                                                                        <div class="expeditions-photo expeditions-photo--missing">
+                                                                                            {{ pic.fileName }}
+                                                                                        </div>
+                                                                                    }
+                                                                                }
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    }
+                                                </section>
+                                            </p-accordion-content>
+                                        </p-accordion-panel>
+                                    }
+                                </p-accordion>
+                            }
+                        </p-tabpanel>
+                    </p-tabpanels>
+                </p-tabs>
+            }
+        </aside>
+    </div>
+</div>
+
+<p-dialog
+    [(visible)]="editDialogVisible"
+    [modal]="true"
+    [style]="{ width: '75vw', maxHeight: '90vh' }"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="expedition-edit-dialog">
     <ng-template #header>
         <div class="flex align-items-center gap-2">
             <i class="pi pi-pencil text-primary" style="font-size: 1.5rem"></i>
             <span class="text-xl font-semibold">Modifier l'expédition</span>
         </div>
     </ng-template>
-    
+
     <ng-container *ngIf="editForm">
         <form [formGroup]="editForm" class="p-fluid">
-            <!-- Informations du vol -->
             <div class="mb-4">
                 <h3 class="text-lg font-semibold mb-3 text-primary border-bottom-2 border-primary pb-2">
                     <i class="pi pi-plane mr-2"></i>Informations du vol
@@ -201,209 +963,116 @@
                             <i class="pi pi-ticket mr-1"></i>Numéro de vol *
                         </label>
                         <input pInputText id="numVol" formControlName="numVol" placeholder="Ex: AF1234" />
-                        <small class="text-muted">Le numéro de vol de l'expédition</small>
                     </div>
                     <div class="col-12 md:col-6 field">
                         <label htmlFor="weightToLoad" class="font-semibold">
                             <i class="pi pi-inbox mr-1"></i>Poids à charger (kg) *
                         </label>
-                        <p-inputnumber id="weightToLoad" formControlName="weightToLoad" [min]="0" [showButtons]="true" placeholder="0" />
-                        <small class="text-muted">Capacité maximale en kilogrammes</small>
+                        <p-inputnumber id="weightToLoad" formControlName="weightToLoad" [min]="0" [showButtons]="true" />
                     </div>
                 </div>
             </div>
 
-            <!-- Itinéraire -->
             <div class="mb-4">
                 <h3 class="text-lg font-semibold mb-3 text-primary border-bottom-2 border-primary pb-2">
                     <i class="pi pi-map mr-2"></i>Itinéraire
                 </h3>
                 <div class="grid formgrid">
                     <div class="col-12 md:col-6 field">
-                        <label htmlFor="countryDep" class="font-semibold">
-                            <i class="pi pi-flag mr-1"></i>Pays de départ *
-                        </label>
-                        <input pInputText id="countryDep" formControlName="countryDep" placeholder="Ex: France" />
+                        <label htmlFor="countryDep" class="font-semibold">Pays de départ *</label>
+                        <input pInputText id="countryDep" formControlName="countryDep" />
                     </div>
                     <div class="col-12 md:col-6 field">
-                        <label htmlFor="villeDep" class="font-semibold">
-                            <i class="pi pi-map-marker mr-1"></i>Ville de départ *
-                        </label>
-                        <input pInputText id="villeDep" formControlName="villeDep" placeholder="Ex: Paris" />
+                        <label htmlFor="villeDep" class="font-semibold">Ville de départ *</label>
+                        <input pInputText id="villeDep" formControlName="villeDep" />
                     </div>
                     <div class="col-12 md:col-6 field">
-                        <label htmlFor="countryArr" class="font-semibold">
-                            <i class="pi pi-flag-fill mr-1"></i>Pays d'arrivée *
-                        </label>
-                        <input pInputText id="countryArr" formControlName="countryArr" placeholder="Ex: Cameroun" />
+                        <label htmlFor="countryArr" class="font-semibold">Pays d'arrivée *</label>
+                        <input pInputText id="countryArr" formControlName="countryArr" />
                     </div>
                     <div class="col-12 md:col-6 field">
-                        <label htmlFor="villeArr" class="font-semibold">
-                            <i class="pi pi-map-marker-fill mr-1"></i>Ville d'arrivée *
-                        </label>
-                        <input pInputText id="villeArr" formControlName="villeArr" placeholder="Ex: Douala" />
+                        <label htmlFor="villeArr" class="font-semibold">Ville d'arrivée *</label>
+                        <input pInputText id="villeArr" formControlName="villeArr" />
                     </div>
                 </div>
             </div>
 
-            <!-- Dates -->
             <div class="mb-4">
                 <h3 class="text-lg font-semibold mb-3 text-primary border-bottom-2 border-primary pb-2">
                     <i class="pi pi-calendar mr-2"></i>Calendrier
                 </h3>
                 <div class="grid formgrid">
                     <div class="col-12 md:col-6 field">
-                        <label htmlFor="depDateStart" class="font-semibold">
-                            <i class="pi pi-calendar-plus mr-1"></i>Date de départ *
-                        </label>
-                        <p-datepicker id="depDateStart" formControlName="depDateStart" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="Sélectionner une date" />
+                        <label htmlFor="depDateStart" class="font-semibold">Date de départ *</label>
+                        <p-datepicker id="depDateStart" formControlName="depDateStart" dateFormat="dd/mm/yy" [showIcon]="true" />
                     </div>
                     <div class="col-12 md:col-6 field">
-                        <label htmlFor="arrivalStartDate" class="font-semibold">
-                            <i class="pi pi-calendar-minus mr-1"></i>Date d'arrivée *
-                        </label>
-                        <p-datepicker id="arrivalStartDate" formControlName="arrivalStartDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="Sélectionner une date" />
+                        <label htmlFor="arrivalStartDate" class="font-semibold">Date d'arrivée *</label>
+                        <p-datepicker id="arrivalStartDate" formControlName="arrivalStartDate" dateFormat="dd/mm/yy" [showIcon]="true" />
                     </div>
                     <div class="col-12 md:col-6 field">
-                        <label htmlFor="receiptDate" class="font-semibold">
-                            <i class="pi pi-clock mr-1"></i>Date de dépôt *
-                        </label>
-                        <p-datepicker id="receiptDate" formControlName="receiptDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="Sélectionner une date" />
-                        <small class="text-muted">Date limite pour déposer les colis</small>
+                        <label htmlFor="receiptDate" class="font-semibold">Date de dépôt *</label>
+                        <p-datepicker id="receiptDate" formControlName="receiptDate" dateFormat="dd/mm/yy" [showIcon]="true" />
                     </div>
                     <div class="col-12 md:col-6 field">
-                        <label htmlFor="deliveryDate" class="font-semibold">
-                            <i class="pi pi-send mr-1"></i>Date de livraison *
-                        </label>
-                        <p-datepicker id="deliveryDate" formControlName="deliveryDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="Sélectionner une date" />
-                        <small class="text-muted">Date prévue de livraison</small>
+                        <label htmlFor="deliveryDate" class="font-semibold">Date de livraison *</label>
+                        <p-datepicker id="deliveryDate" formControlName="deliveryDate" dateFormat="dd/mm/yy" [showIcon]="true" />
                     </div>
                 </div>
             </div>
 
-            <!-- Préférences -->
             <div class="mb-4">
                 <h3 class="text-lg font-semibold mb-3 text-primary border-bottom-2 border-primary pb-2">
-                    <i class="pi pi-star mr-2"></i>Articles acceptés et quantités maximales
+                    <i class="pi pi-star mr-2"></i>Articles acceptés
                 </h3>
-                <small class="text-muted block mb-3">Sélectionnez les catégories d'articles que vous acceptez de transporter et spécifiez la quantité maximale pour chacune.</small>
-                
                 <div class="grid formgrid preferences-grid">
                     <div *ngFor="let pref of selectedPreferences; let i = index" class="col-12 md:col-6 lg:col-4 field">
-                        <div class="p-3 border-round border-1 surface-border hover:surface-hover transition-duration-150" [class.bg-primary-50]="pref.selected">
+                        <div
+                            class="p-3 border-round border-1 surface-border hover:surface-hover transition-duration-150"
+                            [class.bg-primary-50]="pref.selected">
                             <div class="flex align-items-center justify-content-between mb-2">
-                                <label [for]="'pref-'+i" class="font-medium flex align-items-center cursor-pointer flex-1">
-                                    <p-checkbox 
-                                        [inputId]="'pref-'+i" 
-                                        [binary]="true" 
+                                <label [for]="'pref-' + i" class="font-medium flex align-items-center cursor-pointer flex-1">
+                                    <p-checkbox
+                                        [inputId]="'pref-' + i"
+                                        [binary]="true"
                                         [(ngModel)]="pref.selected"
-                                        [ngModelOptions]="{standalone: true}"
-                                        class="mr-2"
-                                    />
+                                        [ngModelOptions]="{ standalone: true }"
+                                        class="mr-2" />
                                     <span>{{ pref.categoryName }}</span>
                                 </label>
                             </div>
                             <div *ngIf="pref.selected" class="mt-2">
-                                <label [for]="'qty-'+i" class="text-sm text-muted block mb-1">Quantité max</label>
-                                <p-inputnumber 
-                                    [inputId]="'qty-'+i"
-                                    [(ngModel)]="pref.maxQuantity" 
-                                    [ngModelOptions]="{standalone: true}"
-                                    [min]="1" 
+                                <label [for]="'qty-' + i" class="text-sm text-muted block mb-1">Quantité max</label>
+                                <p-inputnumber
+                                    [inputId]="'qty-' + i"
+                                    [(ngModel)]="pref.maxQuantity"
+                                    [ngModelOptions]="{ standalone: true }"
+                                    [min]="1"
                                     [showButtons]="true"
                                     buttonLayout="horizontal"
-                                    [step]="1"
-                                    decrementButtonClass="p-button-secondary"
-                                    incrementButtonClass="p-button-secondary"
-                                    incrementButtonIcon="pi pi-plus"
-                                    decrementButtonIcon="pi pi-minus"
-                                    placeholder="Ex: 5"
-                                />
+                                    [step]="1" />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </form>
     </ng-container>
-    
+
     <ng-template #footer>
         <div class="flex justify-content-end gap-2">
-            <p-button 
-                label="Annuler" 
-                icon="pi pi-times" 
-                (onClick)="editDialogVisible=false" 
-                severity="secondary" 
-                [outlined]="true"
-            />
-            <p-button 
-                label="Enregistrer" 
-                icon="pi pi-check" 
-                (onClick)="saveExpedition()" 
-                [disabled]="!editForm.valid" 
-                [loading]="saving"
-            />
+            <p-button
+                label="Annuler"
+                icon="pi pi-times"
+                (onClick)="editDialogVisible = false"
+                severity="secondary"
+                [outlined]="true" />
+            <p-button
+                label="Enregistrer"
+                icon="pi pi-check"
+                (onClick)="saveExpedition()"
+                [disabled]="!editForm.valid"
+                [loading]="saving" />
         </div>
     </ng-template>
 </p-dialog>
-
-<style>
-/* Styles pour l'expédition */
-.expedition-details-header {
-    padding-bottom: 0.5rem;
-}
-
-.expedition-details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem 2rem;
-    margin-bottom: 1.5rem;
-}
-
-.expedition-edit-dialog :deep(.p-dialog-content) {
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
-.expedition-edit-dialog :deep(.p-dialog-header) {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
-    color: white;
-}
-
-.expedition-edit-dialog :deep(.p-dialog-header .p-dialog-title) {
-    color: white;
-}
-
-.preferences-grid .p-checkbox {
-    display: inline-flex;
-}
-
-.preferences-grid .hover\:surface-hover:hover {
-    background-color: var(--surface-hover);
-}
-
-.bg-primary-50 {
-    background-color: var(--primary-50) !important;
-    border-color: var(--primary-200) !important;
-}
-
-.text-muted {
-    color: var(--text-color-secondary);
-}
-
-.border-bottom-2 {
-    border-bottom-width: 2px;
-    border-bottom-style: solid;
-}
-
-.border-primary {
-    border-color: var(--primary-color);
-}
-
-@media (max-width: 600px) {
-    .expedition-details-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>

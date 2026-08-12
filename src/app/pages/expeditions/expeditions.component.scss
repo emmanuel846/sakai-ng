@@ -1,14 +1,264 @@
-.expedition-details-header {
-    padding-bottom: 0.5rem;
+.expeditions-page {
+  min-height: calc(100vh - 10rem);
 }
-.expedition-details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem 2rem;
-    margin-bottom: 1.5rem;
+
+.expeditions-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
 }
-@media (max-width: 600px) {
-    .expedition-details-grid {
-        grid-template-columns: 1fr;
-    }
+
+@media (min-width: 1100px) {
+  .expeditions-split {
+    grid-template-columns: minmax(0, 1fr) 28rem;
+  }
+
+  .expeditions-split--open {
+    grid-template-columns: minmax(0, 1fr) minmax(36rem, 46rem);
+  }
+}
+
+.expeditions-list,
+.expeditions-detail {
+  margin: 0;
+}
+
+.expeditions-row--selected {
+  background: color-mix(in srgb, var(--p-primary-color) 12%, transparent) !important;
+}
+
+.expeditions-detail {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 7rem);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 24rem;
+}
+
+.expeditions-detail__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.expeditions-detail__empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.55;
+}
+
+.expeditions-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.expeditions-detail__tabs {
+  flex: 1;
+  min-height: 0;
+}
+
+.expeditions-detail__section-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.expeditions-detail__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem 1rem;
+  margin: 0;
+}
+
+.expeditions-detail__grid dt {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.expeditions-detail__grid dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.expeditions-detail__full {
+  grid-column: 1 / -1;
+}
+
+.expeditions-detail__no-docs,
+.expeditions-detail__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 8rem;
+  border: 1px dashed var(--p-content-border-color, #d1d5db);
+  border-radius: 0.75rem;
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.9rem;
+}
+
+.expeditions-detail__no-docs--error {
+  color: var(--p-red-500, #ef4444);
+  border-color: color-mix(in srgb, var(--p-red-500, #ef4444) 35%, transparent);
+}
+
+.expeditions-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.expeditions-detail__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--p-primary-color) 18%, transparent);
+  color: var(--p-primary-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.expeditions-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.expeditions-prefs__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--p-content-border-color, #e5e7eb);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--p-surface-100, #f3f4f6) 65%, transparent);
+}
+
+.expeditions-resa-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+  padding-right: 0.5rem;
+}
+
+.expeditions-coli {
+  padding: 0.85rem;
+  margin-bottom: 0.85rem;
+  border: 1px solid var(--p-content-border-color, #e5e7eb);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--p-surface-50, #f9fafb) 80%, transparent);
+}
+
+.expeditions-coli__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.expeditions-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+@media (min-width: 1100px) {
+  .expeditions-photos-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.expeditions-photo {
+  margin: 0;
+}
+
+.expeditions-photo--missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 6rem;
+  padding: 0.5rem;
+  border-radius: 0.65rem;
+  border: 1px dashed var(--p-content-border-color, #d1d5db);
+  color: var(--p-text-muted-color, #9ca3af);
+  font-size: 0.75rem;
+  word-break: break-all;
+  text-align: center;
+}
+
+:host ::ng-deep .expeditions-photo__wrap,
+:host ::ng-deep .expeditions-photo__wrap .p-image {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .expeditions-photo__wrap img,
+.expeditions-photo__img {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--p-surface-100, #f3f4f6) 80%, transparent);
+  border: 1px solid var(--p-content-border-color, #e5e7eb);
+  cursor: zoom-in;
+}
+
+.expedition-edit-dialog :deep(.p-dialog-content) {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.bg-primary-50 {
+  background-color: var(--primary-50, #eff6ff) !important;
+  border-color: var(--primary-200, #bfdbfe) !important;
+}
+
+.border-bottom-2 {
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+}
+
+.border-primary {
+  border-color: var(--p-primary-color, var(--primary-color));
+}
+
+.text-muted {
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+@media (max-width: 1099px) {
+  .expeditions-detail:not(.expeditions-detail--visible) {
+    display: none;
+  }
+
+  .expeditions-detail--visible {
+    order: -1;
+  }
 }

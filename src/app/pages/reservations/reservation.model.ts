@@ -106,6 +106,7 @@ interface Coli {
   travellerValidation: boolean;
   receiverValidation: boolean;
   coliStatus: string;
+  reservedArticles?: Array<{ articleCategory?: string; quantity?: number | null; weight?: number | null }>;
   expeditorColisPictures: any[];
   travellerColisPictures: any[];
   collectorColisPictures: any[];
@@ -122,5 +123,6 @@ interface Receiver {
   phoneNumber: string;
   email: string;
   address: string;
-  idpicturesName: null;
+  idpicturesName?: string | null;
+  IDPicturesName?: string | null;
 }

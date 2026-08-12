@@ -13,6 +13,9 @@ export interface Receiver {
   email: string;
   address: string;
   id?: string;
+  /** Nom du fichier pièce d'identité (sérialisation Jackson de IDPicturesName). */
+  idpicturesName?: string | null;
+  IDPicturesName?: string | null;
 }
 
 export enum ReservationStatus {
@@ -91,11 +94,12 @@ export interface Expeditions {
 export interface CollectionPoints {
   id: string;
   name: string;
-  location_url: string;
-  adresse: string;
-  contacts: string;
-  openHours: string;
-  status: string;
+  location_url?: string;
+  locationUrl?: string;
+  adresse?: string;
+  contacts?: string;
+  openHours?: string;
+  status?: string;
 }
 
 export interface Clients {
@@ -135,18 +139,25 @@ export interface Coli {
   travellerValidation?: boolean;
   receiverValidation?: boolean;
   coliStatus?: string;
+  reservedArticles?: ReservedArticle[];
   expeditorColisPictures?: ExpeditorColisPicture[];
   travellerColisPictures?: ExpeditorColisPicture[];
   collectorColisPictures?: ExpeditorColisPicture[];
 }
 
-interface ExpeditorColisPicture {
-  id: string;
-  createdBy: string;
-  updatedBy: string;
-  createdAt: string;
-  updatedAt: string;
-  deleted: boolean;
+export interface ReservedArticle {
+  articleCategory?: string;
+  quantity?: number | null;
+  weight?: number | null;
+}
+
+export interface ExpeditorColisPicture {
+  id?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deleted?: boolean;
   fileName: string;
 }
 
@@ -194,24 +205,33 @@ export interface ReservationParams {
 
 export interface ExpeditionLists {
   id: string;
-  numVol: string
-  countryDep: string
-  countryArr: string
-  deliverySteps: string;
-  customsFees: number;
+  createdAt?: string;
+  updatedAt?: string;
+  numVol: string;
+  nomBillet?: string | null;
+  countryDep: string;
+  countryArr: string;
+  deliverySteps?: string | null;
+  customsFees?: number | null;
+  totalFees?: number | null;
+  fees?: number | null;
+  tvaRate?: number | null;
+  commissionRate?: number | null;
   receiptDate: string;
   deliveryDate: string;
+  packageRetrivalDate?: string | null;
   villeDep: string;
   villeArr: string;
   weightToLoad: number;
   weightReserved: number;
   depDateStart: string;
-  depDateEnd: string;
+  depDateEnd?: string | null;
   arrivalStartDate: string;
-  arrivalEndDate: string;
+  arrivalEndDate?: string | null;
   expeditionStatus: ExpeditionStatus;
   clients: Clients;
-  collectionPoints: CollectionPoints;
+  collectionPoints?: CollectionPoints | null;
+  destCollectionPoints?: CollectionPoints | null;
   preferences?: ArticlePreferences[];
 }
 export interface ArticlePreferences {

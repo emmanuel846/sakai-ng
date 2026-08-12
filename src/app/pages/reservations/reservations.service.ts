@@ -20,6 +20,12 @@ export class ReservationService{
         )
     }
 
+    listByExpedition(expeditionId: string): Observable<Reservations[]> {
+        return this.http.get<Reservations[]>(this.apiUrl + '/listByExpedition', {
+            params: { expeditionId }
+        });
+    }
+
     validateReservation(id: string): Observable<Reservations> {
         return this.http.put<Reservations>(`${this.apiUrl}/${id}/validate`, {});
     }
