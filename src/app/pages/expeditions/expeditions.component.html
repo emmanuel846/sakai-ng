@@ -106,14 +106,6 @@
                                         (onClick)="validate(expedtionStatus.CREATED, expedition)">
                                     </p-button>
                                     <p-button
-                                        label="Terminer"
-                                        icon="pi pi-check"
-                                        severity="success"
-                                        [rounded]="true"
-                                        [outlined]="true"
-                                        (onClick)="validate(expedtionStatus.COMPLETED, expedition)">
-                                    </p-button>
-                                    <p-button
                                         icon="pi pi-pencil"
                                         [rounded]="true"
                                         [outlined]="true"
@@ -122,6 +114,14 @@
                                     </p-button>
                                 }
                                 @if (filterBy() === expedtionStatus.STARTED) {
+                                    <p-button
+                                        label="Terminer"
+                                        icon="pi pi-check"
+                                        severity="success"
+                                        [rounded]="true"
+                                        [outlined]="true"
+                                        (onClick)="validate(expedtionStatus.COMPLETED, expedition)">
+                                    </p-button>
                                     <p-button
                                         label="Remettre en traitement"
                                         icon="pi pi-undo"
@@ -353,12 +353,6 @@
                                             (onClick)="validate(expedtionStatus.CREATED)">
                                         </p-button>
                                         <p-button
-                                            label="Terminer"
-                                            icon="pi pi-check"
-                                            severity="success"
-                                            (onClick)="validate(expedtionStatus.COMPLETED)">
-                                        </p-button>
-                                        <p-button
                                             label="Modifier"
                                             icon="pi pi-pencil"
                                             [outlined]="true"
@@ -366,6 +360,12 @@
                                         </p-button>
                                     }
                                     @if (selectedExpedition.expeditionStatus === expedtionStatus.STARTED) {
+                                        <p-button
+                                            label="Terminer"
+                                            icon="pi pi-check"
+                                            severity="success"
+                                            (onClick)="validate(expedtionStatus.COMPLETED)">
+                                        </p-button>
                                         <p-button
                                             label="Remettre en traitement"
                                             icon="pi pi-undo"
