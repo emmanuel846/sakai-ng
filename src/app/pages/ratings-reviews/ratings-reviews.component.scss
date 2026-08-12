@@ -1,0 +1,39 @@
+.kpi-wrap-item {
+  flex: 1 1 240px;
+  min-width: 220px;
+}
+
+.kpi-card {
+  border: 1px solid var(--surface-border);
+}
+
+.kpi-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-count {
+  margin-left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--surface-100);
+  color: var(--text-color-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.id-chip {
+  font-size: 0.8rem;
+  background: var(--surface-100);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.35rem;
+}

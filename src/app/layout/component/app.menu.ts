@@ -107,6 +107,11 @@ export class AppMenu {
                         routerLink: ['/dashboard/pages/collection-point-management']
                     },
                     {
+                        label: 'Avis & notes',
+                        icon: 'pi pi-fw pi-star',
+                        routerLink: ['/dashboard/pages/ratings-reviews']
+                    },
+                    {
                         label: 'Paramètres',
                         icon: 'pi pi-fw pi-sliders-h',
                         routerLink: ['/dashboard/pages/settings']
