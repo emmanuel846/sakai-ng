@@ -10,6 +10,8 @@ export interface Reservations {
   grossAmount?: number | null;
   travelerShare?: number | null;
   promoCode?: string | null;
+  creditAmount?: number | null;
+  referralDiscountApplied?: boolean;
   totalWeight?: number;
   receiver?: Receiver;
   status: string;

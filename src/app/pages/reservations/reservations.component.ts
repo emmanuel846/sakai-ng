@@ -69,6 +69,7 @@ export class ReservationsComponent {
       { field: 'amount', header: 'Montant' },
       { field: 'promoCode', header: 'Code promo' },
       { field: 'discountAmount', header: 'Réduction' },
+      { field: 'creditAmount', header: 'Crédit' },
       { field: 'totalWeight', header: 'Poids total' },
       { field: 'status', header: 'Statut' },
     

@@ -9,6 +9,7 @@ import { CountryCityManagementComponent } from './country-city-management/countr
 import { CollectionPointManagementComponent } from './collection-point-management/collection-point-management.component';
 import { SettingsComponent } from './settings/settings.component';
 import { PromoCodesComponent } from './promo-codes/promo-codes.component';
+import { ReferralsComponent } from './referrals/referrals.component';
 import { AdminManagementComponent } from './admin-management/admin-management.component';
 import { RatingsReviewsComponent } from './ratings-reviews/ratings-reviews.component';
 
@@ -25,6 +26,7 @@ export default [
     { path: 'collection-point-management', component: CollectionPointManagementComponent },
     { path: 'settings', component: SettingsComponent },
     { path: 'promo-codes', component: PromoCodesComponent },
+    { path: 'referrals', component: ReferralsComponent },
     { path: 'ratings-reviews', component: RatingsReviewsComponent },
     { path: '**', redirectTo: '/notfound' }
 ] as Routes;

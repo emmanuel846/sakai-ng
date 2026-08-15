@@ -1,0 +1,88 @@
+<p-toast></p-toast>
+
+<div class="flex flex-wrap gap-3 mb-3">
+  <div class="kpi-wrap-item">
+    <div class="card kpi-card kpi-total mb-0">
+      <div class="flex justify-content-between align-items-start">
+        <div>
+          <span class="block text-500 font-medium mb-1">Total</span>
+          <span class="text-900 font-bold text-4xl">{{ totalCount }}</span>
+        </div>
+        <div class="kpi-icon bg-blue-100">
+          <i class="pi pi-users text-blue-500 text-2xl"></i>
+        </div>
+      </div>
+      <span class="text-500 text-sm mt-2 block">Attributions</span>
+    </div>
+  </div>
+  <div class="kpi-wrap-item">
+    <div class="card kpi-card kpi-public mb-0">
+      <div class="flex justify-content-between align-items-start">
+        <div>
+          <span class="block text-500 font-medium mb-1">Récompensés</span>
+          <span class="text-900 font-bold text-4xl">{{ rewardedCount }}</span>
+        </div>
+        <div class="kpi-icon bg-green-100">
+          <i class="pi pi-check-circle text-green-500 text-2xl"></i>
+        </div>
+      </div>
+      <span class="text-500 text-sm mt-2 block">1re réservation payée</span>
+    </div>
+  </div>
+  <div class="kpi-wrap-item">
+    <div class="card kpi-card kpi-json mb-0">
+      <div class="flex justify-content-between align-items-start">
+        <div>
+          <span class="block text-500 font-medium mb-1">En attente</span>
+          <span class="text-900 font-bold text-4xl">{{ pendingCount }}</span>
+        </div>
+        <div class="kpi-icon bg-orange-100">
+          <i class="pi pi-clock text-orange-500 text-2xl"></i>
+        </div>
+      </div>
+      <span class="text-500 text-sm mt-2 block">Inscriptions sans résa payée</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <p-table
+    [value]="referrals"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="15"
+    dataKey="id"
+    styleClass="p-datatable-sm p-datatable-gridlines"
+    responsiveLayout="scroll">
+    <ng-template #header>
+      <tr>
+        <th>Parrain</th>
+        <th>Filleul</th>
+        <th>Code</th>
+        <th>Statut</th>
+        <th>Crédit</th>
+        <th>Date</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-item>
+      <tr>
+        <td>
+          <span class="font-semibold">{{ item.referrerName || '—' }}</span>
+          <div class="text-500 text-xs mt-1">{{ item.referrerCode || item.referrerId }}</div>
+        </td>
+        <td>{{ item.refereeName || item.refereeId }}</td>
+        <td><span class="font-semibold">{{ item.referralCode }}</span></td>
+        <td>
+          <p-tag [value]="statusLabel(item.status)" [severity]="statusSeverity(item.status)"></p-tag>
+        </td>
+        <td>{{ item.rewardAmount != null ? (item.rewardAmount | number:'1.2-2') + ' €' : '—' }}</td>
+        <td>{{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="6" class="text-center text-500 py-4">Aucun parrainage pour le moment.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

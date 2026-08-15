@@ -117,6 +117,11 @@ export class AppMenu {
                         routerLink: ['/dashboard/pages/promo-codes']
                     },
                     {
+                        label: 'Parrainage',
+                        icon: 'pi pi-fw pi-users',
+                        routerLink: ['/dashboard/pages/referrals']
+                    },
+                    {
                         label: 'Paramètres',
                         icon: 'pi pi-fw pi-sliders-h',
                         routerLink: ['/dashboard/pages/settings']
