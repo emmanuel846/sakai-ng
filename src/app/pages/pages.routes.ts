@@ -8,6 +8,7 @@ import { ExpeditionMainComponent } from './expeditions/expedition-main/expeditio
 import { CountryCityManagementComponent } from './country-city-management/country-city-management.component';
 import { CollectionPointManagementComponent } from './collection-point-management/collection-point-management.component';
 import { SettingsComponent } from './settings/settings.component';
+import { PromoCodesComponent } from './promo-codes/promo-codes.component';
 import { AdminManagementComponent } from './admin-management/admin-management.component';
 import { RatingsReviewsComponent } from './ratings-reviews/ratings-reviews.component';
 
@@ -23,6 +24,7 @@ export default [
     { path: 'country-city-management', component: CountryCityManagementComponent },
     { path: 'collection-point-management', component: CollectionPointManagementComponent },
     { path: 'settings', component: SettingsComponent },
+    { path: 'promo-codes', component: PromoCodesComponent },
     { path: 'ratings-reviews', component: RatingsReviewsComponent },
     { path: '**', redirectTo: '/notfound' }
 ] as Routes;

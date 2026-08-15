@@ -67,6 +67,8 @@ export class ReservationsComponent {
       { field: 'id', header: 'Référence' },
       { field: 'createdAt', header: 'Date de création', type: 'date' },
       { field: 'amount', header: 'Montant' },
+      { field: 'promoCode', header: 'Code promo' },
+      { field: 'discountAmount', header: 'Réduction' },
       { field: 'totalWeight', header: 'Poids total' },
       { field: 'status', header: 'Statut' },
     

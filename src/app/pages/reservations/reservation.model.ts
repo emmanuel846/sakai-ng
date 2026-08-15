@@ -6,6 +6,10 @@ export interface Reservations {
   updatedAt?: string;
   deleted?: boolean;
   amount?: number;
+  discountAmount?: number | null;
+  grossAmount?: number | null;
+  travelerShare?: number | null;
+  promoCode?: string | null;
   totalWeight?: number;
   receiver?: Receiver;
   status: string;

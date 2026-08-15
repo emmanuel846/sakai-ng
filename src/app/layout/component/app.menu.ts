@@ -112,6 +112,11 @@ export class AppMenu {
                         routerLink: ['/dashboard/pages/ratings-reviews']
                     },
                     {
+                        label: 'Codes promo',
+                        icon: 'pi pi-fw pi-ticket',
+                        routerLink: ['/dashboard/pages/promo-codes']
+                    },
+                    {
                         label: 'Paramètres',
                         icon: 'pi pi-fw pi-sliders-h',
                         routerLink: ['/dashboard/pages/settings']
