@@ -115,74 +115,105 @@
   [(visible)]="showDialog"
   [header]="isEditing ? 'Modifier le code promo' : 'Nouveau code promo'"
   [modal]="true"
-  [style]="{ width: '42rem' }"
-  [draggable]="false">
-  <div class="flex flex-column gap-3">
-    <div class="flex flex-column gap-1">
-      <label for="promoCode">Code</label>
-      <input pInputText id="promoCode" [(ngModel)]="form.code" class="uppercase" placeholder="BIENVENUE10" />
+  [closable]="true"
+  [draggable]="false"
+  [style]="{ width: '640px', maxWidth: '95vw' }"
+  [contentStyle]="{ overflow: 'auto' }">
+
+  <div class="promo-form">
+    <div class="form-field">
+      <label class="form-label" for="promoCode">Code</label>
+      <input pInputText id="promoCode" [(ngModel)]="form.code" class="w-full uppercase" placeholder="BIENVENUE10" />
     </div>
-    <div class="grid">
-      <div class="col-6 flex flex-column gap-1">
-        <label>Type</label>
-        <p-dropdown [options]="typeOptions" [(ngModel)]="form.type" optionLabel="label" optionValue="value"></p-dropdown>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        <label class="form-label">Type</label>
+        <p-dropdown
+          [options]="typeOptions"
+          [(ngModel)]="form.type"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          styleClass="w-full"
+          [style]="{ width: '100%' }">
+        </p-dropdown>
       </div>
-      <div class="col-6 flex flex-column gap-1">
-        <label>{{ form.type === 'PERCENT' ? 'Pourcentage' : 'Montant (€)' }}</label>
-        <p-inputNumber [(ngModel)]="form.value" [min]="0.01" [max]="form.type === 'PERCENT' ? 100 : 10000" [minFractionDigits]="0" [maxFractionDigits]="2"></p-inputNumber>
-      </div>
-    </div>
-    <div class="grid">
-      <div class="col-6 flex flex-column gap-1">
-        <label for="validFrom">Valable à partir de</label>
-        <input pInputText id="validFrom" type="datetime-local" [(ngModel)]="validFromLocal" />
-      </div>
-      <div class="col-6 flex flex-column gap-1">
-        <label for="validUntil">Expire le</label>
-        <input pInputText id="validUntil" type="datetime-local" [(ngModel)]="validUntilLocal" />
-      </div>
-    </div>
-    <div class="grid">
-      <div class="col-6 flex flex-column gap-1">
-        <label>Usages max (global)</label>
-        <p-inputNumber [(ngModel)]="form.maxUses" [min]="1" [showClear]="true" placeholder="Illimité"></p-inputNumber>
-      </div>
-      <div class="col-6 flex flex-column gap-1">
-        <label>Usages max / client</label>
-        <p-inputNumber [(ngModel)]="form.maxUsesPerClient" [min]="1" [showClear]="true"></p-inputNumber>
-      </div>
-    </div>
-    <div class="grid">
-      <div class="col-6 flex flex-column gap-1">
-        <label>Pays départ (optionnel)</label>
-        <input pInputText [(ngModel)]="form.countryDep" placeholder="Belgique" />
-      </div>
-      <div class="col-6 flex flex-column gap-1">
-        <label>Pays arrivée (optionnel)</label>
-        <input pInputText [(ngModel)]="form.countryArr" placeholder="Cameroun" />
+      <div class="form-field">
+        <label class="form-label">{{ form.type === 'PERCENT' ? 'Pourcentage' : 'Montant (€)' }}</label>
+        <p-inputNumber
+          [(ngModel)]="form.value"
+          [min]="0.01"
+          [max]="form.type === 'PERCENT' ? 100 : 10000"
+          [minFractionDigits]="0"
+          [maxFractionDigits]="2"
+          styleClass="w-full">
+        </p-inputNumber>
       </div>
     </div>
-    <div class="grid">
-      <div class="col-6 flex flex-column gap-1">
-        <label>Montant min (€)</label>
-        <p-inputNumber [(ngModel)]="form.minAmount" [min]="0" [showClear]="true"></p-inputNumber>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        <label class="form-label" for="validFrom">Valable à partir de</label>
+        <input pInputText id="validFrom" type="datetime-local" [(ngModel)]="validFromLocal" class="w-full" />
       </div>
-      <div class="col-6 flex flex-column gap-1">
-        <label>Poids min (kg)</label>
-        <p-inputNumber [(ngModel)]="form.minWeight" [min]="0" [showClear]="true"></p-inputNumber>
+      <div class="form-field">
+        <label class="form-label" for="validUntil">Expire le</label>
+        <input pInputText id="validUntil" type="datetime-local" [(ngModel)]="validUntilLocal" class="w-full" />
       </div>
     </div>
-    <div class="flex flex-column gap-1">
-      <label>Description</label>
-      <textarea pTextarea [(ngModel)]="form.description" rows="2" autoResize></textarea>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        <label class="form-label">Usages max (global)</label>
+        <p-inputNumber [(ngModel)]="form.maxUses" [min]="1" [showClear]="true" placeholder="Illimité" styleClass="w-full"></p-inputNumber>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Usages max / client</label>
+        <p-inputNumber [(ngModel)]="form.maxUsesPerClient" [min]="1" [showClear]="true" styleClass="w-full"></p-inputNumber>
+      </div>
     </div>
-    <div class="flex align-items-center gap-2">
-      <p-toggleswitch [(ngModel)]="form.active"></p-toggleswitch>
-      <span>Code actif</span>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        <label class="form-label">Pays départ (optionnel)</label>
+        <input pInputText [(ngModel)]="form.countryDep" placeholder="Belgique" class="w-full" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Pays arrivée (optionnel)</label>
+        <input pInputText [(ngModel)]="form.countryArr" placeholder="Cameroun" class="w-full" />
+      </div>
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        <label class="form-label">Montant min (€)</label>
+        <p-inputNumber [(ngModel)]="form.minAmount" [min]="0" [showClear]="true" styleClass="w-full"></p-inputNumber>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Poids min (kg)</label>
+        <p-inputNumber [(ngModel)]="form.minWeight" [min]="0" [showClear]="true" styleClass="w-full"></p-inputNumber>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Description</label>
+      <textarea pTextarea [(ngModel)]="form.description" rows="2" class="w-full"></textarea>
+    </div>
+
+    <div class="public-toggle-row">
+      <p-toggleswitch [(ngModel)]="form.active" inputId="promoActive"></p-toggleswitch>
+      <div class="flex flex-column gap-1">
+        <label for="promoActive" class="font-semibold text-sm cursor-pointer">Code actif</label>
+        <span class="text-400 text-xs">Un code inactif ne peut plus être appliqué</span>
+      </div>
     </div>
   </div>
+
   <ng-template #footer>
-    <p-button label="Annuler" severity="secondary" [text]="true" (click)="showDialog = false"></p-button>
-    <p-button [label]="isEditing ? 'Enregistrer' : 'Créer'" [loading]="saving" (click)="save()"></p-button>
+    <div class="flex gap-2 justify-content-end">
+      <p-button label="Annuler" icon="pi pi-times" severity="secondary" [text]="true" (click)="showDialog = false"></p-button>
+      <p-button [label]="isEditing ? 'Enregistrer' : 'Créer'" icon="pi pi-check" [loading]="saving" (click)="save()"></p-button>
+    </div>
   </ng-template>
 </p-dialog>
