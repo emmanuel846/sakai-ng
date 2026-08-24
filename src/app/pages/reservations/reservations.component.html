@@ -452,7 +452,18 @@
                                 <div class="reservations-coli__title">
                                     Colis {{ ci + 1 }}
                                     @if (coli.coliStatus) {
-                                        <p-tag [value]="coli.coliStatus" severity="secondary"></p-tag>
+                                        <p-tag
+                                            [value]="getColiStatusLabel(coli.coliStatus)"
+                                            [severity]="coliStatusSeverity(coli.coliStatus)">
+                                        </p-tag>
+                                    }
+                                    @if (coli.id) {
+                                        <p-button
+                                            label="Changer le statut"
+                                            icon="pi pi-sync"
+                                            size="small"
+                                            [text]="true"
+                                            (onClick)="openColiStatusDialog(coli.id, coli.coliStatus, $event)" />
                                     }
                                 </div>
                                 <dl class="reservations-detail__grid">
@@ -691,6 +702,46 @@
             [loading]="updatingStatus"
             [disabled]="!selectedNewStatus || selectedNewStatus === statusChangeTarget?.status"
             (onClick)="confirmStatusChange()" />
+    </ng-template>
+</p-dialog>
+
+<p-dialog
+    header="Modifier le statut du colis"
+    [(visible)]="coliStatusDialogVisible"
+    [modal]="true"
+    [style]="{ width: '420px' }"
+    [closable]="true">
+    <p class="text-600 mb-3">
+        Colis : <strong>{{ coliStatusTarget?.coliId }}</strong>
+        <span *ngIf="coliStatusTarget?.currentStatus" class="ml-2">
+            (actuel : {{ getColiStatusLabel(coliStatusTarget!.currentStatus) }})
+        </span>
+    </p>
+    <div class="flex flex-column gap-2">
+        <label for="newColiStatus">Nouveau statut</label>
+        <p-dropdown
+            inputId="newColiStatus"
+            [options]="coliStatusOptions"
+            [(ngModel)]="selectedColiStatus"
+            appendTo="body"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Sélectionner un statut"
+            [style]="{ width: '100%' }">
+        </p-dropdown>
+    </div>
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Fermer"
+            icon="pi pi-times"
+            severity="secondary"
+            (onClick)="coliStatusDialogVisible = false" />
+        <p-button
+            label="Mettre à jour"
+            icon="pi pi-check"
+            [loading]="updatingColiStatus"
+            [disabled]="!selectedColiStatus || selectedColiStatus === coliStatusTarget?.currentStatus"
+            (onClick)="confirmColiStatusChange()" />
     </ng-template>
 </p-dialog>
 

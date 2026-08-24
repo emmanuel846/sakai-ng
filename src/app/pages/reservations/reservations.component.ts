@@ -14,7 +14,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { DividerModule } from 'primeng/divider';
 import { ImageModule } from 'primeng/image';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { ReservationStatus } from '../../models/reservation.model';
+import { ReservationStatus, ColiStatus } from '../../models/reservation.model';
 import { Reservations } from './reservation.model';
 import { ClientService } from '../clients/client.service';
 import { environment } from '../../../environments/environment';
@@ -65,6 +65,11 @@ export class ReservationsComponent implements OnDestroy {
   selectedNewStatus: ReservationStatus | null = null;
   updatingStatus = false;
 
+  coliStatusDialogVisible = false;
+  coliStatusTarget: { coliId: string; currentStatus: string } | null = null;
+  selectedColiStatus: ColiStatus | null = null;
+  updatingColiStatus = false;
+
   selectedReservation: Reservations | null = null;
   picturesLoading = false;
   picturesError: string | null = null;
@@ -83,6 +88,15 @@ export class ReservationsComponent implements OnDestroy {
     { label: 'Déposée', value: ReservationStatus.DROPPED },
     { label: 'Échouée', value: ReservationStatus.FAILED },
     { label: 'Supprimée', value: ReservationStatus.DELETED },
+  ];
+
+  readonly coliStatusOptions: { label: string; value: ColiStatus }[] = [
+    { label: 'Créé', value: ColiStatus.CREATED },
+    { label: 'Déposé', value: ColiStatus.DROPPED },
+    { label: 'Récupéré', value: ColiStatus.PICKED },
+    { label: 'Conforme', value: ColiStatus.VALIDATED },
+    { label: 'Livré', value: ColiStatus.DELIVERED },
+    { label: 'Supprimé', value: ColiStatus.DELETED },
   ];
 
   pendingReservations = computed(() =>
@@ -283,8 +297,62 @@ export class ReservationsComponent implements OnDestroy {
     });
   }
 
+  openColiStatusDialog(coliId: string, currentStatus: string, event?: Event): void {
+    event?.stopPropagation();
+    this.coliStatusTarget = { coliId, currentStatus };
+    this.selectedColiStatus = (currentStatus as ColiStatus) || null;
+    this.coliStatusDialogVisible = true;
+  }
+
+  confirmColiStatusChange(): void {
+    if (!this.coliStatusTarget?.coliId || !this.selectedColiStatus) return;
+    this.updatingColiStatus = true;
+    this.reservationService.updateColisStatus(this.coliStatusTarget.coliId, this.selectedColiStatus).subscribe({
+      next: () => {
+        const label = this.getColiStatusLabel(this.selectedColiStatus!);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Statut colis modifié',
+          detail: `Nouveau statut : ${label}`
+        });
+        this.coliStatusDialogVisible = false;
+        this.updatingColiStatus = false;
+        this.refreshList(this.selectedReservation?.id);
+      },
+      error: (err) => {
+        this.updatingColiStatus = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: err?.error?.message || 'Impossible de modifier le statut du colis'
+        });
+      }
+    });
+  }
+
   getStatusLabel(status: string): string {
     return this.statusOptions.find(s => s.value === status)?.label ?? status;
+  }
+
+  getColiStatusLabel(status: string): string {
+    return this.coliStatusOptions.find(s => s.value === status)?.label ?? status;
+  }
+
+  coliStatusSeverity(status?: string | null): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    switch (status) {
+      case ColiStatus.DROPPED:
+      case ColiStatus.PICKED:
+        return 'info';
+      case ColiStatus.VALIDATED:
+      case ColiStatus.DELIVERED:
+        return 'success';
+      case ColiStatus.CREATED:
+        return 'warn';
+      case ColiStatus.DELETED:
+        return 'danger';
+      default:
+        return 'secondary';
+    }
   }
 
   shippingModeLabel(mode?: string): string {

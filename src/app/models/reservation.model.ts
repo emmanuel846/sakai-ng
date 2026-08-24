@@ -49,6 +49,7 @@ export enum ColiStatus {
   DELETED = 'DELETED',
   DROPPED = 'DROPPED',
   PICKED = 'PICKED',
+  VALIDATED = 'VALIDATED',
   DELIVERED = 'DELIVERED',
 }
 

@@ -69,4 +69,10 @@ export class ReservationService{
             params: { reservationId: id, status }
         });
     }
+
+    updateColisStatus(colisId: string, coliStatus: string): Observable<unknown> {
+        return this.http.get(`${environment.apiUrl}/api/v1/colis/adminUpdateStatus`, {
+            params: { colisId, coliStatus }
+        });
+    }
 }
