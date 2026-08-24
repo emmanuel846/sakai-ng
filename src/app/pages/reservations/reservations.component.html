@@ -8,6 +8,10 @@
                 En attente de validation
                 <p-tag [value]="pendingReservations().length.toString()" severity="warn" styleClass="ml-2" />
             </p-tab>
+            <p-tab value="2">
+                Commandes en ligne
+                <p-tag [value]="onlineDeliveryReservations().length.toString()" severity="info" styleClass="ml-2" />
+            </p-tab>
         </p-tablist>
 
         <p-tabpanels>
@@ -30,12 +34,22 @@
                             <td *ngFor="let col of columns">
                                 @if (col.type == 'date') {
                                     <ng-container>{{ resolveFieldData(rowData, col.field) | date: 'dd/MM/YYYY' }}</ng-container>
+                                } @else if (col.field === 'shippingMode') {
+                                    {{ shippingModeLabel(resolveFieldData(rowData, col.field)) }}
                                 } @else {
                                     {{ resolveFieldData(rowData, col.field) }}
                                 }
                             </td>
                             <td>
                                 <div class="flex gap-2">
+                                    @if (canDeclareReception(rowData)) {
+                                    <p-button
+                                        label="Réception"
+                                        icon="pi pi-box"
+                                        severity="info"
+                                        size="small"
+                                        (onClick)="openReceptionDialog(rowData)" />
+                                    }
                                     <p-button
                                         label="Modifier le statut"
                                         icon="pi pi-pencil"
@@ -106,6 +120,54 @@
                         <tr>
                             <td [attr.colspan]="pendingCols.length + 1" class="text-center p-4">
                                 Aucune réservation en attente de validation.
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </p-tabpanel>
+
+            <p-tabpanel value="2">
+                <p-table [columns]="cols" [value]="onlineDeliveryReservations()" [tableStyle]="{ 'min-width': '75rem' }" paginator="true"
+                    [rowsPerPageOptions]="[5, 10, 20]" [rows]="10"
+                    [rowHover]="true" dataKey="id"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} reservations" [showCurrentPageReport]="true">
+                    <ng-template #header let-columns>
+                        <tr>
+                            <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+                                {{ col.header }}
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-rowData let-columns="columns">
+                        <tr>
+                            <td *ngFor="let col of columns">
+                                @if (col.type == 'date') {
+                                    <ng-container>{{ resolveFieldData(rowData, col.field) | date: 'dd/MM/YYYY' }}</ng-container>
+                                } @else if (col.field === 'shippingMode') {
+                                    {{ shippingModeLabel(resolveFieldData(rowData, col.field)) }}
+                                } @else {
+                                    {{ resolveFieldData(rowData, col.field) }}
+                                }
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    @if (canDeclareReception(rowData)) {
+                                    <p-button
+                                        label="Réception"
+                                        icon="pi pi-box"
+                                        severity="info"
+                                        size="small"
+                                        (onClick)="openReceptionDialog(rowData)" />
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td [attr.colspan]="cols.length + 1" class="text-center p-4">
+                                Aucune commande en ligne.
                             </td>
                         </tr>
                     </ng-template>
@@ -182,5 +244,52 @@
             [loading]="updatingStatus"
             [disabled]="!selectedNewStatus || selectedNewStatus === statusChangeTarget?.status"
             (onClick)="confirmStatusChange()" />
+    </ng-template>
+</p-dialog>
+
+<p-dialog
+    header="Réception du colis au point de collecte"
+    [(visible)]="receptionDialogVisible"
+    [modal]="true"
+    [style]="{ width: '560px' }"
+    [closable]="true">
+    <p class="text-600 mb-3">
+        Réservation : <strong>{{ receptionTarget?.id }}</strong>
+    </p>
+    <p class="text-sm text-600 mb-3">
+        Boutique : {{ receptionTarget?.merchant || '—' }} ·
+        Suivi : {{ receptionTarget?.trackingNumber || '—' }}
+    </p>
+    @for (coli of receptionTarget?.colis; track coli.id; let i = $index) {
+        <div class="mb-3 p-3 border-1 border-round surface-border">
+            <p class="font-semibold mb-2">Colis {{ i + 1 }} — {{ coli.coliStatus }}</p>
+            @if (coli.coliStatus === 'CREATED' && coli.id) {
+                <label class="block text-sm mb-1">Photos reçues du point (WhatsApp)</label>
+                <input type="file" accept="image/*" multiple (change)="onCollectorFilesSelected(coli.id, $event)" />
+            }
+        </div>
+    }
+    <div class="flex flex-column gap-2 mt-3">
+        <label for="receptionNote">Note interne</label>
+        <textarea
+            pInputTextarea
+            id="receptionNote"
+            [(ngModel)]="receptionNote"
+            rows="3"
+            placeholder="Canal, interlocuteur, éléments constatés…"
+            class="w-full">
+        </textarea>
+    </div>
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Fermer"
+            icon="pi pi-times"
+            severity="secondary"
+            (onClick)="receptionDialogVisible = false" />
+        <p-button
+            label="Marquer comme reçu"
+            icon="pi pi-box"
+            [loading]="declaringReception"
+            (onClick)="confirmReception()" />
     </ng-template>
 </p-dialog>

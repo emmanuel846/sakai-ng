@@ -44,6 +44,20 @@ export class ReservationService{
         return this.http.post<Reservations>(`${this.apiUrl}/cancel`, {}, { params });
     }
 
+    addPicturesToColis(files: File[], actors: string, colisId: string): Observable<unknown> {
+        const formData = new FormData();
+        [...files].forEach((file) => formData.append('files', file, file.name));
+        formData.append('actors', actors);
+        formData.append('colisId', colisId);
+        return this.http.put(`${environment.apiUrl}/api/v1/colis/addPictures`, formData);
+    }
+
+    declareReception(reservationId: string, note?: string): Observable<Reservations> {
+        const params: Record<string, string> = { reservationId };
+        if (note) params['note'] = note;
+        return this.http.post<Reservations>(`${this.apiUrl}/declareReception`, {}, { params });
+    }
+
     updateReservationStatus(id: string, status: string): Observable<Reservations> {
         return this.http.get<Reservations>(`${this.apiUrl}/updateStatus`, {
             params: { reservationId: id, status }

@@ -13,6 +13,7 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { DropdownModule } from 'primeng/dropdown';
 import { ReservationStatus } from '../../models/reservation.model';
 import { Reservations } from './reservation.model';
+import { forkJoin } from 'rxjs';
 
 interface Column {
   field: string;
@@ -57,6 +58,17 @@ export class ReservationsComponent {
       ? this.reservationService.reservations().filter(r => r.status === 'CREATED')
       : []
   );
+  onlineDeliveryReservations = computed(() =>
+    Array.isArray(this.reservationService.reservations())
+      ? this.reservationService.reservations().filter(r => r.shippingMode === 'ONLINE_DELIVERY')
+      : []
+  );
+
+  receptionDialogVisible = false;
+  receptionTarget: Reservations | null = null;
+  receptionNote = '';
+  declaringReception = false;
+  collectorFiles: Record<string, File[]> = {};
   cols!: Column[];
   pendingCols!: Column[];
 
@@ -72,6 +84,8 @@ export class ReservationsComponent {
       { field: 'creditAmount', header: 'Crédit' },
       { field: 'totalWeight', header: 'Poids total' },
       { field: 'status', header: 'Statut' },
+      { field: 'shippingMode', header: 'Acheminement' },
+      { field: 'trackingNumber', header: 'N° de suivi' },
     
       // Champs imbriqués
       { field: 'receiver.fullName', header: 'Récepteur' },
@@ -185,6 +199,78 @@ export class ReservationsComponent {
 
   getStatusLabel(status: string): string {
     return this.statusOptions.find(s => s.value === status)?.label ?? status;
+  }
+
+  shippingModeLabel(mode?: string): string {
+    return mode === 'ONLINE_DELIVERY' ? 'Commande en ligne' : 'Dépôt au point';
+  }
+
+  canDeclareReception(reservation: Reservations): boolean {
+    return reservation.shippingMode === 'ONLINE_DELIVERY'
+      && reservation.status === 'CONFIRMED'
+      && (reservation.colis ?? []).some(coli => coli.coliStatus === 'CREATED');
+  }
+
+  openReceptionDialog(reservation: Reservations): void {
+    this.receptionTarget = reservation;
+    this.receptionNote = reservation.receptionNote ?? '';
+    this.collectorFiles = {};
+    this.receptionDialogVisible = true;
+  }
+
+  onCollectorFilesSelected(colisId: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.collectorFiles[colisId] = input.files ? Array.from(input.files) : [];
+  }
+
+  confirmReception(): void {
+    if (!this.receptionTarget?.id || this.declaringReception) return;
+    this.declaringReception = true;
+    const reservation = this.receptionTarget;
+    const uploads = (reservation.colis ?? [])
+      .filter(coli => coli.id && (this.collectorFiles[coli.id]?.length ?? 0) > 0)
+      .map(coli => this.reservationService.addPicturesToColis(
+        this.collectorFiles[coli.id],
+        'COLLECTOR',
+        coli.id
+      ));
+
+    const finish = () => this.reservationService.declareReception(reservation.id!, this.receptionNote.trim() || undefined).subscribe({
+      next: () => {
+        this.declaringReception = false;
+        this.receptionDialogVisible = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Réception enregistrée',
+          detail: 'Le colis est disponible pour le voyageur.'
+        });
+        this.reservationService.reservationsList().subscribe({});
+      },
+      error: (err) => {
+        this.declaringReception = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: err?.error?.message || 'Impossible d\'enregistrer la réception'
+        });
+      }
+    });
+
+    if (uploads.length) {
+      forkJoin(uploads).subscribe({
+        next: () => finish(),
+        error: (err) => {
+          this.declaringReception = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: err?.error?.message || 'Impossible de charger les photos'
+          });
+        }
+      });
+    } else {
+      finish();
+    }
   }
 }
 

@@ -18,6 +18,11 @@ export interface Reservations {
   colis?: Coli[];
   expeditions?: Expeditions;
   clients?: Clients;
+  shippingMode?: 'SELF_DROP' | 'ONLINE_DELIVERY';
+  merchant?: string | null;
+  trackingNumber?: string | null;
+  estimatedDeliveryDate?: string | null;
+  receptionNote?: string | null;
 }
 
 interface Expeditions {
@@ -60,6 +65,7 @@ interface CollectionPoints {
   name: string;
   location_url: string;
   adresse: string;
+  iwtAdress?: string;
   contacts: string;
   openHours: string;
   status: string;

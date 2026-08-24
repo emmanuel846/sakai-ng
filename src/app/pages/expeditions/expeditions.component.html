@@ -668,6 +668,9 @@
                                                         {{ reservation.totalWeight }} kg ·
                                                         {{ reservation.colis?.length || 0 }} colis
                                                     </span>
+                                                    @if (isOnlineDelivery(reservation)) {
+                                                        <p-tag value="Commande en ligne" severity="info"></p-tag>
+                                                    }
                                                 </div>
                                             </p-accordion-header>
                                             <p-accordion-content>
@@ -710,6 +713,42 @@
                                                                 }
                                                             </dd>
                                                         </div>
+                                                        <div>
+                                                            <dt>Acheminement</dt>
+                                                            <dd>
+                                                                @if (isOnlineDelivery(reservation)) {
+                                                                    Commande en ligne
+                                                                } @else {
+                                                                    Dépôt au point
+                                                                }
+                                                            </dd>
+                                                        </div>
+                                                        @if (isOnlineDelivery(reservation)) {
+                                                            <div>
+                                                                <dt>Boutique</dt>
+                                                                <dd>{{ displayValue(reservation.merchant) }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt>N° de suivi</dt>
+                                                                <dd class="break-all">{{ displayValue(reservation.trackingNumber) }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt>Livraison estimée</dt>
+                                                                <dd>
+                                                                    @if (reservation.estimatedDeliveryDate) {
+                                                                        {{ reservation.estimatedDeliveryDate | date: 'dd/MM/yyyy' }}
+                                                                    } @else {
+                                                                        —
+                                                                    }
+                                                                </dd>
+                                                            </div>
+                                                            @if (reservation.receptionNote) {
+                                                                <div class="expeditions-detail__full">
+                                                                    <dt>Note de réception</dt>
+                                                                    <dd>{{ reservation.receptionNote }}</dd>
+                                                                </div>
+                                                            }
+                                                        }
                                                     </dl>
                                                 </section>
 
@@ -919,10 +958,50 @@
                                                                         }
                                                                     </div>
                                                                 }
+
+                                                                @if (canDeclareReception(reservation) && coli.coliStatus === 'CREATED' && coli.id) {
+                                                                    <div class="mt-3">
+                                                                        <label class="text-xs uppercase tracking-wide text-surface-500 mb-2 block">
+                                                                            Photos reçues du point de collecte (WhatsApp)
+                                                                        </label>
+                                                                        <input
+                                                                            type="file"
+                                                                            accept="image/*"
+                                                                            multiple
+                                                                            (change)="onCollectorFilesSelected(coli.id, $event)" />
+                                                                        @if (collectorFiles[coli.id]?.length) {
+                                                                            <p class="text-xs text-surface-500 mt-1">
+                                                                                {{ collectorFiles[coli.id].length }} fichier(s) sélectionné(s)
+                                                                            </p>
+                                                                        }
+                                                                    </div>
+                                                                }
                                                             </div>
                                                         }
                                                     }
                                                 </section>
+
+                                                @if (canDeclareReception(reservation)) {
+                                                    <p-divider />
+                                                    <section class="expeditions-detail__section">
+                                                        <h4 class="expeditions-detail__section-title">Réception au point de collecte</h4>
+                                                        <p class="text-sm text-surface-500 mb-3">
+                                                            Chargez les photos reçues du point (WhatsApp) puis marquez le colis comme reçu.
+                                                            Le voyageur pourra alors le récupérer.
+                                                        </p>
+                                                        <textarea
+                                                            rows="3"
+                                                            class="w-full"
+                                                            placeholder="Note interne : canal, interlocuteur, éléments constatés…"
+                                                            [(ngModel)]="receptionNotes[reservation.id!]"></textarea>
+                                                        <p-button
+                                                            class="mt-3"
+                                                            label="Marquer le colis comme reçu au point"
+                                                            icon="pi pi-box"
+                                                            [loading]="declaringReceptionId === reservation.id"
+                                                            (onClick)="declareReception(reservation)" />
+                                                    </section>
+                                                }
                                             </p-accordion-content>
                                         </p-accordion-panel>
                                     }

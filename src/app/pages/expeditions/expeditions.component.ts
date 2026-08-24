@@ -40,6 +40,7 @@ import { catchError } from 'rxjs/operators';
 import { ReservationService } from '../reservations/reservations.service';
 import { Reservations } from '../reservations/reservation.model';
 import { ClientService } from '../clients/client.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-expeditions',
@@ -97,6 +98,9 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
   private objectUrls: string[] = [];
   private reservationsSub?: Subscription;
   private picturesSub?: Subscription;
+  collectorFiles: Record<string, File[]> = {};
+  receptionNotes: Record<string, string> = {};
+  declaringReceptionId: string | null = null;
 
   categories = [
     { name: 'Chaussures et accessoires' },
@@ -423,6 +427,73 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
       { label: 'Voyageur', pictures: coli.travellerColisPictures || [] },
       { label: 'Collecteur', pictures: coli.collectorColisPictures || [] }
     ];
+  }
+
+  isOnlineDelivery(reservation: Reservations): boolean {
+    return reservation.shippingMode === 'ONLINE_DELIVERY';
+  }
+
+  canDeclareReception(reservation: Reservations): boolean {
+    return this.isOnlineDelivery(reservation)
+      && reservation.status === 'CONFIRMED'
+      && (reservation.colis ?? []).some(coli => coli.coliStatus === 'CREATED');
+  }
+
+  onCollectorFilesSelected(colisId: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.collectorFiles[colisId] = input.files ? Array.from(input.files) : [];
+  }
+
+  declareReception(reservation: Reservations): void {
+    if (!reservation.id || this.declaringReceptionId) return;
+    this.declaringReceptionId = reservation.id;
+    const note = (this.receptionNotes[reservation.id] ?? '').trim();
+    const uploads = (reservation.colis ?? [])
+      .filter(coli => coli.id && (this.collectorFiles[coli.id]?.length ?? 0) > 0)
+      .map(coli => this.reservationService.addPicturesToColis(
+        this.collectorFiles[coli.id],
+        environment.Actor.collector,
+        coli.id
+      ));
+
+    const finish = () => this.reservationService.declareReception(reservation.id!, note || undefined).subscribe({
+      next: () => {
+        this.declaringReceptionId = null;
+        this.collectorFiles = {};
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Réception enregistrée',
+          detail: 'Le colis est disponible pour le voyageur.'
+        });
+        if (this.selectedExpedition?.id) {
+          this.loadReservations(this.selectedExpedition.id);
+        }
+      },
+      error: (err) => {
+        this.declaringReceptionId = null;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: err?.error?.message || 'Impossible d\'enregistrer la réception'
+        });
+      }
+    });
+
+    if (uploads.length) {
+      forkJoin(uploads).subscribe({
+        next: () => finish(),
+        error: (err) => {
+          this.declaringReceptionId = null;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: err?.error?.message || 'Impossible de charger les photos'
+          });
+        }
+      });
+    } else {
+      finish();
+    }
   }
 
   private loadReservations(expeditionId: string) {
