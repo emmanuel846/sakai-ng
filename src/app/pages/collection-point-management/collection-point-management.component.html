@@ -216,6 +216,7 @@
                         {{ cp.provinceName }}
                     </div>
                     <div class="text-sm text-400 mt-1" *ngIf="cp.address">{{ cp.address }}</div>
+                    <div class="text-sm text-400 mt-1" *ngIf="cp.iwtAdress">IWT : {{ cp.iwtAdress }}</div>
                 </td>
 
                 <!-- Contacts -->
@@ -406,6 +407,12 @@
                                 [class.ng-invalid]="form.get('address')?.invalid && form.get('address')?.touched">
                             </textarea>
                             <small class="p-error" *ngIf="form.get('address')?.invalid && form.get('address')?.touched">Requis</small>
+                        </div>
+                        <div class="field col-12">
+                            <label>Adresse IWT</label>
+                            <textarea pInputTextarea formControlName="iwtAdress" rows="2" class="w-full"
+                                placeholder="Adresse IWT">
+                            </textarea>
                         </div>
                         <div class="field col-12">
                             <label>URL Google Maps</label>

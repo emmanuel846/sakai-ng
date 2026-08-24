@@ -155,6 +155,7 @@ export class CollectionPointManagementComponent implements OnInit {
       type:               [null, Validators.required],
       name:               ['',   Validators.required],
       address:            ['',   Validators.required],
+      iwtAdress:          [''],
       locationUrl:        [''],
       contacts:           [''],
       openingHours:       this.buildOpeningHoursArray(),
@@ -284,6 +285,7 @@ export class CollectionPointManagementComponent implements OnInit {
       result = result.filter(cp =>
         cp.name?.toLowerCase().includes(q) ||
         cp.address?.toLowerCase().includes(q) ||
+        cp.iwtAdress?.toLowerCase().includes(q) ||
         cp.email?.toLowerCase().includes(q) ||
         cp.companyName?.toLowerCase().includes(q) ||
         cp.firstName?.toLowerCase().includes(q) ||
@@ -373,6 +375,7 @@ export class CollectionPointManagementComponent implements OnInit {
         type:               cp.type,
         name:               cp.name,
         address:            cp.address ?? '',
+        iwtAdress:          cp.iwtAdress ?? '',
         locationUrl:        cp.locationUrl ?? '',
         contacts:           cp.contacts ?? '',
         countryId:          country?.name ?? null,
@@ -405,6 +408,7 @@ export class CollectionPointManagementComponent implements OnInit {
       type:               v.type,
       name:               v.name,
       address:            v.address,
+      iwtAdress:          v.iwtAdress || undefined,
       locationUrl:        v.locationUrl || undefined,
       contacts:           v.contacts || undefined,
       openingHours:       this.openingHoursArray.getRawValue() as OpeningHoursEntry[],

@@ -21,6 +21,7 @@ export interface CollectionPoint {
     name: string;
     locationUrl?: string;
     address: string;
+    iwtAdress?: string;
     contacts?: string;
     openHours?: string;
     openingHours?: OpeningHoursEntry[];
@@ -48,6 +49,7 @@ export interface CollectionPointCreateRequest {
     name: string;
     locationUrl?: string;
     address: string;
+    iwtAdress?: string;
     contacts?: string;
     openHours?: string;
     openingHours?: OpeningHoursEntry[];
