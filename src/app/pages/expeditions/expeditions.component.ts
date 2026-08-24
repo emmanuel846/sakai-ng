@@ -434,8 +434,7 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
   }
 
   canDeclareReception(reservation: Reservations): boolean {
-    return this.isOnlineDelivery(reservation)
-      && reservation.status === 'CONFIRMED'
+    return reservation.status === 'CONFIRMED'
       && (reservation.colis ?? []).some(coli => coli.coliStatus === 'CREATED');
   }
 

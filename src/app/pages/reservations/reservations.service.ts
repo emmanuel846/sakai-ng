@@ -52,6 +52,12 @@ export class ReservationService{
         return this.http.put(`${environment.apiUrl}/api/v1/colis/addPictures`, formData);
     }
 
+    getById(id: string): Observable<Reservations> {
+        return this.http.get<Reservations>(`${this.apiUrl}/listById`, {
+            params: { id }
+        });
+    }
+
     declareReception(reservationId: string, note?: string): Observable<Reservations> {
         const params: Record<string, string> = { reservationId };
         if (note) params['note'] = note;
