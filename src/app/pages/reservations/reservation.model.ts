@@ -22,6 +22,7 @@ export interface Reservations {
   merchant?: string | null;
   trackingNumber?: string | null;
   estimatedDeliveryDate?: string | null;
+  pickupCode?: string | null;
   receptionNote?: string | null;
 }
 
@@ -99,6 +100,7 @@ interface Clients {
   users: null;
   usersId: number;
   public_pseudo: string;
+  whotraveling_id?: string | null;
 }
 
 interface Coli {

@@ -136,6 +136,7 @@ export class ReservationsComponent implements OnDestroy {
       { field: 'status', header: 'Statut' },
       { field: 'shippingMode', header: 'Acheminement' },
       { field: 'trackingNumber', header: 'N° de suivi' },
+      { field: 'pickupCode', header: 'Code retrait' },
       { field: 'receiver.fullName', header: 'Récepteur' },
       { field: 'receiver.phoneNumber', header: 'Téléphone récepteur' },
       { field: 'clients.firstname', header: 'Client' },

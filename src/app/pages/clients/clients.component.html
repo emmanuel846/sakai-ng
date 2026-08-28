@@ -38,7 +38,7 @@
                 [value]="filteredClients"
                 [rows]="10"
                 [paginator]="true"
-                [globalFilterFields]="['firstname', 'lastname', 'phoneNumber', 'country', 'verificationStatus', 'status', 'public_pseudo']"
+                [globalFilterFields]="['firstname', 'lastname', 'phoneNumber', 'country', 'verificationStatus', 'status', 'public_pseudo', 'whotraveling_id']"
                 [rowHover]="true"
                 selectionMode="single"
                 [(selection)]="selectedClient"
@@ -204,6 +204,10 @@
                                     <div>
                                         <dt>Pseudo public</dt>
                                         <dd>{{ displayValue(selectedClient.public_pseudo) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Whotraveling ID</dt>
+                                        <dd class="font-mono">{{ displayValue(selectedClient.whotraveling_id) }}</dd>
                                     </div>
                                     <div class="clients-detail__full">
                                         <dt>Adresse</dt>

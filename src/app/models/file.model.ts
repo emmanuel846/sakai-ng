@@ -54,4 +54,5 @@ export interface IndentityFileResponse {
   level: string;
   usersId: number;
   public_pseudo: string;
+  whotraveling_id?: string | null;
 }

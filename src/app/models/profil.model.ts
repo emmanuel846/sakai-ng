@@ -37,6 +37,7 @@ export interface Profil {
   balance?: number | null;
   usersId: number;
   public_pseudo: string;
+  whotraveling_id?: string | null;
   users?: ProfilUser | null;
 }
 

@@ -125,6 +125,7 @@ export interface Clients {
   level: string;
   usersId: number;
   public_pseudo: string;
+  whotraveling_id?: string | null;
 }
 
 export interface Coli {
