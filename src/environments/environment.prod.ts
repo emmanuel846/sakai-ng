@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   // Remplacé au build Docker via ARG API_URL (défaut: live)
-  apiUrl: 'https://live.whotraveling.com',
+  apiUrl: 'https://test.whotraveling.com',
   data: {
     access_token: 'accesstoken9939939',
     refresh_token: 'refreshtoken300038R0',
