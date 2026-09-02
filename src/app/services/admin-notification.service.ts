@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subject, tap } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, take, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import {
@@ -22,7 +22,10 @@ export class AdminNotificationService {
   private liveSubject = new Subject<AdminSsePayload>();
   live$ = this.liveSubject.asObservable();
 
-  private eventSource: EventSource | null = null;
+  private abortController: AbortController | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private connecting = false;
+  private refreshInFlight = false;
 
   constructor(
     private http: HttpClient,
@@ -68,44 +71,141 @@ export class AdminNotificationService {
   }
 
   startSse(): void {
-    if (this.eventSource || typeof EventSource === 'undefined') {
+    if (this.connecting || this.abortController) {
       return;
     }
     const token = this.authService.getAuthToken();
     if (!token) {
       return;
     }
-    const url = `${this.SSE_URL}?access_token=${encodeURIComponent(token)}`;
-    this.eventSource = new EventSource(url);
-    this.eventSource.addEventListener('admin-notification', (event: MessageEvent) => {
-      this.zone.run(() => {
-        try {
-          const payload = JSON.parse(event.data) as AdminSsePayload;
-          this.liveSubject.next(payload);
-          this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
-          this.showBrowserNotification(payload);
-        } catch {
-          // ignore malformed payloads
-        }
-      });
-    });
-    this.eventSource.onerror = () => {
-      this.stopSse();
-      setTimeout(() => this.startSse(), 5000);
-    };
+    this.connecting = true;
+    this.abortController = new AbortController();
+    void this.readSse(token, this.abortController.signal);
   }
 
   stopSse(): void {
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = null;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
     }
+    this.abortController?.abort();
+    this.abortController = null;
+    this.connecting = false;
   }
 
   requestBrowserPermission(): void {
     if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+  }
+
+  private async readSse(token: string, signal: AbortSignal): Promise<void> {
+    try {
+      const response = await fetch(this.SSE_URL, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'text/event-stream',
+          'Cache-Control': 'no-cache'
+        },
+        signal
+      });
+      if (!response.ok || !response.body) {
+        this.abortController = null;
+        this.connecting = false;
+        this.handleSseHttpError(response.status);
+        return;
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (!signal.aborted) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const blocks = buffer.split('\n\n');
+        buffer = blocks.pop() ?? '';
+        for (const block of blocks) {
+          this.dispatchSseBlock(block);
+        }
+      }
+      if (!signal.aborted) {
+        this.abortController = null;
+        this.scheduleReconnect(3000);
+      }
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') {
+        return;
+      }
+      this.abortController = null;
+      this.scheduleReconnect(5000);
+    } finally {
+      this.connecting = false;
+    }
+  }
+
+  private handleSseHttpError(status: number): void {
+    if (status === 403) {
+      return;
+    }
+    if (status === 401) {
+      this.refreshThenReconnect();
+      return;
+    }
+    this.scheduleReconnect(5000);
+  }
+
+  private refreshThenReconnect(): void {
+    if (this.refreshInFlight) {
+      return;
+    }
+    this.refreshInFlight = true;
+    this.authService.refreshAccessToken().pipe(take(1)).subscribe({
+      next: () => {
+        this.refreshInFlight = false;
+        this.scheduleReconnect(0);
+      },
+      error: () => {
+        this.refreshInFlight = false;
+      }
+    });
+  }
+
+  private scheduleReconnect(delayMs: number): void {
+    if (this.reconnectTimer || this.abortController) {
+      return;
+    }
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.startSse();
+    }, delayMs);
+  }
+
+  private dispatchSseBlock(block: string): void {
+    let eventName = 'message';
+    const dataLines: string[] = [];
+    for (const line of block.split('\n')) {
+      if (line.startsWith('event:')) {
+        eventName = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        dataLines.push(line.slice(5).trimStart());
+      }
+    }
+    if (eventName !== 'admin-notification' || dataLines.length === 0) {
+      return;
+    }
+    this.zone.run(() => {
+      try {
+        const payload = JSON.parse(dataLines.join('\n')) as AdminSsePayload;
+        this.liveSubject.next(payload);
+        this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+        this.showBrowserNotification(payload);
+      } catch {
+        // ignore malformed payloads
+      }
+    });
   }
 
   private showBrowserNotification(payload: AdminSsePayload): void {
