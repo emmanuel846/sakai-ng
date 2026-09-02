@@ -125,6 +125,15 @@
   justify-content: flex-end;
 }
 
+.expeditions-detail__actions--status {
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.expeditions-detail__status-select {
+  min-width: 16rem;
+}
+
 .expeditions-detail__badge {
   display: inline-flex;
   align-items: center;

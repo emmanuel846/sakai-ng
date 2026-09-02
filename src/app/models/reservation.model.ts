@@ -33,15 +33,16 @@ export enum ReservationStatus {
 
 export enum ExpeditionStatus {
   CREATED = 'CREATED',
+  PENDING = 'PENDING',
+  VALIDATED = 'VALIDATED',
+  REJECTED = 'REJECTED',
   DELETED = 'DELETED',
   RESERVED = 'RESERVED',
   STARTED = 'STARTED',
   ONGOING = 'ONGOING',
   DELIVERED = 'DELIVERED',
   COMPLETED = 'COMPLETED',
-  VALIDATED = 'VALIDATED',
   CANCELLED = 'CANCELLED',
-  REJECTED = 'REJECTED',
 }
 
 export enum ColiStatus {

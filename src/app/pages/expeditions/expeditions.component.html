@@ -168,9 +168,22 @@
                                 · Billet {{ selectedExpedition.nomBillet }}
                             }
                         </div>
-                        <div class="flex flex-wrap gap-2 mt-2">
+                        <div class="flex flex-wrap items-center gap-2 mt-2">
+                            <p-select
+                                [options]="statusOptions"
+                                [ngModel]="selectedStatus"
+                                (onChange)="onDetailStatusChange($event.value)"
+                                optionLabel="label"
+                                optionValue="value"
+                                [disabled]="updatingStatus"
+                                appendTo="body"
+                                placeholder="Changer le statut"
+                                pTooltip="Changer le statut librement"
+                                tooltipPosition="bottom"
+                                styleClass="expeditions-detail__status-select">
+                            </p-select>
                             <p-tag
-                                [value]="selectedExpedition.expeditionStatus"
+                                [value]="statusLabel(selectedExpedition.expeditionStatus)"
                                 [severity]="statusSeverity(selectedExpedition.expeditionStatus)">
                             </p-tag>
                             @if (selectedExpedition.deliverySteps) {
@@ -319,7 +332,7 @@
                                     </div>
                                     <div>
                                         <dt>Statut</dt>
-                                        <dd>{{ selectedExpedition.expeditionStatus }}</dd>
+                                        <dd>{{ statusLabel(selectedExpedition.expeditionStatus) }}</dd>
                                     </div>
                                 </dl>
                             </section>
@@ -328,51 +341,13 @@
 
                             <section class="expeditions-detail__section">
                                 <h4 class="expeditions-detail__section-title">Actions</h4>
-                                <div class="expeditions-detail__actions">
-                                    @if (selectedExpedition.expeditionStatus === expedtionStatus.CREATED) {
-                                        <p-button
-                                            label="Valider"
-                                            icon="pi pi-check"
-                                            severity="success"
-                                            (onClick)="validate(expedtionStatus.VALIDATED)">
-                                        </p-button>
-                                        <p-button
-                                            label="Rejeter"
-                                            icon="pi pi-times"
-                                            severity="danger"
-                                            [outlined]="true"
-                                            (onClick)="validate(expedtionStatus.REJECTED)">
-                                        </p-button>
-                                    }
-                                    @if (selectedExpedition.expeditionStatus === expedtionStatus.VALIDATED) {
-                                        <p-button
-                                            label="Mettre en attente"
-                                            icon="pi pi-clock"
-                                            severity="secondary"
-                                            [outlined]="true"
-                                            (onClick)="validate(expedtionStatus.CREATED)">
-                                        </p-button>
-                                        <p-button
-                                            label="Modifier"
-                                            icon="pi pi-pencil"
-                                            [outlined]="true"
-                                            (onClick)="openEditDialog(selectedExpedition!)">
-                                        </p-button>
-                                    }
-                                    @if (selectedExpedition.expeditionStatus === expedtionStatus.STARTED) {
-                                        <p-button
-                                            label="Terminer"
-                                            icon="pi pi-check"
-                                            severity="success"
-                                            (onClick)="validate(expedtionStatus.COMPLETED)">
-                                        </p-button>
-                                        <p-button
-                                            label="Remettre en traitement"
-                                            icon="pi pi-undo"
-                                            [outlined]="true"
-                                            (onClick)="validate(expedtionStatus.VALIDATED)">
-                                        </p-button>
-                                    }
+                                <div class="expeditions-detail__actions expeditions-detail__actions--status">
+                                    <p-button
+                                        label="Modifier l’expédition"
+                                        icon="pi pi-pencil"
+                                        [outlined]="true"
+                                        (onClick)="openEditDialog(selectedExpedition!)">
+                                    </p-button>
                                 </div>
                             </section>
                         </p-tabpanel>

@@ -101,6 +101,21 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
   collectorFiles: Record<string, File[]> = {};
   receptionNotes: Record<string, string> = {};
   declaringReceptionId: string | null = null;
+  updatingStatus = false;
+  selectedStatus: ExpeditionStatus | null = null;
+
+  readonly statusOptions: { label: string; value: ExpeditionStatus }[] = [
+    { label: 'En attente de validation', value: ExpeditionStatus.CREATED },
+    { label: 'En attente', value: ExpeditionStatus.PENDING },
+    { label: 'En cours de traitement', value: ExpeditionStatus.VALIDATED },
+    { label: 'Réservée', value: ExpeditionStatus.RESERVED },
+    { label: 'Démarrée', value: ExpeditionStatus.STARTED },
+    { label: 'En cours', value: ExpeditionStatus.ONGOING },
+    { label: 'Livrée', value: ExpeditionStatus.DELIVERED },
+    { label: 'Terminée', value: ExpeditionStatus.COMPLETED },
+    { label: 'Rejetée', value: ExpeditionStatus.REJECTED },
+    { label: 'Supprimée', value: ExpeditionStatus.DELETED }
+  ];
 
   categories = [
     { name: 'Chaussures et accessoires' },
@@ -159,11 +174,10 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
         this.expeditions = data.reverse().filter((exp) => exp.expeditionStatus === this.filterBy());
         this.loading = false;
         if (this.selectedExpedition) {
-          const refreshed = this.expeditions.find((e) => e.id === this.selectedExpedition!.id) ?? null;
+          const refreshed = this.expeditions.find((e) => e.id === this.selectedExpedition!.id);
           if (refreshed) {
             this.selectedExpedition = refreshed;
-          } else {
-            this.clearSelection();
+            this.selectedStatus = refreshed.expeditionStatus as ExpeditionStatus;
           }
         }
       },
@@ -183,6 +197,9 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
   }
 
   onRowUnselect() {
+    if (this.selectedExpedition && !this.expeditions.some((e) => e.id === this.selectedExpedition!.id)) {
+      return;
+    }
     this.clearSelection();
   }
 
@@ -192,6 +209,7 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
 
   clearSelection() {
     this.selectedExpedition = null;
+    this.selectedStatus = null;
     this.reservations = [];
     this.reservationsError = null;
     this.picturesError = null;
@@ -204,30 +222,56 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
 
   private selectExpedition(expedition: ExpeditionLists) {
     this.selectedExpedition = expedition;
+    this.selectedStatus = expedition.expeditionStatus as ExpeditionStatus;
     this.activeDetailTab = 'trajet';
     this.loadReservations(expedition.id);
   }
 
+  onDetailStatusChange(status: ExpeditionStatus) {
+    if (!status || !this.selectedExpedition || status === this.selectedExpedition.expeditionStatus) {
+      this.selectedStatus = (this.selectedExpedition?.expeditionStatus as ExpeditionStatus) ?? null;
+      return;
+    }
+    this.selectedStatus = status;
+    this.validate(status, this.selectedExpedition);
+  }
+
+  statusLabel(status?: string | null): string {
+    return this.statusOptions.find((option) => option.value === status)?.label ?? status ?? '—';
+  }
+
   validate(expedtionStatus: ExpeditionStatus, expedition?: ExpeditionLists) {
     const target = expedition ?? this.selectedExpedition;
-    if (!target) {
+    if (!target || this.updatingStatus) {
       return;
     }
     this.selectedExpedition = target;
-    this.expeditionService.validate(target.id, expedtionStatus).subscribe({
+    this.updatingStatus = true;
+    const raison = expedtionStatus === ExpeditionStatus.REJECTED ? 'Rejet administrateur' : undefined;
+    this.expeditionService.validate(target.id, expedtionStatus, raison).subscribe({
       next: () => {
+        this.updatingStatus = false;
+        if (this.selectedExpedition?.id === target.id) {
+          this.selectedExpedition = {
+            ...this.selectedExpedition,
+            expeditionStatus: expedtionStatus
+          };
+          this.selectedStatus = expedtionStatus;
+        }
         this.messageService.add({
           severity: 'success',
-          summary: 'Succès',
-          detail: 'Statut de l’expédition mis à jour'
+          summary: 'Statut modifié',
+          detail: `Nouveau statut : ${this.statusLabel(expedtionStatus)}`
         });
         this.getAllExpeditions();
       },
-      error: () => {
+      error: (err) => {
+        this.updatingStatus = false;
+        this.selectedStatus = this.selectedExpedition?.expeditionStatus as ExpeditionStatus ?? null;
         this.messageService.add({
           severity: 'error',
           summary: 'Erreur',
-          detail: 'Impossible de mettre à jour le statut'
+          detail: err?.error?.message || 'Impossible de mettre à jour le statut'
         });
       }
     });
@@ -236,6 +280,7 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
   openEditDialog(expedition: ExpeditionLists, event?: Event) {
     event?.stopPropagation();
     this.selectedExpedition = expedition;
+    this.selectedStatus = expedition.expeditionStatus as ExpeditionStatus;
 
     this.selectedPreferences = this.categories.map((cat) => {
       const existingPref = expedition.preferences?.find((p) => p.categoryName === cat.name);
@@ -360,6 +405,7 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
       case ExpeditionStatus.RESERVED:
         return 'info';
       case ExpeditionStatus.CREATED:
+      case ExpeditionStatus.PENDING:
         return 'warn';
       case ExpeditionStatus.REJECTED:
       case ExpeditionStatus.DELETED:

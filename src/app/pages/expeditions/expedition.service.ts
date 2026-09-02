@@ -14,8 +14,12 @@ export class ExpeditionService{
     getExpeditons(): Observable<ExpeditionLists[]> {
         return this.http.get<ExpeditionLists[]>(this.url+'/list');
     }
-    validate(clientId: string,status: ExpeditionStatus): Observable<any> {
-        return this.http.put(this.url+'/validate?expId='+clientId+'&expeditionStatus='+status, {});
+    validate(clientId: string, status: ExpeditionStatus, raison?: string): Observable<any> {
+        let query = `expId=${clientId}&expeditionStatus=${status}`;
+        if (raison) {
+            query += `&raison=${encodeURIComponent(raison)}`;
+        }
+        return this.http.put(this.url + '/validate?' + query, {});
     }
      updateExpedition(data: Expedition): Observable<Expedition> {
         return this.http.put<Expedition>(this.url + '/update', data);
