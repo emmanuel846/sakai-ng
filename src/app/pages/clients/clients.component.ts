@@ -276,6 +276,26 @@ export class ClientsComponent implements OnInit, OnDestroy {
     });
   }
 
+  confirmCloseAccount(event?: Event) {
+    if (!this.selectedClient || this.selectedClient.status === AccountStatus.DELETED) {
+      return;
+    }
+    const name = `${this.selectedClient.lastname} ${this.selectedClient.firstname}`;
+    this.confirmationService.confirm({
+      target: event?.currentTarget as EventTarget,
+      message:
+        `Cette action est définitive. Le profil de <strong>${name}</strong> sera anonymisé ` +
+        `et l’utilisateur ne pourra plus se connecter. Le solde doit être nul et les trajets / ` +
+        `réservations en cours clôturés.`,
+      header: 'Fermer le compte',
+      icon: 'pi pi-trash',
+      acceptLabel: 'Fermer le compte',
+      rejectLabel: 'Annuler',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.closeAccount()
+    });
+  }
+
   confirmToggleUserActivation(event?: Event) {
     if (!this.linkedUser) {
       return;
@@ -345,6 +365,37 @@ export class ClientsComponent implements OnInit, OnDestroy {
           severity: 'error',
           summary: 'Erreur',
           detail: 'Impossible d’activer le profil client'
+        });
+      }
+    });
+  }
+
+  closeAccount() {
+    if (!this.selectedClient) {
+      return;
+    }
+    this.actionLoading = true;
+    this.clientService.closeAccount(this.selectedClient.id).subscribe({
+      next: (updated) => {
+        this.actionLoading = false;
+        if (updated) {
+          this.selectedClient = updated;
+        }
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Compte fermé',
+          detail: 'Le profil a été anonymisé et l’accès utilisateur révoqué'
+        });
+        this.getAllClients();
+      },
+      error: (err) => {
+        this.actionLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fermeture impossible',
+          detail:
+            err?.error?.message ||
+            'Impossible de fermer ce compte. Vérifiez le solde, les trajets et les réservations.'
         });
       }
     });
@@ -537,6 +588,8 @@ export class ClientsComponent implements OnInit, OnDestroy {
         return 'Suspendu';
       case 'DEACTIVATED':
         return 'Désactivé';
+      case 'DELETED':
+        return 'Fermé';
       default:
         return status || '—';
     }

@@ -30,6 +30,10 @@ export class ClientService {
         return this.http.put(this.url + '/activateAccount?clientId=' + clientId + '&status=' + status, {});
     }
 
+    closeAccount(clientId: string): Observable<any> {
+        return this.activateAccount(clientId, AccountStatus.DELETED);
+    }
+
     downloadFile(fileName: string): Observable<Blob> {
         return this.http.get(this.globalUrl + '/downloadFile', {
             params: { fileName },

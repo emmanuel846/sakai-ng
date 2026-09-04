@@ -9,4 +9,5 @@ export enum VerificationStatus {
         DEACTIVATED = 'DEACTIVATED',
         ACTIVATED = 'ACTIVATED',
         SUSPENDED = 'SUSPENDED',
+        DELETED = 'DELETED',
         }

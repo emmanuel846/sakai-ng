@@ -385,7 +385,7 @@
                                             (onClick)="confirmValidateAccount(verificationStatus.ACCEPTED, $event)">
                                         </p-button>
                                     }
-                                    @if (selectedClient.status !== 'ACTIVATED') {
+                                    @if (selectedClient.status !== 'ACTIVATED' && selectedClient.status !== 'DELETED') {
                                         <p-button
                                             label="Activer le profil client"
                                             icon="pi pi-user-plus"
@@ -394,6 +394,20 @@
                                             [loading]="actionLoading"
                                             (onClick)="confirmActivateClientAccount($event)">
                                         </p-button>
+                                    }
+                                    @if (selectedClient.status !== 'DELETED') {
+                                        <p-button
+                                            label="Fermer le compte"
+                                            icon="pi pi-trash"
+                                            severity="danger"
+                                            [outlined]="true"
+                                            [loading]="actionLoading"
+                                            (onClick)="confirmCloseAccount($event)">
+                                        </p-button>
+                                    } @else {
+                                        <p class="m-0 text-surface-500 text-sm">
+                                            Ce compte est fermé. Le profil a été anonymisé.
+                                        </p>
                                     }
                                 </div>
                             </section>
@@ -490,21 +504,35 @@
                                 <section class="clients-detail__section">
                                     <h4 class="clients-detail__section-title">Actions utilisateur</h4>
                                     <div class="clients-detail__actions">
-                                        <p-button
-                                            label="Gérer les rôles"
-                                            icon="pi pi-key"
-                                            severity="info"
-                                            [outlined]="true"
-                                            (onClick)="openRolesDialog()">
-                                        </p-button>
-                                        <p-button
-                                            [label]="linkedUser.status === 'ACTIVATED' ? 'Désactiver l’utilisateur' : 'Activer l’utilisateur'"
-                                            [icon]="linkedUser.status === 'ACTIVATED' ? 'pi pi-ban' : 'pi pi-check'"
-                                            [severity]="linkedUser.status === 'ACTIVATED' ? 'danger' : 'success'"
-                                            [outlined]="true"
-                                            [loading]="userActionLoading"
-                                            (onClick)="confirmToggleUserActivation($event)">
-                                        </p-button>
+                                        @if (selectedClient.status !== 'DELETED') {
+                                            <p-button
+                                                label="Gérer les rôles"
+                                                icon="pi pi-key"
+                                                severity="info"
+                                                [outlined]="true"
+                                                (onClick)="openRolesDialog()">
+                                            </p-button>
+                                            <p-button
+                                                [label]="linkedUser.status === 'ACTIVATED' ? 'Désactiver l’utilisateur' : 'Activer l’utilisateur'"
+                                                [icon]="linkedUser.status === 'ACTIVATED' ? 'pi pi-ban' : 'pi pi-check'"
+                                                [severity]="linkedUser.status === 'ACTIVATED' ? 'danger' : 'success'"
+                                                [outlined]="true"
+                                                [loading]="userActionLoading"
+                                                (onClick)="confirmToggleUserActivation($event)">
+                                            </p-button>
+                                            <p-button
+                                                label="Fermer le compte"
+                                                icon="pi pi-trash"
+                                                severity="danger"
+                                                [outlined]="true"
+                                                [loading]="actionLoading"
+                                                (onClick)="confirmCloseAccount($event)">
+                                            </p-button>
+                                        } @else {
+                                            <p class="m-0 text-surface-500 text-sm">
+                                                Ce compte est fermé. Le profil a été anonymisé.
+                                            </p>
+                                        }
                                     </div>
                                 </section>
                             }
