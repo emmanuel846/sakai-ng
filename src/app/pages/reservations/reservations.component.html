@@ -629,7 +629,7 @@
                         </div>
                         <div>
                             <dt>Point de collecte</dt>
-                            <dd>{{ displayValue(selectedReservation.expeditions?.collectionPoints?.name) }}</dd>
+                            <dd>{{ displayValue(selectedReservation.selectedCollectionPoint?.name || selectedReservation.expeditions?.collectionPoints?.name) }}</dd>
                         </div>
                     </dl>
                 </section>

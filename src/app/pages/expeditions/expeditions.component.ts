@@ -86,7 +86,9 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
   editDialogVisible = false;
   editForm!: FormGroup;
   saving = false;
-  filterBy = input.required<ExpeditionStatus>();
+  filterBy = input<ExpeditionStatus | null>(null);
+  statusFilter: ExpeditionStatus | null = null;
+  private allExpeditions: ExpeditionLists[] = [];
   activeDetailTab: string | number = 'trajet';
 
   reservations: Reservations[] = [];
@@ -114,6 +116,7 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
     { label: 'Livrée', value: ExpeditionStatus.DELIVERED },
     { label: 'Terminée', value: ExpeditionStatus.COMPLETED },
     { label: 'Rejetée', value: ExpeditionStatus.REJECTED },
+    { label: 'Annulée', value: ExpeditionStatus.CANCELLED },
     { label: 'Supprimée', value: ExpeditionStatus.DELETED }
   ];
 
@@ -167,24 +170,42 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
     this.revokeObjectUrls();
   }
 
+  get isAllTab(): boolean {
+    return this.filterBy() == null;
+  }
+
   getAllExpeditions() {
     this.loading = true;
     this.expeditionService.getExpeditons().subscribe({
       next: (data) => {
-        this.expeditions = data.reverse().filter((exp) => exp.expeditionStatus === this.filterBy());
+        this.allExpeditions = data.reverse();
+        this.applyFilters();
         this.loading = false;
-        if (this.selectedExpedition) {
-          const refreshed = this.expeditions.find((e) => e.id === this.selectedExpedition!.id);
-          if (refreshed) {
-            this.selectedExpedition = refreshed;
-            this.selectedStatus = refreshed.expeditionStatus as ExpeditionStatus;
-          }
-        }
       },
       error: () => {
         this.loading = false;
       }
     });
+  }
+
+  applyFilters() {
+    const tabFilter = this.filterBy();
+    this.expeditions = this.allExpeditions.filter((exp) => {
+      if (tabFilter && exp.expeditionStatus !== tabFilter) {
+        return false;
+      }
+      if (this.isAllTab && this.statusFilter && exp.expeditionStatus !== this.statusFilter) {
+        return false;
+      }
+      return true;
+    });
+    if (this.selectedExpedition) {
+      const refreshed = this.expeditions.find((e) => e.id === this.selectedExpedition!.id);
+      if (refreshed) {
+        this.selectedExpedition = refreshed;
+        this.selectedStatus = refreshed.expeditionStatus as ExpeditionStatus;
+      }
+    }
   }
 
   onGlobalFilter(table: Table, event: Event) {
@@ -342,7 +363,10 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
       deliveryDate: formValue.deliveryDate.toISOString(),
       packageRetrivalDate: formValue.receiptDate.toISOString(),
       clientId: this.selectedExpedition.clients.id,
-      collectionPointsId: this.selectedExpedition.collectionPoints?.id || ''
+      collectionPointsId: this.selectedExpedition.collectionPoints?.id || '',
+      collectionPointsIds: this.selectedExpedition.collectionPoints?.id
+        ? [this.selectedExpedition.collectionPoints.id]
+        : []
     };
 
     this.expeditionService.updateExpedition(updatedExpedition).subscribe({

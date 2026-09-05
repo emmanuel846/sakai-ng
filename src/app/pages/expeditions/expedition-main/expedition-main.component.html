@@ -1,11 +1,15 @@
-<p-tabs value="0">
+<p-tabs value="all">
     <p-tablist>
+        <p-tab value="all">Tout</p-tab>
         <p-tab value="0">En attente de validation</p-tab>
         <p-tab value="1">En cours de traitement</p-tab>
         <p-tab value="2">Démarrés</p-tab>
         <p-tab value="3">Terminé</p-tab>
     </p-tablist>
     <p-tabpanels>
+        <p-tabpanel value="all">
+            <app-expeditions></app-expeditions>
+        </p-tabpanel>
         <p-tabpanel value="0">
             <app-expeditions [filterBy]="expeditionStatus.CREATED"></app-expeditions>
         </p-tabpanel>

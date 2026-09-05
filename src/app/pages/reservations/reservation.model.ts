@@ -24,6 +24,7 @@ export interface Reservations {
   estimatedDeliveryDate?: string | null;
   pickupCode?: string | null;
   receptionNote?: string | null;
+  selectedCollectionPoint?: CollectionPoints | null;
 }
 
 interface Expeditions {
@@ -53,6 +54,8 @@ interface Expeditions {
   expeditionStatus: string;
   clients: Clients;
   collectionPoints: CollectionPoints;
+  departureCollectionPoints?: CollectionPoints[];
+  destCollectionPoints?: CollectionPoints;
   preferences: string;
 }
 

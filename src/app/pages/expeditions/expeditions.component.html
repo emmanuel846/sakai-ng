@@ -15,14 +15,29 @@
             </div>
         </ng-template>
         <ng-template #end>
-            <p-iconfield>
-                <p-inputicon styleClass="pi pi-search" />
-                <input
-                    pInputText
-                    type="text"
-                    (input)="onGlobalFilter(dt, $event)"
-                    placeholder="Rechercher…" />
-            </p-iconfield>
+            <div class="flex flex-wrap items-center gap-3">
+                @if (isAllTab) {
+                    <p-select
+                        [options]="statusOptions"
+                        [(ngModel)]="statusFilter"
+                        (onChange)="applyFilters()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Tous les statuts"
+                        [showClear]="true"
+                        appendTo="body"
+                        styleClass="w-16rem">
+                    </p-select>
+                }
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input
+                        pInputText
+                        type="text"
+                        (input)="onGlobalFilter(dt, $event)"
+                        placeholder="Rechercher…" />
+                </p-iconfield>
+            </div>
         </ng-template>
     </p-toolbar>
 
@@ -61,6 +76,9 @@
                         <th pSortableColumn="depDateStart">Départ</th>
                         <th pSortableColumn="receiptDate">Dépôt</th>
                         <th pSortableColumn="deliveryDate">Livraison</th>
+                        @if (isAllTab) {
+                            <th pSortableColumn="expeditionStatus">Statut</th>
+                        }
                         <th style="min-width: 14rem"></th>
                     </tr>
                 </ng-template>
@@ -77,9 +95,17 @@
                         <td>{{ expedition.depDateStart | date: 'dd/MM/yyyy' }}</td>
                         <td>{{ expedition.receiptDate | date: 'dd/MM/yyyy' }}</td>
                         <td>{{ expedition.deliveryDate | date: 'dd/MM/yyyy' }}</td>
+                        @if (isAllTab) {
+                            <td>
+                                <p-tag
+                                    [value]="statusLabel(expedition.expeditionStatus)"
+                                    [severity]="statusSeverity(expedition.expeditionStatus)">
+                                </p-tag>
+                            </td>
+                        }
                         <td (click)="$event.stopPropagation()">
                             <div class="flex flex-wrap gap-1 justify-end">
-                                @if (filterBy() === expedtionStatus.CREATED) {
+                                @if (expedition.expeditionStatus === expedtionStatus.CREATED) {
                                     <p-button
                                         label="Valider"
                                         icon="pi pi-check"
@@ -96,7 +122,7 @@
                                         (onClick)="validate(expedtionStatus.REJECTED, expedition)">
                                     </p-button>
                                 }
-                                @if (filterBy() === expedtionStatus.VALIDATED) {
+                                @if (expedition.expeditionStatus === expedtionStatus.VALIDATED) {
                                     <p-button
                                         label="En attente"
                                         icon="pi pi-clock"
@@ -113,7 +139,7 @@
                                         (onClick)="openEditDialog(expedition, $event)">
                                     </p-button>
                                 }
-                                @if (filterBy() === expedtionStatus.STARTED) {
+                                @if (expedition.expeditionStatus === expedtionStatus.STARTED) {
                                     <p-button
                                         label="Terminer"
                                         icon="pi pi-check"
@@ -137,7 +163,7 @@
                 </ng-template>
                 <ng-template #emptymessage>
                     <tr>
-                        <td colspan="9" class="text-center text-surface-500 py-6">
+                        <td [attr.colspan]="isAllTab ? 10 : 9" class="text-center text-surface-500 py-6">
                             Aucune expédition dans cet onglet.
                         </td>
                     </tr>

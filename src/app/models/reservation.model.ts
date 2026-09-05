@@ -182,7 +182,9 @@ export interface Expedition {
   arrivalStartDate: string
   arrivalEndDate: string
   clientId: string
-  collectionPointsId: string
+  collectionPointsId?: string
+  collectionPointsIds?: string[]
+  destCollectionPointsId?: string
   packageRetrivalDate:string;
 }
 
@@ -235,6 +237,7 @@ export interface ExpeditionLists {
   clients: Clients;
   collectionPoints?: CollectionPoints | null;
   destCollectionPoints?: CollectionPoints | null;
+  departureCollectionPoints?: CollectionPoints[];
   preferences?: ArticlePreferences[];
 }
 export interface ArticlePreferences {
