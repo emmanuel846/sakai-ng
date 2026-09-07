@@ -103,6 +103,7 @@
 .expeditions-detail__no-docs,
 .expeditions-detail__loading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 0.65rem;

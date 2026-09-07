@@ -16,6 +16,7 @@ import { ImageModule } from 'primeng/image';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ReservationStatus, ColiStatus } from '../../models/reservation.model';
 import { Reservations } from './reservation.model';
+import { AdminCreateReservationComponent } from './admin-create-reservation/admin-create-reservation.component';
 import { ClientService } from '../clients/client.service';
 import { environment } from '../../../environments/environment';
 import { forkJoin, of, Subscription } from 'rxjs';
@@ -47,7 +48,8 @@ interface ColiPicture {
     DropdownModule,
     DividerModule,
     ImageModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+    AdminCreateReservationComponent
   ],
   providers: [MessageService],
   templateUrl: './reservations.component.html',
@@ -115,6 +117,7 @@ export class ReservationsComponent implements OnDestroy {
   receptionNote = '';
   declaringReception = false;
   collectorFiles: Record<string, File[]> = {};
+  createDialogVisible = false;
   cols!: Column[];
   pendingCols!: Column[];
 
@@ -358,6 +361,19 @@ export class ReservationsComponent implements OnDestroy {
 
   shippingModeLabel(mode?: string): string {
     return mode === 'ONLINE_DELIVERY' ? 'Commande en ligne' : 'Dépôt au point';
+  }
+
+  adminPaymentLabel(mode?: string | null): string {
+    switch (mode) {
+      case 'STRIPE_LINK':
+        return 'Backoffice · lien Stripe';
+      case 'PAID_OFFLINE':
+        return 'Backoffice · payée hors plateforme';
+      case 'COMPLIMENTARY':
+        return 'Backoffice · offerte';
+      default:
+        return 'Backoffice';
+    }
   }
 
   isOnlineDelivery(reservation: Reservations): boolean {

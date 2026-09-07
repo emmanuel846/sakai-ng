@@ -12,6 +12,11 @@
                     [outlined]="true"
                     (onClick)="getAllExpeditions()">
                 </p-button>
+                <p-button
+                    label="Réserver pour un client"
+                    icon="pi pi-calendar-plus"
+                    (onClick)="openCreateReservation()">
+                </p-button>
             </div>
         </ng-template>
         <ng-template #end>
@@ -131,6 +136,15 @@
                                         [outlined]="true"
                                         (onClick)="validate(expedtionStatus.CREATED, expedition)">
                                     </p-button>
+                                    @if (canCreateReservation(expedition)) {
+                                        <p-button
+                                            icon="pi pi-calendar-plus"
+                                            [rounded]="true"
+                                            [outlined]="true"
+                                            pTooltip="Réserver pour un client"
+                                            (onClick)="openCreateReservation(expedition, $event)">
+                                        </p-button>
+                                    }
                                     <p-button
                                         icon="pi pi-pencil"
                                         [rounded]="true"
@@ -368,6 +382,13 @@
                             <section class="expeditions-detail__section">
                                 <h4 class="expeditions-detail__section-title">Actions</h4>
                                 <div class="expeditions-detail__actions expeditions-detail__actions--status">
+                                    @if (canCreateReservation(selectedExpedition)) {
+                                        <p-button
+                                            label="Réserver pour un client"
+                                            icon="pi pi-calendar-plus"
+                                            (onClick)="openCreateReservation(selectedExpedition)">
+                                        </p-button>
+                                    }
                                     <p-button
                                         label="Modifier l’expédition"
                                         icon="pi pi-pencil"
@@ -637,6 +658,14 @@
                                 <div class="expeditions-detail__no-docs">
                                     <i class="pi pi-inbox"></i>
                                     <span>Aucune réservation sur cette expédition</span>
+                                    @if (canCreateReservation(selectedExpedition)) {
+                                        <p-button
+                                            label="Réserver pour un client"
+                                            icon="pi pi-calendar-plus"
+                                            [outlined]="true"
+                                            (onClick)="openCreateReservation(selectedExpedition)">
+                                        </p-button>
+                                    }
                                 </div>
                             } @else {
                                 @if (picturesLoading) {
@@ -672,6 +701,9 @@
                                                     @if (isOnlineDelivery(reservation)) {
                                                         <p-tag value="Commande en ligne" severity="info"></p-tag>
                                                     }
+                                                    @if (reservation.adminCreated) {
+                                                        <p-tag value="Backoffice" severity="secondary"></p-tag>
+                                                    }
                                                 </div>
                                             </p-accordion-header>
                                             <p-accordion-content>
@@ -694,6 +726,18 @@
                                                             <dt>Poids total</dt>
                                                             <dd>{{ reservation.totalWeight }} kg</dd>
                                                         </div>
+                                                        @if (reservation.adminCreated) {
+                                                            <div>
+                                                                <dt>Saisie</dt>
+                                                                <dd>Backoffice{{ reservation.adminPaymentMode === 'COMPLIMENTARY' ? ' · offerte' : reservation.adminPaymentMode === 'PAID_OFFLINE' ? ' · payée hors plateforme' : reservation.adminPaymentMode === 'STRIPE_LINK' ? ' · lien Stripe' : '' }}</dd>
+                                                            </div>
+                                                            @if (reservation.adminNote) {
+                                                                <div class="expeditions-detail__full">
+                                                                    <dt>Note admin</dt>
+                                                                    <dd>{{ reservation.adminNote }}</dd>
+                                                                </div>
+                                                            }
+                                                        }
                                                         <div>
                                                             <dt>Créée le</dt>
                                                             <dd>
@@ -1160,3 +1204,8 @@
         </div>
     </ng-template>
 </p-dialog>
+
+<app-admin-create-reservation
+    [(visible)]="createDialogVisible"
+    [expedition]="createExpedition"
+    (created)="onAdminReservationCreated($event)" />

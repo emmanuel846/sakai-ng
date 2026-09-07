@@ -39,6 +39,7 @@ import { forkJoin, of, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ReservationService } from '../reservations/reservations.service';
 import { Reservations } from '../reservations/reservation.model';
+import { AdminCreateReservationComponent } from '../reservations/admin-create-reservation/admin-create-reservation.component';
 import { ClientService } from '../clients/client.service';
 import { environment } from '../../../environments/environment';
 
@@ -72,7 +73,8 @@ import { environment } from '../../../environments/environment';
     DividerModule,
     AccordionModule,
     ImageModule,
-    TooltipModule
+    TooltipModule,
+    AdminCreateReservationComponent
   ],
   providers: [MessageService],
   templateUrl: './expeditions.component.html',
@@ -105,6 +107,8 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
   declaringReceptionId: string | null = null;
   updatingStatus = false;
   selectedStatus: ExpeditionStatus | null = null;
+  createDialogVisible = false;
+  createExpedition: ExpeditionLists | null = null;
 
   readonly statusOptions: { label: string; value: ExpeditionStatus }[] = [
     { label: 'En attente de validation', value: ExpeditionStatus.CREATED },
@@ -416,6 +420,25 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
 
   remainingWeight(exp: ExpeditionLists): number {
     return Math.max(0, (exp.weightToLoad || 0) - (exp.weightReserved || 0));
+  }
+
+  canCreateReservation(exp?: ExpeditionLists | null): boolean {
+    return !!exp
+      && exp.expeditionStatus === ExpeditionStatus.VALIDATED
+      && this.remainingWeight(exp) > 0;
+  }
+
+  openCreateReservation(expedition?: ExpeditionLists | null, event?: Event): void {
+    event?.stopPropagation();
+    this.createExpedition = expedition ?? this.selectedExpedition;
+    this.createDialogVisible = true;
+  }
+
+  onAdminReservationCreated(reservation: Reservations): void {
+    this.getAllExpeditions();
+    if (this.selectedExpedition?.id && reservation.expeditions?.id === this.selectedExpedition.id) {
+      this.loadReservations(this.selectedExpedition.id);
+    }
   }
 
   statusSeverity(status?: string | null): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {

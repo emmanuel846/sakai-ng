@@ -1,0 +1,275 @@
+.admin-resa-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.admin-resa-header p {
+  margin: 0;
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.9rem;
+}
+
+.admin-resa-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.admin-resa-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--p-surface-100, #f3f4f6);
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-resa-steps span {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  font-size: 0.75rem;
+}
+
+.admin-resa-steps .is-active {
+  background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+  color: var(--p-primary-color);
+}
+
+.admin-resa-steps .is-done {
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+}
+
+.admin-resa-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 800px) {
+  .admin-resa-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.admin-resa-card,
+.admin-resa-recap {
+  border: 1px solid var(--p-surface-border, #e5e7eb);
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  background: var(--p-surface-0, #fff);
+}
+
+.admin-resa-card h3,
+.admin-resa-recap h3 {
+  margin: 0 0 0.85rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.admin-resa-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-resa-fields {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-resa-fields input,
+.admin-resa-fields textarea {
+  width: 100%;
+}
+
+.admin-resa-muted {
+  margin: 0.35rem 0 0;
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.8rem;
+}
+
+.trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 18rem;
+  overflow: auto;
+}
+
+.trip-pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--p-surface-border, #e5e7eb);
+  border-radius: 0.85rem;
+  padding: 0.7rem 0.85rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.trip-pick small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.trip-pick.is-selected,
+.trip-pick--locked {
+  border-color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+}
+
+.admin-resa-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.admin-resa-meta dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.admin-resa-meta dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
+.pay-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 800px) {
+  .pay-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.pay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  min-height: 100%;
+  padding: 0.9rem;
+  border: 1px solid var(--p-surface-border, #e5e7eb);
+  border-radius: 0.9rem;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pay-card i {
+  color: var(--p-primary-color);
+}
+
+.pay-card span,
+.pay-card em {
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color, #6b7280);
+  font-style: normal;
+}
+
+.pay-card em {
+  color: #b45309;
+}
+
+.pay-card.is-selected {
+  border-color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+}
+
+.admin-resa-recap {
+  margin-top: 1rem;
+}
+
+.admin-resa-recap dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.admin-resa-recap dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.admin-resa-recap dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
+.admin-resa-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+.admin-resa-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 0.5rem 0.5rem;
+}
+
+.admin-resa-success i {
+  font-size: 2.4rem;
+  color: var(--p-green-500, #16a34a);
+  margin-bottom: 0.6rem;
+}
+
+.admin-resa-success h3 {
+  margin: 0 0 0.35rem;
+}
+
+.admin-resa-success__hint {
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.admin-resa-link {
+  width: 100%;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.admin-resa-link__row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.admin-resa-link input {
+  flex: 1;
+}
+
+:host ::ng-deep .admin-resa-dialog .p-dialog-content {
+  padding-top: 0.25rem;
+}

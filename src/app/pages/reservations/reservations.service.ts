@@ -2,7 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable, signal, WritableSignal } from "@angular/core";
 import { environment } from "../../../environments/environment";
 import { Observable, tap } from "rxjs";
-import { Reservations } from "./reservation.model";
+import { AdminReservationCreateRequest, AdminReservationCreateResponse, Reservations } from "./reservation.model";
 
 @Injectable({
     providedIn:'root'
@@ -74,5 +74,20 @@ export class ReservationService{
         return this.http.get(`${environment.apiUrl}/api/v1/colis/adminUpdateStatus`, {
             params: { colisId, coliStatus }
         });
+    }
+
+    createAdminReservation(payload: AdminReservationCreateRequest): Observable<AdminReservationCreateResponse> {
+        return this.http.post<AdminReservationCreateResponse>(`${this.apiUrl}/admin/create`, payload)
+            .pipe(
+                tap((response) => {
+                    const created = response?.reservation;
+                    if (!created) {
+                        return;
+                    }
+                    const current = this.reservations();
+                    const list = Array.isArray(current) ? current : [];
+                    this.reservations.set([created, ...list]);
+                })
+            );
     }
 }

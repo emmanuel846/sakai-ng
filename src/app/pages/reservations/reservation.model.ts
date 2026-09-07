@@ -25,6 +25,46 @@ export interface Reservations {
   pickupCode?: string | null;
   receptionNote?: string | null;
   selectedCollectionPoint?: CollectionPoints | null;
+  adminCreated?: boolean;
+  adminPaymentMode?: 'STRIPE_LINK' | 'PAID_OFFLINE' | 'COMPLIMENTARY' | null;
+  adminNote?: string | null;
+}
+
+export type AdminPaymentMode = 'STRIPE_LINK' | 'PAID_OFFLINE' | 'COMPLIMENTARY';
+
+export interface AdminReservationCreateRequest {
+  expeditionId: string;
+  clientId: string;
+  totalWeight: number;
+  receiver: {
+    fullName: string;
+    phoneNumber: string;
+    email?: string | null;
+    address?: string | null;
+  };
+  colis?: Array<{
+    weight: number;
+    dimension?: string | null;
+    type?: string | null;
+    declaredPrice?: number;
+    contains?: string | null;
+    description?: string | null;
+    reservedArticles?: Array<{ articleCategory?: string; quantity?: number | null; weight?: number | null }>;
+  }>;
+  shippingMode?: 'SELF_DROP' | 'ONLINE_DELIVERY';
+  merchant?: string | null;
+  trackingNumber?: string | null;
+  estimatedDeliveryDate?: string | null;
+  pickupCode?: string | null;
+  collectionPointsId?: string | null;
+  promoCode?: string | null;
+  paymentMode: AdminPaymentMode;
+  adminNote?: string | null;
+}
+
+export interface AdminReservationCreateResponse {
+  data?: string | null;
+  reservation: Reservations;
 }
 
 interface Expeditions {

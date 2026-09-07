@@ -1,0 +1,330 @@
+<p-toast />
+<p-dialog
+    [visible]="visible"
+    (visibleChange)="onVisibleChange($event)"
+    [modal]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '56rem', maxWidth: '96vw' }"
+    styleClass="admin-resa-dialog">
+    <ng-template #header>
+        <div class="admin-resa-header">
+            <div>
+                <h2>Réserver pour un client</h2>
+                <p>Concierge : la réservation est créée au nom d’un client existant, sans passer par le site.</p>
+            </div>
+        </div>
+    </ng-template>
+
+    @if (result) {
+        <div class="admin-resa-success">
+            <i class="pi pi-check-circle"></i>
+            <h3>Réservation enregistrée</h3>
+            <p>
+                {{ result.reservation.totalWeight }} kg pour
+                {{ result.reservation.clients?.firstname }} {{ result.reservation.clients?.lastname }}
+                · {{ paymentLabel(result.reservation.adminPaymentMode) }}
+            </p>
+            @if (stripeUrl) {
+                <div class="admin-resa-link">
+                    <label>Lien de paiement à envoyer</label>
+                    <div class="admin-resa-link__row">
+                        <input pInputText [value]="stripeUrl" readonly />
+                        <p-button
+                            [label]="copied ? 'Copié' : 'Copier'"
+                            [icon]="copied ? 'pi pi-check' : 'pi pi-copy'"
+                            (onClick)="copyStripeLink()" />
+                    </div>
+                </div>
+            } @else {
+                <p class="admin-resa-success__hint">
+                    @if (result.reservation.adminPaymentMode === 'COMPLIMENTARY') {
+                        Aucun paiement voyageur ne sera généré.
+                    } @else {
+                        Le voyageur et le client ont été notifiés.
+                    }
+                </p>
+            }
+        </div>
+    } @else {
+        <form [formGroup]="form" class="admin-resa">
+            <ol class="admin-resa-steps">
+                <li [class.is-active]="step === 1" [class.is-done]="step > 1">
+                    <span>1</span>
+                    Trajet & client
+                </li>
+                <li [class.is-active]="step === 2" [class.is-done]="step > 2">
+                    <span>2</span>
+                    Colis
+                </li>
+                <li [class.is-active]="step === 3">
+                    <span>3</span>
+                    Paiement
+                </li>
+            </ol>
+
+            @if (step === 1) {
+                <div class="admin-resa-grid">
+                    <section class="admin-resa-card">
+                        <h3>Trajet</h3>
+                        @if (expedition) {
+                            <article class="trip-pick trip-pick--locked">
+                                <strong>{{ expeditionLabel(selectedExpedition) }}</strong>
+                                <span>{{ remainingKg | number:'1.0-1' }} kg dispo</span>
+                            </article>
+                        } @else {
+                            <input
+                                pInputText
+                                class="w-full mb-2"
+                                [value]="expeditionQuery"
+                                (input)="expeditionQuery = $any($event.target).value; filterExpeditions()"
+                                placeholder="Rechercher un trajet (ville, voyageur, vol)" />
+                            <div class="trip-list">
+                                @if (loadingLists) {
+                                    <p class="admin-resa-muted">Chargement des trajets…</p>
+                                } @else if (!filteredExpeditions.length) {
+                                    <p class="admin-resa-muted">Aucun trajet validé avec des kilos disponibles.</p>
+                                } @else {
+                                    @for (exp of filteredExpeditions; track exp.id) {
+                                        <button
+                                            type="button"
+                                            class="trip-pick"
+                                            [class.is-selected]="selectedExpedition?.id === exp.id"
+                                            (click)="selectExpedition(exp)">
+                                            <div>
+                                                <strong>{{ exp.villeDep }} → {{ exp.villeArr }}</strong>
+                                                <small>
+                                                    {{ exp.depDateStart | date:'d MMM y':'':'fr' }}
+                                                    · {{ exp.clients.firstname }} {{ exp.clients.lastname }}
+                                                </small>
+                                            </div>
+                                            <span>{{ (exp.weightToLoad || 0) - (exp.weightReserved || 0) | number:'1.0-1' }} kg</span>
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        }
+                    </section>
+
+                    <section class="admin-resa-card">
+                        <h3>Client expéditeur</h3>
+                        <label class="admin-resa-label" for="admin-client">Compte existant</label>
+                        <p-autocomplete
+                            inputId="admin-client"
+                            formControlName="client"
+                            [suggestions]="filteredClients"
+                            (completeMethod)="searchClients($event)"
+                            [dropdown]="true"
+                            [forceSelection]="true"
+                            optionLabel="searchLabel"
+                            placeholder="Nom, téléphone, e-mail…"
+                            styleClass="w-full"
+                            appendTo="body" />
+                        @if (selectedClient) {
+                            <dl class="admin-resa-meta">
+                                <div>
+                                    <dt>Téléphone</dt>
+                                    <dd>{{ selectedClient.phoneNumber || '—' }}</dd>
+                                </div>
+                                <div>
+                                    <dt>ID</dt>
+                                    <dd>{{ selectedClient.whotraveling_id || selectedClient.public_pseudo || '—' }}</dd>
+                                </div>
+                            </dl>
+                        }
+                    </section>
+                </div>
+            }
+
+            @if (step === 2) {
+                <div class="admin-resa-grid">
+                    <section class="admin-resa-card">
+                        <h3>Colis</h3>
+                        <div class="admin-resa-fields">
+                            <div>
+                                <label class="admin-resa-label" for="admin-weight">Poids (kg)</label>
+                                <p-inputnumber
+                                    inputId="admin-weight"
+                                    formControlName="totalWeight"
+                                    [min]="0.1"
+                                    [max]="remainingKg || 100"
+                                    [minFractionDigits]="1"
+                                    [maxFractionDigits]="1"
+                                    suffix=" kg"
+                                    styleClass="w-full" />
+                                <small class="admin-resa-muted">{{ remainingKg | number:'1.0-1' }} kg encore disponibles</small>
+                            </div>
+                            <div>
+                                <label class="admin-resa-label" for="admin-contains">Contenu</label>
+                                <input pInputText id="admin-contains" formControlName="contains" placeholder="Ex : 2 paires de chaussures" />
+                            </div>
+                            @if (categoryOptions.length) {
+                                <div>
+                                    <label class="admin-resa-label" for="admin-cat">Catégorie acceptée</label>
+                                    <p-select
+                                        inputId="admin-cat"
+                                        formControlName="articleCategory"
+                                        [options]="categoryOptions"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Optionnel"
+                                        [showClear]="true"
+                                        appendTo="body"
+                                        styleClass="w-full" />
+                                </div>
+                            }
+                            <div>
+                                <label class="admin-resa-label" for="admin-ship">Acheminement</label>
+                                <p-select
+                                    inputId="admin-ship"
+                                    formControlName="shippingMode"
+                                    [options]="[
+                                        { label: 'Dépôt au point de collecte', value: 'SELF_DROP' },
+                                        { label: 'Commande en ligne (iWT)', value: 'ONLINE_DELIVERY' }
+                                    ]"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    appendTo="body"
+                                    styleClass="w-full" />
+                            </div>
+                            @if (collectionPoints.length > 1) {
+                                <div>
+                                    <label class="admin-resa-label" for="admin-cp">Point de collecte</label>
+                                    <p-select
+                                        inputId="admin-cp"
+                                        formControlName="collectionPointsId"
+                                        [options]="collectionPoints"
+                                        optionLabel="name"
+                                        optionValue="id"
+                                        placeholder="Choisir un point"
+                                        appendTo="body"
+                                        styleClass="w-full" />
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    <section class="admin-resa-card">
+                        <h3>Destinataire</h3>
+                        <div class="admin-resa-fields">
+                            <div>
+                                <label class="admin-resa-label" for="admin-rname">Nom complet</label>
+                                <input pInputText id="admin-rname" formControlName="receiverName" />
+                            </div>
+                            <div>
+                                <label class="admin-resa-label" for="admin-rphone">Téléphone</label>
+                                <input pInputText id="admin-rphone" formControlName="receiverPhone" />
+                            </div>
+                            <div>
+                                <label class="admin-resa-label" for="admin-remail">E-mail</label>
+                                <input pInputText id="admin-remail" formControlName="receiverEmail" placeholder="Facultatif" />
+                            </div>
+                            <div>
+                                <label class="admin-resa-label" for="admin-raddr">Adresse</label>
+                                <input pInputText id="admin-raddr" formControlName="receiverAddress" placeholder="Facultatif" />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            }
+
+            @if (step === 3) {
+                <section class="admin-resa-card">
+                    <h3>Règlement</h3>
+                    <div class="pay-grid">
+                        @for (mode of paymentModes; track mode.value) {
+                            <button
+                                type="button"
+                                class="pay-card"
+                                [class.is-selected]="paymentMode === mode.value"
+                                (click)="selectPayment(mode.value)">
+                                <i class="pi" [ngClass]="mode.icon"></i>
+                                <strong>{{ mode.title }}</strong>
+                                <span>{{ mode.detail }}</span>
+                                @if (mode.warning) {
+                                    <em>{{ mode.warning }}</em>
+                                }
+                            </button>
+                        }
+                    </div>
+                    <div class="admin-resa-fields mt-3">
+                        <div>
+                            <label class="admin-resa-label" for="admin-note">Note interne</label>
+                            <textarea
+                                pTextarea
+                                id="admin-note"
+                                formControlName="adminNote"
+                                rows="2"
+                                placeholder="WhatsApp, téléphone, motif…"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="admin-resa-recap">
+                    <h3>Récapitulatif</h3>
+                    <dl>
+                        <div>
+                            <dt>Trajet</dt>
+                            <dd>{{ expeditionLabel(selectedExpedition) }}</dd>
+                        </div>
+                        <div>
+                            <dt>Client</dt>
+                            <dd>{{ clientLabel(selectedClient) }}</dd>
+                        </div>
+                        <div>
+                            <dt>Poids</dt>
+                            <dd>{{ form.value.totalWeight }} kg</dd>
+                        </div>
+                        <div>
+                            <dt>Prix catalogue</dt>
+                            <dd>{{ estimatedAmount | number:'1.2-2' }} €</dd>
+                        </div>
+                        <div>
+                            <dt>Part voyageur</dt>
+                            <dd>
+                                @if (paymentMode === 'COMPLIMENTARY') {
+                                    0,00 €
+                                } @else {
+                                    {{ estimatedTravelerShare | number:'1.2-2' }} €
+                                }
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
+            }
+        </form>
+    }
+
+    <ng-template #footer>
+        @if (result) {
+            <div class="admin-resa-footer">
+                <span></span>
+                <p-button label="Fermer" icon="pi pi-check" (onClick)="close()" />
+            </div>
+        } @else {
+            <div class="admin-resa-footer">
+                <p-button
+                    label="Annuler"
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="close()" />
+                <div class="flex gap-2">
+                    @if (step > 1) {
+                        <p-button label="Retour" severity="secondary" [outlined]="true" (onClick)="back()" />
+                    }
+                    @if (step < 3) {
+                        <p-button label="Continuer" icon="pi pi-arrow-right" iconPos="right" [disabled]="!canGoNext()" (onClick)="next()" />
+                    } @else {
+                        <p-button
+                            label="Créer la réservation"
+                            icon="pi pi-check"
+                            [loading]="submitting"
+                            [disabled]="!canGoNext()"
+                            (onClick)="submit()" />
+                    }
+                </div>
+            </div>
+        }
+    </ng-template>
+</p-dialog>

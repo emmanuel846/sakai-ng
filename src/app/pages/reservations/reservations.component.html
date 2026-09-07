@@ -1,6 +1,17 @@
 <p-toast />
 
 <div class="reservations-page">
+    <div class="flex flex-wrap items-center justify-content-between gap-3 mb-3">
+        <div>
+            <h2 class="m-0 text-xl font-semibold">Réservations</h2>
+            <p class="m-0 mt-1 text-sm text-surface-500">Suivi des réservations clients et saisies concierge</p>
+        </div>
+        <p-button
+            label="Réserver pour un client"
+            icon="pi pi-calendar-plus"
+            (onClick)="createDialogVisible = true" />
+    </div>
+
     <div class="reservations-split" [class.reservations-split--open]="!!selectedReservation">
         <div class="reservations-list card">
             <p-tabs value="0">
@@ -255,6 +266,9 @@
                             @if (isOnlineDelivery(selectedReservation)) {
                                 <p-tag value="Commande en ligne" severity="info"></p-tag>
                             }
+                            @if (selectedReservation.adminCreated) {
+                                <p-tag value="Backoffice" severity="secondary"></p-tag>
+                            }
                         </div>
                         <p class="m-0 text-sm text-surface-500 break-all">{{ selectedReservation.id }}</p>
                     </div>
@@ -298,6 +312,24 @@
                             <dt>Acheminement</dt>
                             <dd>{{ shippingModeLabel(selectedReservation.shippingMode) }}</dd>
                         </div>
+                        @if (selectedReservation.adminCreated) {
+                            <div>
+                                <dt>Saisie</dt>
+                                <dd>{{ adminPaymentLabel(selectedReservation.adminPaymentMode) }}</dd>
+                            </div>
+                            @if (selectedReservation.createdBy) {
+                                <div>
+                                    <dt>Créée par</dt>
+                                    <dd>{{ selectedReservation.createdBy }}</dd>
+                                </div>
+                            }
+                            @if (selectedReservation.adminNote) {
+                                <div class="reservations-detail__full">
+                                    <dt>Note admin</dt>
+                                    <dd>{{ selectedReservation.adminNote }}</dd>
+                                </div>
+                            }
+                        }
                         <div>
                             <dt>Créée le</dt>
                             <dd>
@@ -806,3 +838,5 @@
         }
     </ng-template>
 </p-dialog>
+
+<app-admin-create-reservation [(visible)]="createDialogVisible" />
