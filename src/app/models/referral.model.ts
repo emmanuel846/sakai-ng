@@ -1,4 +1,11 @@
 export type ReferralStatus = 'PENDING' | 'REWARDED' | 'INELIGIBLE';
+export type ReferralAccessMode = 'ALL' | 'SELECTED';
+
+export interface ReferralAccess {
+  enabled: boolean;
+  accessMode: ReferralAccessMode;
+  allowedClientIds: string[];
+}
 
 export interface ReferralAdmin {
   id: string;

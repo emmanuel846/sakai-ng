@@ -1,5 +1,60 @@
 <p-toast></p-toast>
 
+<div class="card access-card mb-3">
+  <div class="flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+      <h2 class="m-0 text-900 font-semibold text-xl">Accès au programme</h2>
+      <p class="mt-2 mb-0 text-500 text-sm">
+        Choisissez qui peut parrainer. Les filleuls déjà inscrits restent honorés.
+      </p>
+    </div>
+    <p-button
+      label="Enregistrer"
+      icon="pi pi-check"
+      [loading]="accessSaving"
+      [disabled]="accessLoading"
+      (onClick)="saveAccess()">
+    </p-button>
+  </div>
+
+  <div class="flex flex-wrap align-items-center gap-4 mb-3">
+    <div class="flex align-items-center gap-2">
+      <p-toggleswitch [(ngModel)]="enabled" inputId="referralEnabled" [disabled]="accessLoading"></p-toggleswitch>
+      <label for="referralEnabled" class="font-medium">Programme activé</label>
+    </div>
+    <p-selectButton
+      [options]="accessModeOptions"
+      [(ngModel)]="accessMode"
+      optionLabel="label"
+      optionValue="value"
+      [disabled]="accessLoading || !enabled">
+    </p-selectButton>
+  </div>
+
+  @if (enabled && accessMode === 'SELECTED') {
+    <div class="allowlist">
+      <label class="block font-medium mb-2" for="referralClients">Utilisateurs autorisés à parrainer</label>
+      <p-multiSelect
+        inputId="referralClients"
+        [options]="clientOptions"
+        [(ngModel)]="allowedClientIds"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Rechercher et sélectionner des utilisateurs"
+        display="chip"
+        [filter]="true"
+        filterPlaceHolder="Nom, pseudo ou email"
+        [disabled]="accessLoading"
+        appendTo="body"
+        styleClass="w-full">
+      </p-multiSelect>
+      <small class="text-500 mt-2 block">
+        {{ allowedClientIds.length }} utilisateur(s) sélectionné(s). Hors liste, le menu Parrainage est masqué.
+      </small>
+    </div>
+  }
+</div>
+
 <div class="flex flex-wrap gap-3 mb-3">
   <div class="kpi-wrap-item">
     <div class="card kpi-card kpi-total mb-0">
