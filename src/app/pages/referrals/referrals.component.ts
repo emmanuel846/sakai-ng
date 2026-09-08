@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -8,8 +9,20 @@ import { ButtonModule } from 'primeng/button';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageService } from 'primeng/api';
-import { ReferralAccess, ReferralAccessMode, ReferralAdmin, ReferralStatus } from '../../models/referral.model';
+import {
+  ReferralAccess,
+  ReferralAccessMode,
+  ReferralAdmin,
+  ReferralBenefitKind,
+  ReferralRewardBeneficiary,
+  ReferralRewardRule,
+  ReferralRewardTrigger,
+  ReferralStatus
+} from '../../models/referral.model';
+import { EMPTY } from 'rxjs';
+import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 import { ReferralApiService } from '../../services/referral-api.service';
 import { ClientService } from '../clients/client.service';
 import { Profil } from '../../models/profil.model';
@@ -17,6 +30,11 @@ import { Profil } from '../../models/profil.model';
 interface ClientOption {
   label: string;
   value: string;
+}
+
+interface RuleRow {
+  trigger: ReferralRewardTrigger;
+  label: string;
 }
 
 @Component({
@@ -31,26 +49,37 @@ interface ClientOption {
     ButtonModule,
     ToggleSwitchModule,
     SelectButtonModule,
-    MultiSelectModule
+    MultiSelectModule,
+    InputNumberModule
   ],
   providers: [MessageService],
   templateUrl: './referrals.component.html',
   styleUrls: ['./referrals.component.scss']
 })
 export class ReferralsComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   referrals: ReferralAdmin[] = [];
   loading = false;
   accessLoading = false;
   accessSaving = false;
+  rulesLoading = false;
 
   enabled = true;
   accessMode: ReferralAccessMode = 'ALL';
   allowedClientIds: string[] = [];
   clientOptions: ClientOption[] = [];
+  rules: ReferralRewardRule[] = [];
 
   readonly accessModeOptions: { label: string; value: ReferralAccessMode }[] = [
     { label: 'Tout le monde', value: 'ALL' },
     { label: 'Utilisateurs sélectionnés', value: 'SELECTED' }
+  ];
+
+  readonly triggerRows: RuleRow[] = [
+    { trigger: 'REGISTRATION', label: 'Inscription' },
+    { trigger: 'FIRST_RESERVATION', label: '1re réservation' },
+    { trigger: 'FIRST_EXPEDITION', label: '1re publication' }
   ];
 
   constructor(
@@ -62,6 +91,7 @@ export class ReferralsComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.loadAccess();
+    this.loadRules();
     this.loadClients();
   }
 
@@ -113,6 +143,24 @@ export class ReferralsComponent implements OnInit {
     });
   }
 
+  loadRules(): void {
+    this.rulesLoading = true;
+    this.api.getRules().subscribe({
+      next: (payload) => {
+        this.rules = payload?.rules || [];
+        this.rulesLoading = false;
+      },
+      error: () => {
+        this.rulesLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger les règles de rémunération.'
+        });
+      }
+    });
+  }
+
   loadClients(): void {
     this.clientService.getClients().subscribe({
       next: (clients) => {
@@ -134,30 +182,44 @@ export class ReferralsComponent implements OnInit {
     });
   }
 
-  saveAccess(): void {
+  saveConfiguration(): void {
     if (this.accessSaving) {
       return;
     }
     this.accessSaving = true;
-    const payload: ReferralAccess = {
+    const accessPayload: ReferralAccess = {
       enabled: this.enabled,
       accessMode: this.accessMode,
       allowedClientIds: this.accessMode === 'SELECTED' ? [...this.allowedClientIds] : this.allowedClientIds
     };
-    this.api.updateAccess(payload).subscribe({
-      next: (access) => {
-        this.applyAccess(access);
+    this.api.updateAccess(accessPayload).pipe(
+      tap(access => this.applyAccess(access)),
+      switchMap(() =>
+        this.api.updateRules({ rules: this.rules }).pipe(
+          catchError(() => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreur',
+              detail: 'Accès enregistré, mais les règles n’ont pas pu être sauvegardées.'
+            });
+            return EMPTY;
+          })
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
         this.accessSaving = false;
+      })
+    ).subscribe({
+      next: (payload) => {
+        this.rules = payload?.rules || this.rules;
         this.messageService.add({
           severity: 'success',
           summary: 'Enregistré',
-          detail: this.accessMode === 'ALL'
-            ? 'Le parrainage est ouvert à tout le monde.'
-            : `${this.allowedClientIds.length} utilisateur(s) autorisé(s) à parrainer.`
+          detail: 'Configuration du parrainage mise à jour.'
         });
       },
       error: () => {
-        this.accessSaving = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Erreur',
@@ -165,6 +227,21 @@ export class ReferralsComponent implements OnInit {
         });
       }
     });
+  }
+
+  ruleFor(trigger: ReferralRewardTrigger, beneficiary: ReferralRewardBeneficiary): ReferralRewardRule | undefined {
+    return this.rules.find(item => item.trigger === trigger && item.beneficiary === beneficiary);
+  }
+
+  benefitLabel(kind: ReferralBenefitKind | undefined): string {
+    return kind === 'DISCOUNT' ? 'Réduction' : 'Crédit';
+  }
+
+  showMaxPerMonth(rule: ReferralRewardRule | undefined): boolean {
+    return !!rule?.enabled
+      && rule.trigger === 'FIRST_RESERVATION'
+      && rule.beneficiary === 'REFERRER'
+      && rule.benefitKind === 'CREDIT';
   }
 
   statusSeverity(status: ReferralStatus): 'success' | 'info' | 'warn' {

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ReferralAccess, ReferralAdmin } from '../models/referral.model';
+import { ReferralAccess, ReferralAdmin, ReferralRewardRules } from '../models/referral.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReferralApiService {
@@ -20,5 +20,13 @@ export class ReferralApiService {
 
   updateAccess(payload: ReferralAccess): Observable<ReferralAccess> {
     return this.http.put<ReferralAccess>(`${this.BASE}/access`, payload);
+  }
+
+  getRules(): Observable<ReferralRewardRules> {
+    return this.http.get<ReferralRewardRules>(`${this.BASE}/rules`);
+  }
+
+  updateRules(payload: ReferralRewardRules): Observable<ReferralRewardRules> {
+    return this.http.put<ReferralRewardRules>(`${this.BASE}/rules`, payload);
   }
 }

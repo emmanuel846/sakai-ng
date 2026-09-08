@@ -29,3 +29,38 @@
 .allowlist {
     max-width: 42rem;
 }
+
+.rules-card {
+    border-left: 4px solid #22c55e;
+}
+
+.rules-table-wrap {
+    overflow-x: auto;
+}
+
+.rules-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rules-table th,
+.rules-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--surface-200);
+    vertical-align: top;
+}
+
+.rule-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 10rem;
+}
+
+.max-month {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+}

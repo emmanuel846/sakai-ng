@@ -12,8 +12,8 @@
       label="Enregistrer"
       icon="pi pi-check"
       [loading]="accessSaving"
-      [disabled]="accessLoading"
-      (onClick)="saveAccess()">
+      [disabled]="accessLoading || rulesLoading || accessSaving"
+      (onClick)="saveConfiguration()">
     </p-button>
   </div>
 
@@ -53,6 +53,78 @@
       </small>
     </div>
   }
+</div>
+
+<div class="card rules-card mb-3">
+  <h2 class="m-0 text-900 font-semibold text-xl mb-2">Rémunérations par événement</h2>
+  <p class="mt-0 mb-3 text-500 text-sm">
+    Activez les récompenses cumulables : inscription, 1re réservation confirmée, 1re publication de trajet.
+  </p>
+
+  <div class="rules-table-wrap">
+    <table class="rules-table">
+      <thead>
+        <tr>
+          <th>Événement</th>
+          <th>Parrain</th>
+          <th>Filleul</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of triggerRows; track row.trigger) {
+          <tr>
+            <td class="font-medium">{{ row.label }}</td>
+            <td>
+              @if (ruleFor(row.trigger, 'REFERRER'); as rule) {
+              <div class="rule-cell">
+                <p-toggleswitch [(ngModel)]="rule.enabled" [disabled]="rulesLoading || !enabled"></p-toggleswitch>
+                <p-inputNumber
+                  [(ngModel)]="rule.amount"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  [min]="0"
+                  suffix=" €"
+                  [disabled]="rulesLoading || !enabled || !rule.enabled"
+                  styleClass="rule-amount">
+                </p-inputNumber>
+                <small class="text-500">{{ benefitLabel(rule.benefitKind) }}</small>
+                @if (showMaxPerMonth(rule)) {
+                <div class="max-month">
+                  <span>Plafond / mois</span>
+                  <p-inputNumber
+                    [(ngModel)]="rule.maxPerMonth"
+                    [useGrouping]="false"
+                    [min]="0"
+                    [disabled]="rulesLoading || !enabled || !rule.enabled"
+                    styleClass="rule-max">
+                  </p-inputNumber>
+                </div>
+                }
+              </div>
+              }
+            </td>
+            <td>
+              @if (ruleFor(row.trigger, 'REFEREE'); as rule) {
+              <div class="rule-cell">
+                <p-toggleswitch [(ngModel)]="rule.enabled" [disabled]="rulesLoading || !enabled"></p-toggleswitch>
+                <p-inputNumber
+                  [(ngModel)]="rule.amount"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  [min]="0"
+                  [suffix]="rule.benefitKind === 'DISCOUNT' && rule.rewardType === 'PERCENT' ? ' %' : ' €'"
+                  [disabled]="rulesLoading || !enabled || !rule.enabled"
+                  styleClass="rule-amount">
+                </p-inputNumber>
+                <small class="text-500">{{ benefitLabel(rule.benefitKind) }}</small>
+              </div>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <div class="flex flex-wrap gap-3 mb-3">
