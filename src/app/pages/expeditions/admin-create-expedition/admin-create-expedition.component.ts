@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
@@ -55,13 +55,14 @@ interface PreferenceOption {
   styleUrl: './admin-create-expedition.component.scss',
   providers: [MessageService, DatePipe]
 })
-export class AdminCreateExpeditionComponent {
+export class AdminCreateExpeditionComponent implements OnChanges {
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() created = new EventEmitter<ExpeditionLists>();
 
   step = 1;
   loadingLists = false;
+  loadingClients = false;
   submitting = false;
   result: ExpeditionLists | null = null;
 
@@ -131,12 +132,16 @@ export class AdminCreateExpeditionComponent {
     return +(base + commission + tvaOnCommission).toFixed(2);
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['visible'] && this.visible) {
+      this.resetAndOpen();
+    }
+  }
+
   onVisibleChange(visible: boolean): void {
     this.visible = visible;
     this.visibleChange.emit(visible);
-    if (visible) {
-      this.resetAndOpen();
-    } else {
+    if (!visible) {
       this.result = null;
       this.step = 1;
     }
@@ -147,7 +152,19 @@ export class AdminCreateExpeditionComponent {
   }
 
   searchClients(event: AutoCompleteCompleteEvent): void {
-    const q = (event.query || '').toLowerCase().trim();
+    this.applyClientFilter(event.query || '');
+  }
+
+  onClientDropdownClick(): void {
+    this.applyClientFilter('');
+  }
+
+  private applyClientFilter(query: string): void {
+    if (this.loadingClients) {
+      this.filteredClients = [];
+      return;
+    }
+    const q = query.toLowerCase().trim();
     this.filteredClients = !q
       ? this.clients.slice(0, 20)
       : this.clients.filter((client) => client.searchLabel.toLowerCase().includes(q)).slice(0, 20);
@@ -374,6 +391,9 @@ export class AdminCreateExpeditionComponent {
 
   private loadLists(): void {
     this.loadingLists = true;
+    this.loadingClients = true;
+    this.clients = [];
+    this.filteredClients = [];
     this.clientService.getClients().subscribe({
       next: (clients) => {
         this.clients = (clients || []).map((client) => ({
@@ -389,9 +409,11 @@ export class AdminCreateExpeditionComponent {
             .filter(Boolean)
             .join(' · ')
         }));
-        this.filteredClients = this.clients.slice(0, 20);
+        this.loadingClients = false;
+        this.applyClientFilter('');
       },
       error: () => {
+        this.loadingClients = false;
         this.messageService.add({ severity: 'error', summary: 'Clients', detail: 'Impossible de charger les clients.' });
       }
     });

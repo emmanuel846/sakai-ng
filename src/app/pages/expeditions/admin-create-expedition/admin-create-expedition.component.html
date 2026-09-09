@@ -57,14 +57,23 @@
                             formControlName="client"
                             [suggestions]="filteredClients"
                             (completeMethod)="searchClients($event)"
+                            (onDropdownClick)="onClientDropdownClick()"
                             (onSelect)="onClientSelected($event.value)"
                             (onClear)="onClientSelected(null)"
                             [dropdown]="true"
                             [forceSelection]="true"
+                            [minLength]="0"
+                            [disabled]="loadingClients"
+                            dataKey="id"
                             optionLabel="searchLabel"
                             placeholder="Nom, téléphone, e-mail…"
-                            styleClass="w-full" />
-                        <p class="admin-exp-muted">Le nom sur le billet est prérempli depuis le profil du voyageur.</p>
+                            styleClass="w-full"
+                            appendTo="body" />
+                        @if (loadingClients) {
+                            <p class="admin-exp-muted">Chargement des comptes…</p>
+                        } @else {
+                            <p class="admin-exp-muted">Le nom sur le billet est prérempli depuis le profil du voyageur.</p>
+                        }
                     </section>
 
                     <section class="admin-exp-card">
