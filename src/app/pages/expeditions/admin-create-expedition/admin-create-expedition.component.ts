@@ -20,6 +20,10 @@ import { ArticlePreferences, ExpeditionLists } from '../../../models/reservation
 import { AppSettingApiService } from '../../../services/app-setting-api.service';
 import { CollectionPointApiService } from '../../../services/collection-point-api.service';
 import { CountryApiService } from '../../../services/country-api.service';
+import {
+  ExpeditionDateConstraints,
+  ExpeditionPublishLogicService
+} from '../../../services/expedition-publish-logic.service';
 import { ClientService } from '../../clients/client.service';
 import { ExpeditionService } from '../expedition.service';
 
@@ -81,6 +85,7 @@ export class AdminCreateExpeditionComponent implements OnChanges {
   defaultFee = 10;
   minFee = 0;
   maxFee = 1000000;
+  dateConstraints: ExpeditionDateConstraints;
 
   form: FormGroup;
 
@@ -91,9 +96,11 @@ export class AdminCreateExpeditionComponent implements OnChanges {
     private countryService: CountryApiService,
     private collectionPointService: CollectionPointApiService,
     private appSettingService: AppSettingApiService,
+    private publishLogic: ExpeditionPublishLogicService,
     private messageService: MessageService,
     private datePipe: DatePipe
   ) {
+    this.dateConstraints = this.publishLogic.initialDateConstraints();
     this.form = this.fb.group({
       client: [null as ClientOption | null, Validators.required],
       countryDep: [null as Country | null, Validators.required],
@@ -126,10 +133,16 @@ export class AdminCreateExpeditionComponent implements OnChanges {
   }
 
   get finalPrice(): number {
-    const base = Number(this.form.get('fees')?.value || 0);
-    const commission = base * this.commissionRate;
-    const tvaOnCommission = commission * this.tvaRate;
-    return +(base + commission + tvaOnCommission).toFixed(2);
+    return this.publishLogic.computeFinalPrice(
+      Number(this.form.get('fees')?.value || 0),
+      this.commissionRate,
+      this.tvaRate
+    );
+  }
+
+  get selectedDepCollectionPoints(): CollectionPoint[] {
+    const value = this.form.get('collectionPointsIds')?.value;
+    return Array.isArray(value) ? value : [];
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -186,35 +199,31 @@ export class AdminCreateExpeditionComponent implements OnChanges {
       this.form.patchValue({ nomBillet: fullName });
       this.lastAutoNomBillet = fullName;
     }
+    this.reloadCollectionPointsIfCountriesSet();
   }
 
   onDepCountryChange(country: Country | null): void {
     this.form.patchValue({ collectionPointsIds: [] });
     this.depCollectionPoints = [];
-    if (country?.id) {
-      this.collectionPointService.getByCountry(country.id).subscribe({
-        next: (points) => {
-          this.depCollectionPoints = points.filter((p) => p.status === 'ACTIVE');
-        },
-        error: () => {
-          this.messageService.add({ severity: 'error', summary: 'Points de collecte', detail: 'Chargement départ impossible.' });
-        }
-      });
-    }
+    this.resetDateConstraints();
+    this.loadDepCollectionPoints(country);
   }
 
   onArrCountryChange(country: Country | null): void {
     this.form.patchValue({ destCollectionPointsId: null });
     this.destCollectionPoints = [];
-    if (country?.id) {
-      this.collectionPointService.getByCountry(country.id).subscribe({
-        next: (points) => {
-          this.destCollectionPoints = points.filter((p) => p.status === 'ACTIVE');
-        },
-        error: () => {
-          this.messageService.add({ severity: 'error', summary: 'Points de collecte', detail: 'Chargement arrivée impossible.' });
-        }
-      });
+    this.loadDestCollectionPoints(country);
+  }
+
+  onDepCollectionPointsChange(): void {
+    const depDate = this.form.get('depatureDate')?.value as Date | null;
+    if (depDate) {
+      this.applyDepartureDatePlan(depDate);
+    } else {
+      this.dateConstraints = {
+        ...this.dateConstraints,
+        closedDayNumbers: this.publishLogic.computeClosedDayNumbers(this.selectedDepCollectionPoints)
+      };
     }
   }
 
@@ -222,18 +231,14 @@ export class AdminCreateExpeditionComponent implements OnChanges {
     if (!date) {
       return;
     }
-    const dep = new Date(date);
-    const retrait = new Date(dep);
-    retrait.setDate(retrait.getDate() - 1);
-    const receipt = new Date(retrait);
-    receipt.setDate(receipt.getDate() - 1);
-    const delivery = new Date(dep);
-    delivery.setDate(delivery.getDate() + 1);
-    this.form.patchValue({
-      packageRetrivalDate: retrait,
-      receiptDate: receipt,
-      deliveryDate: delivery
-    });
+    this.applyDepartureDatePlan(date);
+  }
+
+  onRetraitDateChange(date: Date | null): void {
+    if (!date) {
+      return;
+    }
+    this.form.patchValue({ packageRetrivalDate: new Date(date) });
   }
 
   addPreference(): void {
@@ -309,17 +314,21 @@ export class AdminCreateExpeditionComponent implements OnChanges {
     }
 
     const depDate = this.toApiDate(this.form.get('depatureDate')?.value);
-    const collectionPoints = this.form.get('collectionPointsIds')?.value as CollectionPoint[];
+    const collectionPoints = this.selectedDepCollectionPoints;
     const destPoint = this.form.get('destCollectionPointsId')?.value as CollectionPoint | null;
-    const fees = Number(this.form.get('fees')?.value || 0);
+    const travelerFee = this.publishLogic.clampFee(
+      Number(this.form.get('fees')?.value || this.defaultFee),
+      this.minFee,
+      this.maxFee
+    );
     const weight = Number(this.form.get('weight')?.value || 0);
 
     this.submitting = true;
     this.expeditionService
       .createAdminExpedition({
         clientId: client.id,
-        fees,
-        totalFees: this.finalPrice,
+        fees: travelerFee,
+        totalFees: this.publishLogic.computeFinalPrice(travelerFee, this.commissionRate, this.tvaRate),
         receiptDate: this.toApiDate(this.form.get('receiptDate')?.value),
         deliveryDate: this.toApiDate(this.form.get('deliveryDate')?.value),
         packageRetrivalDate: this.toApiDate(this.form.get('packageRetrivalDate')?.value),
@@ -369,6 +378,9 @@ export class AdminCreateExpeditionComponent implements OnChanges {
     this.step = 1;
     this.result = null;
     this.lastAutoNomBillet = '';
+    this.depCollectionPoints = [];
+    this.destCollectionPoints = [];
+    this.dateConstraints = this.publishLogic.initialDateConstraints();
     this.preferencesFormArray.clear();
     this.form.reset({
       client: null,
@@ -464,7 +476,7 @@ export class AdminCreateExpeditionComponent implements OnChanges {
         const parsed = parseFloat(setting.value);
         if (!isNaN(parsed)) {
           this.defaultFee = parsed;
-          this.form.patchValue({ fees: parsed });
+          this.form.patchValue({ fees: this.publishLogic.clampFee(parsed, this.minFee, this.maxFee) });
         }
       }
     });
@@ -473,6 +485,8 @@ export class AdminCreateExpeditionComponent implements OnChanges {
         const parsed = parseFloat(setting.value);
         if (!isNaN(parsed)) {
           this.minFee = parsed;
+          const current = Number(this.form.get('fees')?.value || this.defaultFee);
+          this.form.patchValue({ fees: this.publishLogic.clampFee(current, this.minFee, this.maxFee) });
         }
       }
     });
@@ -481,8 +495,84 @@ export class AdminCreateExpeditionComponent implements OnChanges {
         const parsed = parseFloat(setting.value);
         if (!isNaN(parsed)) {
           this.maxFee = parsed;
+          const current = Number(this.form.get('fees')?.value || this.defaultFee);
+          this.form.patchValue({ fees: this.publishLogic.clampFee(current, this.minFee, this.maxFee) });
         }
       }
+    });
+  }
+
+  private reloadCollectionPointsIfCountriesSet(): void {
+    const countryDep = this.form.get('countryDep')?.value as Country | null;
+    const countryArr = this.form.get('countryArr')?.value as Country | null;
+    if (countryDep) {
+      this.loadDepCollectionPoints(countryDep);
+    }
+    if (countryArr) {
+      this.loadDestCollectionPoints(countryArr);
+    }
+  }
+
+  private loadDepCollectionPoints(country: Country | null): void {
+    const client = this.selectedClient;
+    if (!country?.id || !client?.id) {
+      return;
+    }
+    this.collectionPointService.getAvailableForClient(country.id, client.id).subscribe({
+      next: (points) => {
+        this.depCollectionPoints = points.filter((p) => p.status === 'ACTIVE');
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Points de collecte',
+          detail: 'Chargement départ impossible.'
+        });
+      }
+    });
+  }
+
+  private loadDestCollectionPoints(country: Country | null): void {
+    const client = this.selectedClient;
+    if (!country?.id || !client?.id) {
+      return;
+    }
+    this.collectionPointService.getAvailableForClient(country.id, client.id).subscribe({
+      next: (points) => {
+        this.destCollectionPoints = points.filter((p) => p.status === 'ACTIVE');
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Points de collecte',
+          detail: 'Chargement arrivée impossible.'
+        });
+      }
+    });
+  }
+
+  private applyDepartureDatePlan(departure: Date): void {
+    const plan = this.publishLogic.computeDatesOnDeparture(
+      departure,
+      this.selectedDepCollectionPoints,
+      this.dateConstraints.departureMinDate
+    );
+    this.dateConstraints = plan.constraints;
+    this.form.patchValue({
+      depatureDate: departure,
+      packageRetrivalDate: plan.packageRetrivalDate,
+      receiptDate: plan.receiptDate,
+      deliveryDate: plan.deliveryDate
+    });
+  }
+
+  private resetDateConstraints(): void {
+    this.dateConstraints = this.publishLogic.initialDateConstraints();
+    this.form.patchValue({
+      depatureDate: null,
+      packageRetrivalDate: null,
+      receiptDate: null,
+      deliveryDate: null
     });
   }
 

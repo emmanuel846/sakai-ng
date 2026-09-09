@@ -128,19 +128,43 @@
                                     dateFormat="dd/mm/yy"
                                     appendTo="body"
                                     styleClass="w-full"
+                                    [minDate]="dateConstraints.departureMinDate"
                                     (onSelect)="onDepartureDateChange($event)" />
                             </div>
                             <div>
                                 <label class="admin-exp-label">Retrait colis (voyageur)</label>
-                                <p-datepicker formControlName="packageRetrivalDate" dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full" />
+                                <p-datepicker
+                                    formControlName="packageRetrivalDate"
+                                    dateFormat="dd/mm/yy"
+                                    appendTo="body"
+                                    styleClass="w-full"
+                                    [minDate]="dateConstraints.packageRetrivalDateMin"
+                                    [maxDate]="dateConstraints.packageRetrivalDateMax"
+                                    [disabledDays]="dateConstraints.closedDayNumbers"
+                                    [disabled]="!form.get('depatureDate')?.value"
+                                    (onSelect)="onRetraitDateChange($event)" />
                             </div>
                             <div>
                                 <label class="admin-exp-label">Dépôt colis (expéditeurs)</label>
-                                <p-datepicker formControlName="receiptDate" dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full" />
+                                <p-datepicker
+                                    formControlName="receiptDate"
+                                    dateFormat="dd/mm/yy"
+                                    appendTo="body"
+                                    styleClass="w-full"
+                                    [minDate]="dateConstraints.receiptDateMin"
+                                    [maxDate]="dateConstraints.receiptDateMax"
+                                    [disabled]="!form.get('depatureDate')?.value" />
                             </div>
                             <div>
                                 <label class="admin-exp-label">Livraison destination</label>
-                                <p-datepicker formControlName="deliveryDate" dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full" />
+                                <p-datepicker
+                                    formControlName="deliveryDate"
+                                    dateFormat="dd/mm/yy"
+                                    appendTo="body"
+                                    styleClass="w-full"
+                                    [minDate]="dateConstraints.deliveryDateMin"
+                                    [maxDate]="dateConstraints.deliveryDateMax"
+                                    [disabled]="!form.get('depatureDate')?.value" />
                             </div>
                         </div>
                     </section>
@@ -156,7 +180,8 @@
                                     optionLabel="name"
                                     placeholder="Sélectionner"
                                     appendTo="body"
-                                    styleClass="w-full" />
+                                    styleClass="w-full"
+                                    (onChange)="onDepCollectionPointsChange()" />
                             </div>
                             <div>
                                 <label class="admin-exp-label">Point de collecte arrivée</label>

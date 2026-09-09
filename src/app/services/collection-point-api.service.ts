@@ -52,6 +52,11 @@ export class CollectionPointApiService {
     return this.http.get<CollectionPoint[]>(`${this.BASE}/by-country/${countryId}`);
   }
 
+  /** Points disponibles pour un client dans un pays (hors filtre communautaire — même règle que publish-ride). */
+  getAvailableForClient(countryId: string, clientId: string): Observable<CollectionPoint[]> {
+    return this.http.get<CollectionPoint[]>(`${this.BASE}/available/${countryId}/for-client/${clientId}`);
+  }
+
   getByCity(cityId: string): Observable<CollectionPoint[]> {
     return this.http.get<CollectionPoint[]>(`${this.BASE}/by-city/${cityId}`);
   }
