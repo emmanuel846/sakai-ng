@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { Profil } from "../../models/profil.model";
-import { Expedition, ExpeditionLists, ExpeditionStatus } from "../../models/reservation.model";
+import { AdminExpeditionCreateRequest, Expedition, ExpeditionLists, ExpeditionStatus } from "../../models/reservation.model";
 @Injectable({
     providedIn: 'root'
 })
@@ -24,5 +24,8 @@ export class ExpeditionService{
      updateExpedition(data: Expedition): Observable<Expedition> {
         return this.http.put<Expedition>(this.url + '/update', data);
     }
-   
+
+    createAdminExpedition(payload: AdminExpeditionCreateRequest): Observable<ExpeditionLists> {
+        return this.http.post<ExpeditionLists>(`${this.url}/admin/create`, payload);
+    }
 }

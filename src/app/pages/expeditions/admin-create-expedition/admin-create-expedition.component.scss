@@ -1,0 +1,183 @@
+.admin-exp-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.admin-exp-header p {
+  margin: 0;
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.9rem;
+}
+
+.admin-exp-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.admin-exp-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--p-surface-100, #f3f4f6);
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-exp-steps span {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  font-size: 0.75rem;
+}
+
+.admin-exp-steps .is-active {
+  background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+  color: var(--p-primary-color);
+}
+
+.admin-exp-steps .is-done {
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+}
+
+.admin-exp-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 800px) {
+  .admin-exp-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.admin-exp-card,
+.admin-exp-recap {
+  border: 1px solid var(--p-surface-border, #e5e7eb);
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  background: var(--p-surface-0, #fff);
+}
+
+.admin-exp-card h3,
+.admin-exp-recap h3 {
+  margin: 0 0 0.85rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.admin-exp-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-exp-fields {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-exp-muted {
+  margin: 0.35rem 0 0;
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.8rem;
+}
+
+.admin-exp-pref-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.admin-exp-pref-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-exp-pref-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--p-surface-border, #e5e7eb);
+  border-radius: 0.65rem;
+}
+
+.admin-exp-recap {
+  margin-top: 1rem;
+}
+
+.admin-exp-recap dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.admin-exp-recap dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.admin-exp-recap dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
+.admin-exp-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+.admin-exp-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 0.5rem 0.5rem;
+}
+
+.admin-exp-success i {
+  font-size: 2.4rem;
+  color: var(--p-green-500, #16a34a);
+  margin-bottom: 0.6rem;
+}
+
+.admin-exp-success h3 {
+  margin: 0 0 0.35rem;
+}
+
+.admin-exp-success__hint {
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+:host ::ng-deep .admin-exp-dialog .p-dialog-content {
+  padding-top: 0.25rem;
+}

@@ -1,0 +1,275 @@
+<p-toast />
+<p-dialog
+    [visible]="visible"
+    (visibleChange)="onVisibleChange($event)"
+    [modal]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '56rem', maxWidth: '96vw' }"
+    styleClass="admin-exp-dialog">
+    <ng-template #header>
+        <div class="admin-exp-header">
+            <div>
+                <h2>Publier un trajet pour un voyageur</h2>
+                <p>Concierge : l’annonce est créée au nom d’un compte existant, sans connexion sur le site public.</p>
+            </div>
+        </div>
+    </ng-template>
+
+    @if (result) {
+        <div class="admin-exp-success">
+            <i class="pi pi-check-circle"></i>
+            <h3>Trajet enregistré</h3>
+            <p>
+                {{ result.countryDep }} → {{ result.countryArr }}
+                · {{ selectedClient?.firstname }} {{ selectedClient?.lastname }}
+                · {{ result.depDateStart | date:'dd/MM/yyyy' }}
+            </p>
+            <p class="admin-exp-success__hint">
+                Le trajet est en statut « créé » et devra être validé comme une publication classique.
+            </p>
+        </div>
+    } @else {
+        <form [formGroup]="form" class="admin-exp">
+            <ol class="admin-exp-steps">
+                <li [class.is-active]="step === 1" [class.is-done]="step > 1">
+                    <span>1</span>
+                    Voyageur & trajet
+                </li>
+                <li [class.is-active]="step === 2" [class.is-done]="step > 2">
+                    <span>2</span>
+                    Dates & collecte
+                </li>
+                <li [class.is-active]="step === 3">
+                    <span>3</span>
+                    Articles
+                </li>
+            </ol>
+
+            @if (step === 1) {
+                <div class="admin-exp-grid">
+                    <section class="admin-exp-card">
+                        <h3>Voyageur</h3>
+                        <label class="admin-exp-label" for="admin-exp-client">Compte existant</label>
+                        <p-autocomplete
+                            inputId="admin-exp-client"
+                            formControlName="client"
+                            [suggestions]="filteredClients"
+                            (completeMethod)="searchClients($event)"
+                            (onSelect)="onClientSelected($event.value)"
+                            (onClear)="onClientSelected(null)"
+                            [dropdown]="true"
+                            [forceSelection]="true"
+                            optionLabel="searchLabel"
+                            placeholder="Nom, téléphone, e-mail…"
+                            styleClass="w-full" />
+                        <p class="admin-exp-muted">Le nom sur le billet est prérempli depuis le profil du voyageur.</p>
+                    </section>
+
+                    <section class="admin-exp-card">
+                        <h3>Itinéraire</h3>
+                        <div class="admin-exp-fields">
+                            <div>
+                                <label class="admin-exp-label" for="admin-exp-dep">Pays de départ</label>
+                                <p-select
+                                    inputId="admin-exp-dep"
+                                    formControlName="countryDep"
+                                    [options]="countries"
+                                    optionLabel="name"
+                                    placeholder="Choisir"
+                                    appendTo="body"
+                                    styleClass="w-full"
+                                    (onChange)="onDepCountryChange($event.value)" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label" for="admin-exp-arr">Pays d’arrivée</label>
+                                <p-select
+                                    inputId="admin-exp-arr"
+                                    formControlName="countryArr"
+                                    [options]="countries"
+                                    optionLabel="name"
+                                    placeholder="Choisir"
+                                    appendTo="body"
+                                    styleClass="w-full"
+                                    (onChange)="onArrCountryChange($event.value)" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label" for="admin-exp-vol">N° réservation / vol</label>
+                                <input pInputText id="admin-exp-vol" formControlName="numVol" class="w-full" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label" for="admin-exp-billet">Nom sur le billet</label>
+                                <input pInputText id="admin-exp-billet" formControlName="nomBillet" class="w-full" />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            }
+
+            @if (step === 2) {
+                <div class="admin-exp-grid">
+                    <section class="admin-exp-card">
+                        <h3>Dates</h3>
+                        <div class="admin-exp-fields">
+                            <div>
+                                <label class="admin-exp-label">Date de départ</label>
+                                <p-datepicker
+                                    formControlName="depatureDate"
+                                    dateFormat="dd/mm/yy"
+                                    appendTo="body"
+                                    styleClass="w-full"
+                                    (onSelect)="onDepartureDateChange($event)" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label">Retrait colis (voyageur)</label>
+                                <p-datepicker formControlName="packageRetrivalDate" dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label">Dépôt colis (expéditeurs)</label>
+                                <p-datepicker formControlName="receiptDate" dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label">Livraison destination</label>
+                                <p-datepicker formControlName="deliveryDate" dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="admin-exp-card">
+                        <h3>Capacité & points</h3>
+                        <div class="admin-exp-fields">
+                            <div>
+                                <label class="admin-exp-label">Points de collecte départ</label>
+                                <p-multiselect
+                                    formControlName="collectionPointsIds"
+                                    [options]="depCollectionPoints"
+                                    optionLabel="name"
+                                    placeholder="Sélectionner"
+                                    appendTo="body"
+                                    styleClass="w-full" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label">Point de collecte arrivée</label>
+                                <p-select
+                                    formControlName="destCollectionPointsId"
+                                    [options]="destCollectionPoints"
+                                    optionLabel="name"
+                                    placeholder="Optionnel"
+                                    [showClear]="true"
+                                    appendTo="body"
+                                    styleClass="w-full" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label">Kilos disponibles</label>
+                                <p-inputNumber formControlName="weight" [min]="0.1" [maxFractionDigits]="1" styleClass="w-full" />
+                            </div>
+                            <div>
+                                <label class="admin-exp-label">Prix voyageur (€/kg)</label>
+                                <p-inputNumber formControlName="fees" [min]="minFee" [max]="maxFee" [minFractionDigits]="2" styleClass="w-full" />
+                                <p class="admin-exp-muted">Prix expéditeur estimé : {{ finalPrice | number:'1.2-2' }} €/kg</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            }
+
+            @if (step === 3) {
+                <section class="admin-exp-card">
+                    <h3>Articles acceptés</h3>
+                    <div class="admin-exp-pref-row">
+                        <p-select
+                            [(ngModel)]="selectedArticle"
+                            [ngModelOptions]="{ standalone: true }"
+                            [options]="catalog"
+                            optionLabel="name"
+                            optionValue="name"
+                            placeholder="Catégorie"
+                            appendTo="body"
+                            styleClass="flex-1" />
+                        <p-inputNumber
+                            [(ngModel)]="selectedMaxValue"
+                            [ngModelOptions]="{ standalone: true }"
+                            [min]="0.1"
+                            [maxFractionDigits]="selectedCatalogEntry?.limitType === 'WEIGHT' ? 1 : 0"
+                            styleClass="w-8rem" />
+                        <p-button type="button" label="Ajouter" icon="pi pi-plus" (onClick)="addPreference()" />
+                    </div>
+
+                    @if (!preferencesFormArray.length) {
+                        <p class="admin-exp-muted">Ajoutez au moins une catégorie d’articles.</p>
+                    } @else {
+                        <ul class="admin-exp-pref-list">
+                            @for (pref of preferencesFormArray.controls; track $index) {
+                                <li>
+                                    <span>
+                                        {{ pref.value.categoryName }}
+                                        ·
+                                        @if (pref.value.limitType === 'WEIGHT') {
+                                            {{ pref.value.maxWeight }} kg
+                                        } @else {
+                                            {{ pref.value.maxQuantity }} unité(s)
+                                        }
+                                    </span>
+                                    <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" (onClick)="removePreference($index)" />
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <label class="admin-exp-label mt-3" for="admin-exp-note">Note interne (optionnel)</label>
+                    <textarea pTextarea id="admin-exp-note" formControlName="adminNote" rows="3" class="w-full"></textarea>
+                </section>
+
+                <section class="admin-exp-recap">
+                    <h3>Récapitulatif</h3>
+                    <dl>
+                        <div>
+                            <dt>Voyageur</dt>
+                            <dd>{{ clientLabel(selectedClient) || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Trajet</dt>
+                            <dd>{{ form.get('countryDep')?.value?.name }} → {{ form.get('countryArr')?.value?.name }}</dd>
+                        </div>
+                        <div>
+                            <dt>Départ</dt>
+                            <dd>{{ form.get('depatureDate')?.value | date:'dd/MM/yyyy' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Capacité</dt>
+                            <dd>{{ form.get('weight')?.value }} kg · {{ form.get('fees')?.value }} €/kg</dd>
+                        </div>
+                    </dl>
+                </section>
+            }
+        </form>
+    }
+
+    <ng-template #footer>
+        <div class="admin-exp-footer">
+            @if (result) {
+                <span></span>
+                <p-button label="Fermer" (onClick)="close()" />
+            } @else {
+                <div>
+                    @if (step > 1) {
+                        <p-button label="Retour" severity="secondary" [text]="true" (onClick)="back()" />
+                    }
+                </div>
+                <div class="flex gap-2">
+                    @if (step < 3) {
+                        <p-button label="Suivant" icon="pi pi-arrow-right" iconPos="right" (onClick)="next()" [disabled]="!canGoNext()" />
+                    } @else {
+                        <p-button
+                            label="Publier le trajet"
+                            icon="pi pi-check"
+                            (onClick)="submit()"
+                            [loading]="submitting"
+                            [disabled]="!canGoNext() || submitting" />
+                    }
+                </div>
+            }
+        </div>
+    </ng-template>
+</p-dialog>

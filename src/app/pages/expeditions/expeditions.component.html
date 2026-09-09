@@ -13,6 +13,12 @@
                     (onClick)="getAllExpeditions()">
                 </p-button>
                 <p-button
+                    label="Publier un trajet"
+                    icon="pi pi-send"
+                    severity="help"
+                    (onClick)="openCreateExpedition()">
+                </p-button>
+                <p-button
                     label="Réserver pour un client"
                     icon="pi pi-calendar-plus"
                     (onClick)="openCreateReservation()">
@@ -102,10 +108,15 @@
                         <td>{{ expedition.deliveryDate | date: 'dd/MM/yyyy' }}</td>
                         @if (isAllTab) {
                             <td>
-                                <p-tag
-                                    [value]="statusLabel(expedition.expeditionStatus)"
-                                    [severity]="statusSeverity(expedition.expeditionStatus)">
-                                </p-tag>
+                                <div class="flex flex-wrap gap-1">
+                                    <p-tag
+                                        [value]="statusLabel(expedition.expeditionStatus)"
+                                        [severity]="statusSeverity(expedition.expeditionStatus)">
+                                    </p-tag>
+                                    @if (expedition.adminCreated) {
+                                        <p-tag value="Backoffice" severity="contrast" />
+                                    }
+                                </div>
                             </td>
                         }
                         <td (click)="$event.stopPropagation()">
@@ -226,6 +237,9 @@
                                 [value]="statusLabel(selectedExpedition.expeditionStatus)"
                                 [severity]="statusSeverity(selectedExpedition.expeditionStatus)">
                             </p-tag>
+                            @if (selectedExpedition.adminCreated) {
+                                <p-tag value="Backoffice" severity="contrast" />
+                            }
                             @if (selectedExpedition.deliverySteps) {
                                 <p-tag [value]="selectedExpedition.deliverySteps" severity="info"></p-tag>
                             }
@@ -1209,3 +1223,7 @@
     [(visible)]="createDialogVisible"
     [expedition]="createExpedition"
     (created)="onAdminReservationCreated($event)" />
+
+<app-admin-create-expedition
+    [(visible)]="createExpeditionDialogVisible"
+    (created)="onAdminExpeditionCreated($event)" />

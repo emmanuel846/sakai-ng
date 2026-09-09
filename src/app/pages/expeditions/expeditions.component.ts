@@ -40,6 +40,7 @@ import { catchError } from 'rxjs/operators';
 import { ReservationService } from '../reservations/reservations.service';
 import { Reservations } from '../reservations/reservation.model';
 import { AdminCreateReservationComponent } from '../reservations/admin-create-reservation/admin-create-reservation.component';
+import { AdminCreateExpeditionComponent } from './admin-create-expedition/admin-create-expedition.component';
 import { ClientService } from '../clients/client.service';
 import { environment } from '../../../environments/environment';
 
@@ -74,7 +75,8 @@ import { environment } from '../../../environments/environment';
     AccordionModule,
     ImageModule,
     TooltipModule,
-    AdminCreateReservationComponent
+    AdminCreateReservationComponent,
+    AdminCreateExpeditionComponent
   ],
   providers: [MessageService],
   templateUrl: './expeditions.component.html',
@@ -109,6 +111,7 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
   selectedStatus: ExpeditionStatus | null = null;
   createDialogVisible = false;
   createExpedition: ExpeditionLists | null = null;
+  createExpeditionDialogVisible = false;
 
   readonly statusOptions: { label: string; value: ExpeditionStatus }[] = [
     { label: 'En attente de validation', value: ExpeditionStatus.CREATED },
@@ -432,6 +435,15 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
     event?.stopPropagation();
     this.createExpedition = expedition ?? this.selectedExpedition;
     this.createDialogVisible = true;
+  }
+
+  openCreateExpedition(event?: Event): void {
+    event?.stopPropagation();
+    this.createExpeditionDialogVisible = true;
+  }
+
+  onAdminExpeditionCreated(_expedition: ExpeditionLists): void {
+    this.getAllExpeditions();
   }
 
   onAdminReservationCreated(reservation: Reservations): void {

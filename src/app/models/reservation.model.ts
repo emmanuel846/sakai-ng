@@ -208,10 +208,36 @@ export interface ReservationParams {
   expeditionId: string;
 }
 
+export interface AdminExpeditionCreateRequest {
+  clientId: string;
+  fees: number;
+  totalFees: number;
+  receiptDate: string;
+  deliveryDate: string;
+  packageRetrivalDate: string;
+  villeDep: string;
+  villeArr: string;
+  weight: number;
+  depStartDate: string;
+  depEndDate: string;
+  arrivalStartDate: string;
+  arrivalEndDate: string;
+  preferences: ArticlePreferences[];
+  numVol: string;
+  countryDep: string;
+  countryArr: string;
+  collectionPointsIds: string[];
+  destCollectionPointsId?: string | null;
+  nomBillet: string;
+  adminNote?: string | null;
+}
+
 export interface ExpeditionLists {
   id: string;
   createdAt?: string;
   updatedAt?: string;
+  adminCreated?: boolean;
+  adminNote?: string | null;
   numVol: string;
   nomBillet?: string | null;
   countryDep: string;
