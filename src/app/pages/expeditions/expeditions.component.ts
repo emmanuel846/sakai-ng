@@ -507,9 +507,51 @@ export class ExpeditionsComponent implements OnInit, AfterContentInit, OnDestroy
     return `${pref.categoryName} — max ${pref.maxQuantity ?? '—'} u.`;
   }
 
+  collectionAddress(point?: CollectionPoints | null): string | null {
+    if (!point) return null;
+    const value = (point.address || point.adresse || point.iwtAdress || '').trim();
+    return value || null;
+  }
+
+  collectionContacts(point?: CollectionPoints | null): string | null {
+    if (!point) return null;
+    const value = (point.contacts || point.email || '').trim();
+    return value || null;
+  }
+
+  collectionHours(point?: CollectionPoints | null): string | null {
+    if (!point) return null;
+    if (point.openingHours?.length) {
+      const open = point.openingHours.filter((h) => !h.closed);
+      if (!open.length) return 'Fermé 7j/7';
+      const parts = open.map((h) => {
+        const day = this.collectionDayLabel(h.day);
+        const from = (h.openTime ?? '').substring(0, 5);
+        const to = (h.closeTime ?? '').substring(0, 5);
+        return from && to ? `${day} ${from}-${to}` : day;
+      });
+      return parts.join(' · ');
+    }
+    const value = (point.openHours || '').trim();
+    return value || null;
+  }
+
   collectionLocation(point?: CollectionPoints | null): string | null {
     if (!point) return null;
     return point.locationUrl || point.location_url || null;
+  }
+
+  private collectionDayLabel(day?: string): string {
+    const labels: Record<string, string> = {
+      MONDAY: 'Lun',
+      TUESDAY: 'Mar',
+      WEDNESDAY: 'Mer',
+      THURSDAY: 'Jeu',
+      FRIDAY: 'Ven',
+      SATURDAY: 'Sam',
+      SUNDAY: 'Dim'
+    };
+    return day ? labels[day] ?? day : '';
   }
 
   receiverIdFileName(receiver?: { idpicturesName?: string | null; IDPicturesName?: string | null } | null): string | null {

@@ -99,8 +99,17 @@ export interface CollectionPoints {
   location_url?: string;
   locationUrl?: string;
   adresse?: string;
+  address?: string;
+  iwtAdress?: string;
   contacts?: string;
+  email?: string;
   openHours?: string;
+  openingHours?: Array<{
+    day?: string;
+    openTime?: string;
+    closeTime?: string;
+    closed?: boolean;
+  }>;
   status?: string;
 }
 

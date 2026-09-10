@@ -475,15 +475,15 @@
                                         </div>
                                         <div class="expeditions-detail__full">
                                             <dt>Adresse</dt>
-                                            <dd>{{ displayValue(selectedExpedition.collectionPoints.adresse) }}</dd>
+                                            <dd>{{ displayValue(collectionAddress(selectedExpedition.collectionPoints)) }}</dd>
                                         </div>
                                         <div>
                                             <dt>Contacts</dt>
-                                            <dd>{{ displayValue(selectedExpedition.collectionPoints.contacts) }}</dd>
+                                            <dd>{{ displayValue(collectionContacts(selectedExpedition.collectionPoints)) }}</dd>
                                         </div>
                                         <div>
                                             <dt>Horaires</dt>
-                                            <dd>{{ displayValue(selectedExpedition.collectionPoints.openHours) }}</dd>
+                                            <dd>{{ displayValue(collectionHours(selectedExpedition.collectionPoints)) }}</dd>
                                         </div>
                                         <div class="expeditions-detail__full">
                                             <dt>Lien carte</dt>
@@ -520,15 +520,15 @@
                                         </div>
                                         <div class="expeditions-detail__full">
                                             <dt>Adresse</dt>
-                                            <dd>{{ displayValue(selectedExpedition.destCollectionPoints.adresse) }}</dd>
+                                            <dd>{{ displayValue(collectionAddress(selectedExpedition.destCollectionPoints)) }}</dd>
                                         </div>
                                         <div>
                                             <dt>Contacts</dt>
-                                            <dd>{{ displayValue(selectedExpedition.destCollectionPoints.contacts) }}</dd>
+                                            <dd>{{ displayValue(collectionContacts(selectedExpedition.destCollectionPoints)) }}</dd>
                                         </div>
                                         <div>
                                             <dt>Horaires</dt>
-                                            <dd>{{ displayValue(selectedExpedition.destCollectionPoints.openHours) }}</dd>
+                                            <dd>{{ displayValue(collectionHours(selectedExpedition.destCollectionPoints)) }}</dd>
                                         </div>
                                         <div class="expeditions-detail__full">
                                             <dt>Lien carte</dt>
